@@ -89,11 +89,11 @@ const CHAINS: Record<number, ChainCfg> = {
     usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
     explorer: "https://lineascan.build",
   },
-  11155111: {
-    id: 11155111, name: "Ethereum Sepolia", network: "sepolia",
-    rpc: "https://ethereum-sepolia-rpc.publicnode.com",
-    usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-    explorer: "https://sepolia.etherscan.io",
+  5042: {
+    id: 5042, name: "Arc Mainnet", network: "arc",
+    rpc: "https://rpc.mainnet.arc.io",
+    usdc: "0x3600000000000000000000000000000000000000",
+    explorer: "https://explorer.arc.io",
   },
 };
 

@@ -38,7 +38,7 @@ export const TOKENS_BY_CHAIN: Record<number, TokenInfo[]> = {
 
 export const WETH_ADDRESS: `0x${string}` = "0x4200000000000000000000000000000000000006";
 
-// USDC ERC-20 interface on Arc Testnet (used as both token address and "wrapped native" equivalent)
+// USDC ERC-20 interface on Arc Mainnet (used as both token address and "wrapped native" equivalent)
 // This directly affects native USDC balance — approve/transferFrom work against the native balance.
 export const ARC_WRAPPED_NATIVE: `0x${string}` = "0x3600000000000000000000000000000000000000";
 
@@ -87,7 +87,7 @@ export const POPULAR_PAIRS: Record<number, { from: string; to: string }[]> = {
 
 /** Build a human-readable route string */
 export function getRouteDisplay(tokenIn: TokenInfo, tokenOut: TokenInfo, chainId?: number): string {
-  if (chainId === 5042002) {
+  if (chainId === 5042) {
     return `${tokenIn.symbol} → ${tokenOut.symbol}`;
   }
   const isNativeIn = tokenIn.address === "native" && tokenIn.symbol === "ETH";
