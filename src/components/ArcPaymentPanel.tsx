@@ -87,7 +87,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const chainLabel = getChainLabel(paymentChainId);
   const explorerName = getExplorerName(paymentChainId);
   const isBase = paymentChainId === BASE_CHAIN_ID;
-  const isArc = paymentChainId === 5042002;
+  const isArc = paymentChainId === 5042;
 
   // ── Base Mainnet pay path ──
   const payOnBase = async (): Promise<string> => {
@@ -287,10 +287,10 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       </div>
 
       {isArc && (
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
+          <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <p className="text-xs text-foreground/90">
-            <strong>Arc Testnet</strong> is for swap demos only. Listings require a mainnet — pay 5 USDC on Base (below) or any other chain including Solana, Sui, Near.
+            <strong>Arc Mainnet</strong> is live — USDC is the gas token, so listing fees settle in seconds.
           </p>
         </div>
       )}
@@ -325,11 +325,6 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
           : <>💰 Pay {fee} USDC on Base</>}
       </Button>
 
-      <a href="https://faucet.circle.com" target="_blank" rel="noopener noreferrer" className="block">
-        <Button variant="outline" className="w-full py-5 rounded-xl" type="button">
-          <Droplets className="h-4 w-4 mr-2" /> Get USDC via Circle Faucet
-        </Button>
-      </a>
 
       <div className="pt-2">
         <button onClick={() => setShowExternal((v) => !v)}

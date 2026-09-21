@@ -12,7 +12,7 @@ interface ChainContextValue {
 const ChainContext = createContext<ChainContextValue | null>(null);
 
 const STORAGE_KEY = "usdcdir:lastChainId";
-const DEFAULT_CHAIN: SupportedChainId = 5042002;
+const DEFAULT_CHAIN: SupportedChainId = 5042;
 
 const readStoredChain = (): SupportedChainId => {
   if (typeof window === "undefined") return DEFAULT_CHAIN;
@@ -51,7 +51,7 @@ export const ChainProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const chainConfig = CHAINS[chainId];
-  const isArcTestnet = chainId === 5042002;
+  const isArcTestnet = chainId === 5042;
 
   return (
     <ChainContext.Provider value={{ chainId, setChainId, chainConfig, isArcTestnet }}>

@@ -1,9 +1,8 @@
 /**
  * Chain registry — single source of truth for supported networks.
- * Arc mainnet ships disabled and is flipped on with one boolean
- * once Circle announces final RPC + USDC contract.
+ * Arc Mainnet is live (chain ID 5042, USDC as native gas token).
  */
-export type ChainKey = "base" | "arc-testnet" | "arc-mainnet" | "sepolia";
+export type ChainKey = "base" | "arc-mainnet";
 
 export interface ChainEntry {
   id: number;
@@ -17,19 +16,6 @@ export interface ChainEntry {
   appKitChain?: string; // Circle App Kit chain string
 }
 
-// Arc mainnet placeholders — replace once Circle publishes final values
-const ARC_MAINNET_PLACEHOLDER: ChainEntry = {
-  id: 5042001,
-  key: "arc-mainnet",
-  label: "Arc Mainnet",
-  network: "arc",
-  rpc: "https://rpc.arc.network",
-  usdc: "0x0000000000000000000000000000000000000000",
-  explorer: "https://arcscan.app",
-  enabled: false, // flip to true when Circle launches
-  appKitChain: "Arc",
-};
-
 export const CHAINS: Record<ChainKey, ChainEntry> = {
   base: {
     id: 8453, key: "base", label: "Base Mainnet", network: "base",
@@ -39,21 +25,13 @@ export const CHAINS: Record<ChainKey, ChainEntry> = {
     enabled: true,
     appKitChain: "Base",
   },
-  "arc-testnet": {
-    id: 5042002, key: "arc-testnet", label: "Arc Testnet", network: "arc-testnet",
-    rpc: "https://rpc.testnet.arc.network",
-    usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d",
-    explorer: "https://testnet.arcscan.app",
+  "arc-mainnet": {
+    id: 5042, key: "arc-mainnet", label: "Arc Mainnet", network: "arc",
+    rpc: "https://rpc.mainnet.arc.io",
+    usdc: "0x3600000000000000000000000000000000000000",
+    explorer: "https://explorer.arc.io",
     enabled: true,
-    appKitChain: "Arc_Testnet",
-  },
-  "arc-mainnet": ARC_MAINNET_PLACEHOLDER,
-  sepolia: {
-    id: 11155111, key: "sepolia", label: "Ethereum Sepolia", network: "sepolia",
-    rpc: "https://ethereum-sepolia-rpc.publicnode.com",
-    usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-    explorer: "https://sepolia.etherscan.io",
-    enabled: true,
+    appKitChain: "Arc",
   },
 };
 

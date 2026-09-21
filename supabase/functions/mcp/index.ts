@@ -114,7 +114,7 @@ mcp.tool({
         text: JSON.stringify({
           action: "POST",
           endpoint: `${API_BASE}/agents`,
-          price: { amount_usdc: "1.000", asset: "USDC", networks: ["base", "arc-testnet"] },
+          price: { amount_usdc: "1.000", asset: "USDC", networks: ["base", "arc"] },
           treasury: "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
           body_schema: { name: "string", wallet_address: "0x...", description: "string<=300", logo_url: "https?://... (optional)" },
           payment_methods: [

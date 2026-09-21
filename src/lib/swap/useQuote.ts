@@ -28,7 +28,7 @@ export function useQuote({
   })();
 
   const isBase = chainId === 8453;
-  const isArc = chainId === 5042002;
+  const isArc = chainId === 5042;
 
   // ── V3 quote (Base) ──
   const actualTokenInV3 = tokenIn?.address === "native" ? WETH_ADDRESS : (tokenIn?.address as `0x${string}`);
@@ -56,8 +56,8 @@ export function useQuote({
     query: { enabled: shouldFetchV3, refetchInterval: 15_000 },
   });
 
-  // ── Arc Testnet: Use 1:1 stablecoin estimate (no on-chain V2 liquidity available) ──
-  // Arc Testnet USDC/EURC swaps are executed via Circle App Kit's built-in swap,
+  // ── Arc Mainnet: Use 1:1 stablecoin estimate (no on-chain V2 liquidity available) ──
+  // Arc Mainnet USDC/EURC swaps are executed via Circle App Kit's built-in swap,
   // so we provide an estimated quote here for display purposes.
   if (isArc) {
     const bothStable = tokenIn?.isStable && tokenOut?.isStable;

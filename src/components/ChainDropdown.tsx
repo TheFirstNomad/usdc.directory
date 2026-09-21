@@ -9,7 +9,7 @@ import { CHAINS, type SupportedChainId } from "@/lib/swap/chains";
 
 const CHAIN_ICONS: Record<SupportedChainId, { src: string; alt: string }> = {
   8453: { src: "/chains/base.jpg", alt: "Base" },
-  5042002: { src: "/chains/arc.jpg", alt: "Arc" },
+  5042: { src: "/chains/arc.jpg", alt: "Arc" },
 };
 
 const ChainDropdown = ({
@@ -19,8 +19,10 @@ const ChainDropdown = ({
   chainId: SupportedChainId;
   onChange: (id: SupportedChainId) => void;
 }) => {
-  const current = CHAINS[chainId];
-  const icon = CHAIN_ICONS[chainId];
+  // Guard against a stale/unsupported chain id (e.g. persisted from a retired network)
+  const safeId: SupportedChainId = CHAINS[chainId] ? chainId : 5042;
+  const current = CHAINS[safeId];
+  const icon = CHAIN_ICONS[safeId];
 
   return (
     <DropdownMenu>
@@ -50,7 +52,7 @@ const ChainDropdown = ({
                 <div className="flex flex-col flex-1 min-w-0">
                   <span className="text-sm font-semibold text-foreground">{chain.name}</span>
                   <span className="text-[11px] text-muted-foreground">
-                    {numId === 8453 ? "Production · Low fees" : "Testnet · No real value"}
+                    {numId === 8453 ? "Production · Low fees" : "Production · USDC gas"}
                   </span>
                 </div>
                 {active && (

@@ -65,13 +65,13 @@ const MyListings = () => {
     setBoosting(listing.id);
     try {
       const adapter = await createViemAdapterFromWallet(walletProvider);
-      const { txHash } = await payBoostFee(adapter, 5042002);
+      const { txHash } = await payBoostFee(adapter, 5042);
       const { data, error } = await supabase.functions.invoke("boost-listing", {
         body: {
           partner_id: listing.id,
           wallet_address: address.toLowerCase(),
           payment_tx: txHash,
-          chain: "Arc_Testnet",
+          chain: "arc",
         },
       });
       if (error) throw error;

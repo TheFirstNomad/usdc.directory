@@ -27,28 +27,28 @@ export const TREASURY_ADDRESS: `0x${string}` =
   "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 
 // ── Chain helpers ────────────────────────────────────────────────────
-export type PaymentChainId = 8453 | 5042002;
+export type PaymentChainId = 8453 | 5042;
 
 /** Map numeric chain ID to the exact string literal the Circle SDK expects. */
 function chainString(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "Base" : "Arc_Testnet";
+  return chainId === 8453 ? "Base" : "Arc";
 }
 
 /** Human-readable chain label. */
 export function getChainLabel(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "Base Mainnet" : "Arc Testnet";
+  return chainId === 8453 ? "Base Mainnet" : "Arc Mainnet";
 }
 
 /** Block explorer URL for a given transaction. */
 export function getExplorerUrl(chainId: PaymentChainId, txHash: string): string {
   return chainId === 8453
     ? `https://basescan.org/tx/${txHash}`
-    : `https://testnet.arcscan.app/tx/${txHash}`;
+    : `https://explorer.arc.io/tx/${txHash}`;
 }
 
 /** Block explorer name. */
 export function getExplorerName(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "BaseScan" : "ArcScan";
+  return chainId === 8453 ? "BaseScan" : "Arc Explorer";
 }
 
 // ── Tx hash extraction helper ───────────────────────────────────────
@@ -65,13 +65,20 @@ function extractTxHash(result: unknown): string {
   return String(result);
 }
 
-// ── Arc Testnet chain switch helper ────────────────────────────────
-const ARC_TESTNET_HEX = "0x4cf532"; // 5042002
+// ── Arc Mainnet chain switch helper ────────────────────────────────
+const ARC_MAINNET_HEX = "0x13b2"; // 5042
+
+const ARC_MAINNET_PARAMS = {
+  chainId: ARC_MAINNET_HEX,
+  chainName: "Arc",
+  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+  rpcUrls: ["https://rpc.mainnet.arc.io"],
+  blockExplorerUrls: ["https://explorer.arc.io"],
+};
 
 /**
- * Attempt to switch the connected wallet to Arc Testnet.
- * This is non-blocking and silent: it won't throw an error if the switch fails
- * or if the network is not found in the wallet.
+ * Attempt to switch the connected wallet to Arc Mainnet, adding the network
+ * if the wallet does not know it yet. Non-blocking: never throws.
  */
 export async function ensureArcChain(passedProvider?: unknown): Promise<void> {
   const provider = (passedProvider as { request?: (a: { method: string; params?: unknown[] }) => Promise<unknown> })
@@ -81,15 +88,23 @@ export async function ensureArcChain(passedProvider?: unknown): Promise<void> {
 
   try {
     const current = (await provider.request({ method: "eth_chainId" })) as string;
-    if (current?.toLowerCase() === ARC_TESTNET_HEX) {
+    if (current?.toLowerCase() === ARC_MAINNET_HEX) {
       console.debug("[arcAppKit] ensureArcChain → already on Arc");
       return;
     }
 
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: ARC_TESTNET_HEX }],
-    });
+    try {
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: ARC_MAINNET_HEX }],
+      });
+    } catch (switchErr: unknown) {
+      // 4902 = unrecognised chain — offer to add it
+      await provider.request({
+        method: "wallet_addEthereumChain",
+        params: [ARC_MAINNET_PARAMS],
+      });
+    }
     console.debug("[arcAppKit] ensureArcChain → switched");
   } catch (err: unknown) {
     console.warn("[arcAppKit] ensureArcChain soft-failed (continuing):", err);
@@ -144,13 +159,13 @@ async function getAppKit(): Promise<AppKit> {
  * Sends a USDC listing fee to the treasury wallet.
  *
  * @param adapter - Viem adapter created by `createViemAdapterFromWallet`.
- * @param chainId - Target chain (Base Mainnet or Arc Testnet).
+ * @param chainId - Target chain (Base Mainnet or Arc Mainnet).
  * @param amount  - USDC amount as a decimal string (e.g. "10").
  * @returns Transaction hash and explorer URL.
  */
 export async function payListingFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = 5042,
   amount: string = "10",
 ) {
   const kit = await getAppKit();
@@ -161,7 +176,7 @@ export async function payListingFee(
     to: TREASURY_ADDRESS,
     amount,
     token: "USDC",
-  } as Parameters<typeof kit.send>[0]);
+  } as unknown as Parameters<typeof kit.send>[0]);
 
 
   const txHash = extractTxHash(result);
@@ -175,7 +190,7 @@ export async function payListingFee(
  */
 export async function payAgentListingFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = 5042,
 ) {
   return payListingFee(adapter, chainId, "1");
 }
@@ -186,7 +201,7 @@ export async function payAgentListingFee(
  */
 export async function payBoostFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = 5042,
 ) {
   return payListingFee(adapter, chainId, "5");
 }
@@ -313,7 +328,7 @@ export async function swapViaKit(
         allowanceStrategy: "approve",
         kitKey: ARC_KIT_KEY,
       },
-    } as Parameters<typeof kit.swap>[0]);
+    } as unknown as Parameters<typeof kit.swap>[0]);
     console.debug("[swapViaKit] kit.swap returned", r);
     return r;
   };

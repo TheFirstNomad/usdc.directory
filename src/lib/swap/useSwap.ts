@@ -112,7 +112,7 @@ export function useSwap({
   const { sendTransactionAsync } = useSendTransaction();
 
   const isBase = chainId === 8453;
-  const isArc = chainId === 5042002;
+  const isArc = chainId === 5042;
   const isNativeIn = tokenIn?.address === "native";
   const isNativeOut = tokenOut?.address === "native";
 
@@ -196,7 +196,7 @@ export function useSwap({
           userAddress,
         });
         
-        // ── Arc Testnet: Circle App Kit swap ──
+        // ── Arc Mainnet: Circle App Kit swap ──
         // We no longer force ensureArcChain here to avoid wallet RPC addition/forced switching prompts.
         // Circle SDK will handle the adapter with the existing provider state.
         const adapter = await createViemAdapterFromWallet(walletProvider);
