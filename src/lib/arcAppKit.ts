@@ -328,7 +328,7 @@ export async function swapViaKit(
         allowanceStrategy: "approve",
         kitKey: ARC_KIT_KEY,
       },
-    } as Parameters<typeof kit.swap>[0]);
+    } as unknown as Parameters<typeof kit.swap>[0]);
     console.debug("[swapViaKit] kit.swap returned", r);
     return r;
   };
