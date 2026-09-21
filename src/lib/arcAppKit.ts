@@ -27,28 +27,28 @@ export const TREASURY_ADDRESS: `0x${string}` =
   "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 
 // ── Chain helpers ────────────────────────────────────────────────────
-export type PaymentChainId = 8453 | 5042002;
+export type PaymentChainId = 8453 | 5042;
 
 /** Map numeric chain ID to the exact string literal the Circle SDK expects. */
 function chainString(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "Base" : "Arc_Testnet";
+  return chainId === 8453 ? "Base" : "Arc";
 }
 
 /** Human-readable chain label. */
 export function getChainLabel(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "Base Mainnet" : "Arc Testnet";
+  return chainId === 8453 ? "Base Mainnet" : "Arc Mainnet";
 }
 
 /** Block explorer URL for a given transaction. */
 export function getExplorerUrl(chainId: PaymentChainId, txHash: string): string {
   return chainId === 8453
     ? `https://basescan.org/tx/${txHash}`
-    : `https://testnet.arcscan.app/tx/${txHash}`;
+    : `https://explorer.arc.io/tx/${txHash}`;
 }
 
 /** Block explorer name. */
 export function getExplorerName(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "BaseScan" : "ArcScan";
+  return chainId === 8453 ? "BaseScan" : "Arc Explorer";
 }
 
 // ── Tx hash extraction helper ───────────────────────────────────────
