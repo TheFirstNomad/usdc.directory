@@ -31,7 +31,7 @@ serve(async (req) => {
       return json({ error: "Invalid payment_tx" }, 400);
     }
 
-    const chainKey = normalizeChainKey(chain ?? "arc_testnet");
+    const chainKey = normalizeChainKey(chain ?? "arc");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,

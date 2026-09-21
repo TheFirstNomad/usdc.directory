@@ -168,7 +168,7 @@ curl -X POST ${API_BASE}/agents \\
             </table>
           </div>
           <p className="text-xs text-muted-foreground">
-            Supported chains: Base · Arc Testnet · Ethereum Sepolia. Payment schemes: <span className="font-mono">x402</span> (EIP-3009) or <span className="font-mono">onchain</span> (USDC transfer tx hash).
+            Supported chains: Base · Arc Mainnet · and all major USDC mainnets. Payment schemes: <span className="font-mono">x402</span> (EIP-3009) or <span className="font-mono">onchain</span> (USDC transfer tx hash).
           </p>
         </section>
 

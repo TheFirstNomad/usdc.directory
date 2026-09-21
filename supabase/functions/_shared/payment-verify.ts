@@ -27,13 +27,13 @@ export const EVM_CHAINS: Record<string, EvmChainCfg> = {
   avalanche:     { rpc: "https://api.avax.network/ext/bc/C/rpc", usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" },
   bnb:           { rpc: "https://bsc-dataseed.binance.org",     usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
   linea:         { rpc: "https://rpc.linea.build",              usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff" },
-  arc_testnet:   { rpc: "https://rpc.testnet.arc.network",      usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d" },
+  arc:           { rpc: "https://rpc.mainnet.arc.io",           usdc: "0x3600000000000000000000000000000000000000" },
 };
 
 /** Normalises the many chain spellings the clients send. */
 export function normalizeChainKey(chain: string | undefined | null): string {
   const c = String(chain ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_");
-  if (c === "arc" || c === "arctestnet" || c === "arc_testnet") return "arc_testnet";
+  if (c === "arc" || c === "arc_mainnet" || c === "arcmainnet") return "arc";
   if (c === "bsc" || c === "bnb_chain" || c === "binance") return "bnb";
   if (c === "eth" || c === "mainnet") return "ethereum";
   return c;
