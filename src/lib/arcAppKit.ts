@@ -65,13 +65,20 @@ function extractTxHash(result: unknown): string {
   return String(result);
 }
 
-// ── Arc Testnet chain switch helper ────────────────────────────────
-const ARC_TESTNET_HEX = "0x4cf532"; // 5042002
+// ── Arc Mainnet chain switch helper ────────────────────────────────
+const ARC_MAINNET_HEX = "0x13b2"; // 5042
+
+const ARC_MAINNET_PARAMS = {
+  chainId: ARC_MAINNET_HEX,
+  chainName: "Arc",
+  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+  rpcUrls: ["https://rpc.mainnet.arc.io"],
+  blockExplorerUrls: ["https://explorer.arc.io"],
+};
 
 /**
- * Attempt to switch the connected wallet to Arc Testnet.
- * This is non-blocking and silent: it won't throw an error if the switch fails
- * or if the network is not found in the wallet.
+ * Attempt to switch the connected wallet to Arc Mainnet, adding the network
+ * if the wallet does not know it yet. Non-blocking: never throws.
  */
 export async function ensureArcChain(passedProvider?: unknown): Promise<void> {
   const provider = (passedProvider as { request?: (a: { method: string; params?: unknown[] }) => Promise<unknown> })
@@ -81,15 +88,23 @@ export async function ensureArcChain(passedProvider?: unknown): Promise<void> {
 
   try {
     const current = (await provider.request({ method: "eth_chainId" })) as string;
-    if (current?.toLowerCase() === ARC_TESTNET_HEX) {
+    if (current?.toLowerCase() === ARC_MAINNET_HEX) {
       console.debug("[arcAppKit] ensureArcChain → already on Arc");
       return;
     }
 
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: ARC_TESTNET_HEX }],
-    });
+    try {
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: ARC_MAINNET_HEX }],
+      });
+    } catch (switchErr: unknown) {
+      // 4902 = unrecognised chain — offer to add it
+      await provider.request({
+        method: "wallet_addEthereumChain",
+        params: [ARC_MAINNET_PARAMS],
+      });
+    }
     console.debug("[arcAppKit] ensureArcChain → switched");
   } catch (err: unknown) {
     console.warn("[arcAppKit] ensureArcChain soft-failed (continuing):", err);
