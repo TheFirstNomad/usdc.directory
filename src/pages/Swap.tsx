@@ -56,8 +56,8 @@ const Swap = () => {
 
   const chainConfig = CHAINS[selectedChainId];
   const popularPairs = POPULAR_PAIRS[selectedChainId] ?? [];
-  const isArcTestnet = selectedChainId === 5042002;
-  // Skip wrong-chain check on Arc Testnet — Circle SDK handles chain context
+  const isArcTestnet = selectedChainId === 5042;
+  // Skip wrong-chain check on Arc — Circle SDK handles chain context
   const wrongChain = isConnected && !isArcTestnet && walletChainId !== selectedChainId;
 
   /* ── chain switch ── */
@@ -214,16 +214,13 @@ const Swap = () => {
             <ChainSelector chainId={selectedChainId} onChange={handleChainChange} />
           </div>
 
-          {/* Arc Testnet info banner */}
+          {/* Arc Mainnet info banner */}
           {isArcTestnet && (
             <div className="w-full max-w-[460px] mb-4 animate-fade-in">
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
                 <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  Swaps on Arc Testnet are routed through Circle App Kit.{" "}
-                  <a href="https://faucet.circle.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    Get test USDC
-                  </a>
+                  Swaps on Arc Mainnet are routed through Circle App Kit — USDC pays the gas.
                 </p>
               </div>
             </div>
