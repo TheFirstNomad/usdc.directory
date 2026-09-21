@@ -44,8 +44,7 @@ export const VERIFIED_FEE_DISPLAY = "20";
 // USDC contract addresses (per chain)
 export const USDC_ADDRESSES: Record<number, `0x${string}`> = {
   8453: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base mainnet
-  5042002: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d", // Arc Testnet
-  11155111: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", // Sepolia
+  5042: "0x3600000000000000000000000000000000000000", // Arc Mainnet (USDC ERC-20 interface)
 };
 
 export const BASE_EXPLORER_URL = "https://basescan.org";
