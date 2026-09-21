@@ -19,19 +19,21 @@ export const BASE_TOKENS: TokenInfo[] = [
   { symbol: "DEGEN", name: "Degen", address: "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed", decimals: 18, logoUrl: "/tokens/eth.png" },
 ];
 
-// Arc Testnet: USDC is the native gas token.
+// Arc Mainnet: USDC is the native gas token.
 // The USDC ERC-20 interface at 0x3600... uses 6 decimals (per official Arc docs).
 // Native gas balance uses 18 decimals, but ALL on-chain token operations should
 // use the 6-decimal ERC-20 interface. EURC also uses 6 decimals.
-export const ARC_TESTNET_TOKENS: TokenInfo[] = [
+export const ARC_TOKENS: TokenInfo[] = [
   { symbol: "USDC", name: "USDC (Native)", address: "0x3600000000000000000000000000000000000000", decimals: 6, logoUrl: "/tokens/usdc.png", isStable: true },
-  { symbol: "EURC", name: "Euro Coin", address: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a", decimals: 6, logoUrl: "/tokens/eurc.png", isStable: true },
-  { symbol: "cirBTC", name: "Circle BTC", address: "0xf0C4a4CE82A5746AbAAd9425360Ab04fbBA432BF", decimals: 8, logoUrl: "/tokens/btc.png" },
+  { symbol: "EURC", name: "Euro Coin", address: "0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1", decimals: 6, logoUrl: "/tokens/eurc.png", isStable: true },
 ];
+
+/** @deprecated use ARC_TOKENS */
+export const ARC_TESTNET_TOKENS = ARC_TOKENS;
 
 export const TOKENS_BY_CHAIN: Record<number, TokenInfo[]> = {
   8453: BASE_TOKENS,
-  5042002: ARC_TESTNET_TOKENS,
+  5042: ARC_TOKENS,
 };
 
 export const WETH_ADDRESS: `0x${string}` = "0x4200000000000000000000000000000000000006";
