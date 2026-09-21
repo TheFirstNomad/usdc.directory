@@ -28,7 +28,7 @@ export function useQuote({
   })();
 
   const isBase = chainId === 8453;
-  const isArc = chainId === 5042002;
+  const isArc = chainId === 5042;
 
   // ── V3 quote (Base) ──
   const actualTokenInV3 = tokenIn?.address === "native" ? WETH_ADDRESS : (tokenIn?.address as `0x${string}`);

@@ -87,7 +87,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const chainLabel = getChainLabel(paymentChainId);
   const explorerName = getExplorerName(paymentChainId);
   const isBase = paymentChainId === BASE_CHAIN_ID;
-  const isArc = paymentChainId === 5042002;
+  const isArc = paymentChainId === 5042;
 
   // ── Base Mainnet pay path ──
   const payOnBase = async (): Promise<string> => {

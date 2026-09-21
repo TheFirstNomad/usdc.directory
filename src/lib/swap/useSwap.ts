@@ -112,7 +112,7 @@ export function useSwap({
   const { sendTransactionAsync } = useSendTransaction();
 
   const isBase = chainId === 8453;
-  const isArc = chainId === 5042002;
+  const isArc = chainId === 5042;
   const isNativeIn = tokenIn?.address === "native";
   const isNativeOut = tokenOut?.address === "native";
 

@@ -79,11 +79,9 @@ export const POPULAR_PAIRS: Record<number, { from: string; to: string }[]> = {
     { from: "DAI", to: "USDC" },
     { from: "WETH", to: "USDC" },
   ],
-  5042002: [
+  5042: [
     { from: "USDC", to: "EURC" },
     { from: "EURC", to: "USDC" },
-    { from: "USDC", to: "cirBTC" },
-    { from: "cirBTC", to: "USDC" },
   ],
 };
 
