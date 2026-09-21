@@ -165,7 +165,7 @@ async function getAppKit(): Promise<AppKit> {
  */
 export async function payListingFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = 5042,
   amount: string = "10",
 ) {
   const kit = await getAppKit();
@@ -190,7 +190,7 @@ export async function payListingFee(
  */
 export async function payAgentListingFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = 5042,
 ) {
   return payListingFee(adapter, chainId, "1");
 }
@@ -201,7 +201,7 @@ export async function payAgentListingFee(
  */
 export async function payBoostFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = 5042,
 ) {
   return payListingFee(adapter, chainId, "5");
 }
