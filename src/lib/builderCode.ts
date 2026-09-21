@@ -3,7 +3,7 @@
  *
  * Appends our registered builder code to the `data` field of every Base mainnet
  * transaction we send directly. Transactions executed through Circle App Kit
- * (Arc Testnet) are NOT attributed — Circle's SDK builds and signs its own
+ * (Arc Mainnet) are NOT attributed — Circle's SDK builds and signs its own
  * calldata internally, so we have no hook to inject the suffix there.
  *
  * Spec: https://eips.ethereum.org/EIPS/eip-8021

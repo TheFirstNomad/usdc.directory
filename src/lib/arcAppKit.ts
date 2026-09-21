@@ -159,7 +159,7 @@ async function getAppKit(): Promise<AppKit> {
  * Sends a USDC listing fee to the treasury wallet.
  *
  * @param adapter - Viem adapter created by `createViemAdapterFromWallet`.
- * @param chainId - Target chain (Base Mainnet or Arc Testnet).
+ * @param chainId - Target chain (Base Mainnet or Arc Mainnet).
  * @param amount  - USDC amount as a decimal string (e.g. "10").
  * @returns Transaction hash and explorer URL.
  */

@@ -5,7 +5,7 @@
  * `sendTransaction`, then appends our ERC-8021 suffix so the transfer's
  * "Input Data" is attributed to our builder code on base.dev / BaseScan.
  *
- * Arc Testnet payments continue to flow through Circle App Kit (kit.send) —
+ * Arc Mainnet payments continue to flow through Circle App Kit (kit.send) —
  * this helper is Base-mainnet only.
  */
 import { encodeFunctionData, parseUnits } from "viem";

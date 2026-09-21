@@ -56,8 +56,8 @@ export function useQuote({
     query: { enabled: shouldFetchV3, refetchInterval: 15_000 },
   });
 
-  // ── Arc Testnet: Use 1:1 stablecoin estimate (no on-chain V2 liquidity available) ──
-  // Arc Testnet USDC/EURC swaps are executed via Circle App Kit's built-in swap,
+  // ── Arc Mainnet: Use 1:1 stablecoin estimate (no on-chain V2 liquidity available) ──
+  // Arc Mainnet USDC/EURC swaps are executed via Circle App Kit's built-in swap,
   // so we provide an estimated quote here for display purposes.
   if (isArc) {
     const bothStable = tokenIn?.isStable && tokenOut?.isStable;
