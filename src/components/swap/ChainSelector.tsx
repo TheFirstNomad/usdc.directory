@@ -2,7 +2,7 @@ import { CHAINS, type SupportedChainId } from "@/lib/swap/chains";
 
 const CHAIN_ICONS: Record<SupportedChainId, string> = {
   8453: "/chains/base.jpg",
-  5042002: "/chains/arc.jpg",
+  5042: "/chains/arc.jpg",
 };
 
 const ChainSelector = ({
