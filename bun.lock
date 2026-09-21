@@ -5,7 +5,7 @@
     "": {
       "name": "vite_react_shadcn_ts",
       "dependencies": {
-        "@circle-fin/adapter-viem-v2": "1.15.0",
+        "@circle-fin/adapter-viem-v2": "1.15.1",
         "@circle-fin/app-kit": "1.15.2",
         "@hookform/resolvers": "^3.10.0",
         "@radix-ui/react-accordion": "^1.2.11",
@@ -121,7 +121,7 @@
 
     "@base-org/account": ["@base-org/account@1.1.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@base-org/account/-/account-1.1.1.tgz", { "dependencies": { "@noble/hashes": "1.4.0", "clsx": "1.2.1", "eventemitter3": "5.0.1", "idb-keyval": "6.2.1", "ox": "0.6.9", "preact": "10.24.2", "viem": "^2.31.7", "zustand": "5.0.3" } }, "sha512-IfVJPrDPhHfqXRDb89472hXkpvJuQQR7FDI9isLPHEqSYt/45whIoBxSPgZ0ssTt379VhQo4+87PWI1DoLSfAQ=="],
 
-    "@circle-fin/adapter-viem-v2": ["@circle-fin/adapter-viem-v2@1.15.0", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@circle-fin/adapter-viem-v2/-/adapter-viem-v2-1.15.0.tgz", { "dependencies": { "@ethersproject/abi": "^5.8.0", "@ethersproject/address": "^5.8.0", "@ethersproject/bytes": "^5.8.0", "@ethersproject/units": "^5.8.0", "@noble/hashes": "^1.8.0", "@solana/web3.js": "^1.98.4", "abitype": "^1.1.0", "bs58": "6.0.0", "pino": "10.1.0", "zod": "3.25.67" }, "peerDependencies": { "viem": "^2.30.0" } }, "sha512-KUPJKDI9CAHw5kYGH74OQnFYmtrFw2OOwhiaoJJxSVjl9jpXUnFU+n4ghxm6EZFO8oDI09STRn0WVgKQTJGSEw=="],
+    "@circle-fin/adapter-viem-v2": ["@circle-fin/adapter-viem-v2@1.15.1", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@circle-fin/adapter-viem-v2/-/adapter-viem-v2-1.15.1.tgz", { "dependencies": { "@ethersproject/abi": "^5.8.0", "@ethersproject/address": "^5.8.0", "@ethersproject/bytes": "^5.8.0", "@ethersproject/units": "^5.8.0", "@noble/hashes": "^1.8.0", "@solana/web3.js": "^1.98.4", "abitype": "^1.1.0", "bs58": "6.0.0", "pino": "10.1.0", "zod": "3.25.67" }, "peerDependencies": { "viem": "^2.30.0" } }, "sha512-VzkfPjbqvfA++djJ2adTLievnIKEZVx10h3wbG+9HIJPWgF4hFIhx+MMjBkdRVzcWSga9uAGyLWFvvsMzVwNwQ=="],
 
     "@circle-fin/app-kit": ["@circle-fin/app-kit@1.15.2", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@circle-fin/app-kit/-/app-kit-1.15.2.tgz", { "dependencies": { "@circle-fin/bridge-kit": "1.15.1", "@circle-fin/earn-kit": "1.7.0", "@circle-fin/onramp-kit": "1.0.1", "@circle-fin/provider-gateway-v1": "1.5.0", "@circle-fin/swap-kit": "1.7.0", "@circle-fin/unified-balance-kit": "1.7.0", "@coral-xyz/anchor": "^0.31.1", "@ethersproject/abi": "^5.8.0", "@ethersproject/address": "^5.8.0", "@ethersproject/bytes": "^5.8.0", "@ethersproject/keccak256": "^5.8.0", "@ethersproject/units": "^5.8.0", "@noble/curves": "1.4.2", "@solana/web3.js": "^1.98.4", "abitype": "^1.1.0", "bn.js": "^5.2.3", "bs58": "6.0.0", "buffer": "^6.0.3", "pino": "10.1.0", "zod": "3.25.67" } }, "sha512-7+MaJVcdUJ5Mr1Tonz5/b56gm1F1K2HML04iOimMUmKT3q3mfixNKztAZVH2bv+K6ZXMHXQ0SkI7ZYraOPsseg=="],
 
