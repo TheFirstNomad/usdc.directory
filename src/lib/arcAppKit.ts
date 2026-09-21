@@ -176,7 +176,7 @@ export async function payListingFee(
     to: TREASURY_ADDRESS,
     amount,
     token: "USDC",
-  } as Parameters<typeof kit.send>[0]);
+  } as unknown as Parameters<typeof kit.send>[0]);
 
 
   const txHash = extractTxHash(result);
