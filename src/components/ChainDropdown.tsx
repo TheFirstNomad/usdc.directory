@@ -19,8 +19,10 @@ const ChainDropdown = ({
   chainId: SupportedChainId;
   onChange: (id: SupportedChainId) => void;
 }) => {
-  const current = CHAINS[chainId];
-  const icon = CHAIN_ICONS[chainId];
+  // Guard against a stale/unsupported chain id (e.g. persisted from a retired network)
+  const safeId: SupportedChainId = CHAINS[chainId] ? chainId : 5042;
+  const current = CHAINS[safeId];
+  const icon = CHAIN_ICONS[safeId];
 
   return (
     <DropdownMenu>
