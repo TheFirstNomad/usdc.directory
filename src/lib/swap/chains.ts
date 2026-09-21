@@ -1,4 +1,4 @@
-export type SupportedChainId = 8453 | 5042002;
+export type SupportedChainId = 8453 | 5042;
 
 export const CHAINS: Record<SupportedChainId, {
   name: string;
@@ -15,12 +15,11 @@ export const CHAINS: Record<SupportedChainId, {
     isTestnet: false,
     dexName: "Uniswap V3",
   },
-  5042002: {
-    name: "Arc Testnet",
-    shortName: "Arc Testnet",
-    explorer: "https://testnet.arcscan.app",
-    isTestnet: true,
-    faucetUrl: "https://faucet.circle.com",
+  5042: {
+    name: "Arc Mainnet",
+    shortName: "Arc",
+    explorer: "https://explorer.arc.io",
+    isTestnet: false,
     dexName: "Circle App Kit",
   },
 };
