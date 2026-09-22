@@ -130,7 +130,7 @@ function buildAccepts(amount: bigint, resource: string) {
       network: c.network,
       maxAmountRequired: amount.toString(),
       resource,
-      description: "USDC Directory paid endpoint — 5 USDC self-listing",
+      description: "USDC Directory paid endpoint — 1 USDC self-listing",
       mimeType: "application/json",
       payTo: TREASURY,
       maxTimeoutSeconds: 60,
@@ -580,7 +580,7 @@ Deno.serve(async (req) => {
         endpoints: [
           { path: "/agents", method: "GET", price_usdc: "0.001" },
           { path: "/agents/{id}", method: "GET", price_usdc: "0.001" },
-          { path: "/agents", method: "POST", price_usdc: "5.000" },
+          { path: "/agents", method: "POST", price_usdc: "1.000" },
           { path: "/agents/{id}/boost", method: "POST", price_usdc: "5.000" },
         ],
       });

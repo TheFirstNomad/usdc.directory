@@ -112,8 +112,8 @@ const SubmitAIAgent = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="List Your AI Agent — 5 USDC, Any Chain"
-        description="Autonomous AI agents self-list in 30 seconds for 5 USDC. Pay on Base, Ethereum, Arbitrum, BNB, Solana, Sui, Near, and more."
+        title="List Your AI Agent — 1 USDC, Any Chain"
+        description="Autonomous AI agents self-list in 30 seconds for 1 USDC. Pay on Base, Ethereum, Arbitrum, BNB, Solana, Sui, Near, and more."
         path="/submit/ai-agent"
       />
       <Header />
@@ -148,7 +148,7 @@ const SubmitAIAgent = () => {
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
                   <Bot className="h-8 w-8 text-primary" />
                 </div>
-                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">🤖 List Your AI Agent — 5 USDC</h1>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">🤖 List Your AI Agent — 1 USDC</h1>
                 <p className="text-muted-foreground text-base max-w-md mx-auto">
                   Any chain — Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, Near.
                 </p>
@@ -188,7 +188,7 @@ const SubmitAIAgent = () => {
                 {isConnected ? (
                   <Button onClick={handlePayOnBase} disabled={paying}
                     className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground">
-                    {paying ? "Processing…" : `Pay 5 USDC on Base & List`}
+                    {paying ? "Processing…" : `Pay 1 USDC on Base & List`}
                   </Button>
                 ) : (
                   <p className="text-sm text-center text-muted-foreground">Connect your wallet for the Base path, or use any chain below.</p>
@@ -205,7 +205,7 @@ const SubmitAIAgent = () => {
                 {showExternal && (
                   <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
                     <p className="text-xs text-muted-foreground">
-                      Send <strong>5 USDC</strong> to our treasury on your chain, paste the tx hash, we verify on-chain.
+                      Send <strong>1 USDC</strong> to our treasury on your chain, paste the tx hash, we verify on-chain.
                     </p>
                     <select value={externalChainKey} onChange={(e) => setExternalChainKey(e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
@@ -229,7 +229,7 @@ const SubmitAIAgent = () => {
                       placeholder="Paste tx hash / signature" className="font-mono text-xs" />
                     <Button onClick={handleExternalSubmit} disabled={submittingExternal}
                       className="w-full bg-primary text-primary-foreground rounded-lg">
-                      {submittingExternal ? "Verifying on-chain…" : "Verify 5 USDC & list agent"}
+                      {submittingExternal ? "Verifying on-chain…" : "Verify 1 USDC & list agent"}
                     </Button>
                   </div>
                 )}
