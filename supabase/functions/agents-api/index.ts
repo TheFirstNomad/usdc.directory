@@ -461,7 +461,7 @@ function paymentResponseHeader(gate: { paymentId: string; chain: string; scheme:
 
 // ── Pricing ──────────────────────────────────────────────────────────────────
 const PRICE_API_CALL = 1_000n;       // $0.001
-const PRICE_LIST_AGENT = 5_000_000n; // 5 USDC
+const PRICE_LIST_AGENT = 1_000_000n; // 1 USDC
 const PRICE_BOOST = 5_000_000n;      // 5 USDC
 
 // ── Handlers ─────────────────────────────────────────────────────────────────

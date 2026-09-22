@@ -1,5 +1,5 @@
 // Deprecated: free listings are no longer accepted.
-// All listings now require 5 USDC payment on any supported mainnet (EVM, Solana, Sui, or Near).
+// All listings now require 1 USDC payment on any supported mainnet (EVM, Solana, Sui, or Near).
 // See /submit and /.well-known/x402 for current payment paths.
 
 const corsHeaders = {
@@ -11,7 +11,7 @@ Deno.serve((req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   return new Response(
     JSON.stringify({
-      error: "Free listings have been discontinued. All listings now require a 5 USDC payment on any supported chain (EVM, Solana, Sui, or Near). Visit /submit to list your business or AI agent.",
+      error: "Free listings have been discontinued. All listings now require a 1 USDC payment on any supported chain (EVM, Solana, Sui, or Near). Visit /submit to list your business or AI agent.",
       code: "FREE_LISTING_DEPRECATED",
     }),
     {
