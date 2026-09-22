@@ -1,5 +1,5 @@
 /**
- * submit-ai-agent — Self-list an AI agent for 5 USDC on any supported chain.
+ * submit-ai-agent — Self-list an AI agent for 1 USDC on any supported chain.
  *
  * For Base Mainnet, the front-end pays via wagmi sendTransaction (ERC-8021
  * attribution) and posts the tx hash here. For any other chain (Ethereum,
@@ -17,7 +17,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FEE_BASE_UNITS = 5_000_000n;
+const FEE_BASE_UNITS = 1_000_000n;
 const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
 const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
 const SUI_TREASURY = "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979".toLowerCase();
