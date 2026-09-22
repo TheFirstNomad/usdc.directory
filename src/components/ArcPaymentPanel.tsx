@@ -1,5 +1,5 @@
 /**
- * ArcPaymentPanel — 5 USDC listing fee, payable on ANY supported chain.
+ * ArcPaymentPanel — 1 USDC listing fee, payable on ANY supported chain.
  *
  * Two paths:
  *   1. Base Mainnet — direct USDC transfer via wagmi with ERC-8021 attribution.

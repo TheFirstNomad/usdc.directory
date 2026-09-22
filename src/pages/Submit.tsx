@@ -16,7 +16,7 @@ const STEPS = [
   { title: "Business Info", description: "Tell us about your business" },
   { title: "Location", description: "Where are your customers?" },
   { title: "Preview", description: "Review your listing" },
-  { title: "Pay & List", description: "5 USDC on any chain" },
+  { title: "Pay & List", description: "1 USDC on any chain" },
 ];
 
 const PRESENCE_TYPES = ["Online Only", "Physical Locations", "Both"];
@@ -127,7 +127,7 @@ const Submit = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-3">🎉 Listed Successfully!</h1>
             <p className="text-muted-foreground mb-4">
-              Your 5 USDC payment was verified on-chain and your listing is now live in the global USDC Directory.
+              Your 1 USDC payment was verified on-chain and your listing is now live in the global USDC Directory.
             </p>
             {orderId && (
               <p className="text-xs text-muted-foreground font-mono break-all mb-6">Tx: {orderId}</p>
@@ -143,8 +143,8 @@ const Submit = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="List Your Business — 5 USDC, Any Chain"
-        description="Self-list on USDC Directory for 5 USDC. Pay on Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, or Near."
+        title="List Your Business — 1 USDC, Any Chain"
+        description="Self-list on USDC Directory for 1 USDC. Pay on Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, or Near."
         path="/submit"
       />
       <Header />
@@ -153,7 +153,7 @@ const Submit = () => {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">List Your Business</h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto">
-            <span className="font-semibold text-foreground">5 USDC, any chain.</span> Pay on Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea — or Solana, Sui, Near. Listings publish instantly after on-chain verification.
+            <span className="font-semibold text-foreground">1 USDC, any chain.</span> Pay on Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea — or Solana, Sui, Near. Listings publish instantly after on-chain verification.
           </p>
         </div>
       </section>
@@ -296,7 +296,7 @@ const Submit = () => {
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
                 <Eye className="h-5 w-5 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">This is how your listing will appear. Continue to pay 5 USDC.</p>
+                <p className="text-sm text-muted-foreground">This is how your listing will appear. Continue to pay 1 USDC.</p>
               </div>
             </div>
           )}
@@ -309,7 +309,7 @@ const Submit = () => {
               <div className="bg-card border border-border rounded-xl p-4">
                 <h4 className="font-semibold text-foreground text-sm mb-2">What you get:</h4>
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  <li>✅ Instant listing once 5 USDC payment is verified on-chain</li>
+                  <li>✅ Instant listing once 1 USDC payment is verified on-chain</li>
                   <li>✅ Searchable by category, region, and network</li>
                   <li>✅ Eligible for homepage featuring & boost</li>
                   <li>✅ Discoverable to AI agents via paid x402 API</li>

@@ -2,7 +2,7 @@
  * submit-listing — Persists a new listing or update after on-chain payment.
  *
  * Accepts payments on ANY supported chain (EVM mainnets + Solana + Sui + Near).
- * 5 USDC fee for listing, 5 USDC for update.
+ * 1 USDC fee for listing, 1 USDC for update.
  *
  * POST body:
  *   {
@@ -22,7 +22,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FEE_BASE_UNITS = 5_000_000n; // 5 USDC, 6 decimals
+const FEE_BASE_UNITS = 1_000_000n; // 1 USDC, 6 decimals
 const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
 const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
 const SUI_TREASURY = "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979".toLowerCase();

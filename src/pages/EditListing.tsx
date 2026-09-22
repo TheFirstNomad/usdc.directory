@@ -177,7 +177,7 @@ const EditListing = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title={`Edit ${partner.name} — 5 USDC`} description={`Update your listing for ${partner.name} on USDC Directory.`} path={`/edit/${id}`} />
+      <SEO title={`Edit ${partner.name} — 1 USDC`} description={`Update your listing for ${partner.name} on USDC Directory.`} path={`/edit/${id}`} />
       <Header />
 
       <section className="bg-gradient-to-b from-primary/5 to-background py-14 px-6">
@@ -186,7 +186,7 @@ const EditListing = () => {
             <Pencil className="inline h-7 w-7 mr-2 -mt-1" /> Edit: {partner.name}
           </h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto">
-            Update your listing details. <span className="font-semibold text-foreground">5 USDC</span> update fee applies.
+            Update your listing details. <span className="font-semibold text-foreground">1 USDC</span> update fee applies.
           </p>
         </div>
       </section>

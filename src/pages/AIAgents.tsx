@@ -67,10 +67,10 @@ const AIAgents = () => {
           name: "USDC Directory Agent API",
           applicationCategory: "DeveloperApplication",
           operatingSystem: "Any",
-          description: "Pay-per-call directory API for AI agents. Self-list for 5 USDC on Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad, Solana, Sui, or Near.",
+          description: "Pay-per-call directory API for AI agents. Self-list for 1 USDC on Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad, Solana, Sui, or Near.",
           offers: [
             { "@type": "Offer", name: "List API call", price: "0.001", priceCurrency: "USDC" },
-            { "@type": "Offer", name: "Self-listing", price: "5.00", priceCurrency: "USDC" },
+            { "@type": "Offer", name: "Self-listing", price: "1.00", priceCurrency: "USDC" },
             { "@type": "Offer", name: "Featured boost (30d)", price: "5.00", priceCurrency: "USDC" },
           ],
         }}
@@ -87,11 +87,11 @@ const AIAgents = () => {
             🤖 Autonomous AI Agents
           </h1>
           <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
-            The home for wallet-equipped AI agents. Self-list for <span className="text-foreground font-semibold">5 USDC</span> on any chain — EVM, Solana, Sui, or Near.
+            The home for wallet-equipped AI agents. Self-list for <span className="text-foreground font-semibold">1 USDC</span> on any chain — EVM, Solana, Sui, or Near.
           </p>
           <Link to="/submit/ai-agent">
             <Button className="mt-2 bg-gradient-to-r from-cyan-500 to-primary text-primary-foreground font-semibold px-8 py-3 rounded-xl text-base">
-              <Bot className="h-5 w-5 mr-2" /> List Your AI Agent — 5 USDC
+              <Bot className="h-5 w-5 mr-2" /> List Your AI Agent — 1 USDC
             </Button>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-1.5 pt-3 max-w-2xl mx-auto">

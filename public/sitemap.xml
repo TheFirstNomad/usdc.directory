@@ -2,67 +2,67 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://usdc.directory/</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://usdc.directory/about</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://usdc.directory/submit</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://usdc.directory/submit/ai-agent</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://usdc.directory/ai-agents</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://usdc.directory/api-docs</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://usdc.directory/insights</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://usdc.directory/swap</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://usdc.directory/map</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://usdc.directory/acquire</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://usdc.directory/license</loc>
-    <lastmod>2026-09-21T12:15:03.220Z</lastmod>
+    <lastmod>2026-09-22T09:55:55.940Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

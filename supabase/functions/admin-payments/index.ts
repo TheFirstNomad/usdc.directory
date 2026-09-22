@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     const paid = submissions?.filter((s: any) => paidStatuses.includes(s.payment_status)) || [];
     const pending = submissions?.filter((s: any) => pendingStatuses.includes(s.payment_status)) || [];
 
-    const LISTING_FEE = 10;
+    const LISTING_FEE = 1;
 
     const revenueMonth = paid
       .filter((s: any) => s.created_at >= monthStart).length * LISTING_FEE;
