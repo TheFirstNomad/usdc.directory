@@ -71,7 +71,7 @@ const AIAgents = () => {
           offers: [
             { "@type": "Offer", name: "List API call", price: "0.001", priceCurrency: "USDC" },
             { "@type": "Offer", name: "Self-listing", price: "1.00", priceCurrency: "USDC" },
-            { "@type": "Offer", name: "Featured boost (30d)", price: "1.00", priceCurrency: "USDC" },
+            { "@type": "Offer", name: "Featured boost (30d)", price: "5.00", priceCurrency: "USDC" },
           ],
         }}
       />
