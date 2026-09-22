@@ -28,15 +28,15 @@ export const TREASURY_ADDRESS: `0x${string}` =
   "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 
 // Listing fee in USDC (6 decimals)
-export const LISTING_FEE = 10_000_000n; // 10 USDC
-export const UPDATE_FEE = 5_000_000n; // 5 USDC
+export const LISTING_FEE = 1_000_000n; // 1 USDC
+export const UPDATE_FEE = 1_000_000n; // 1 USDC
 export const LISTING_FEE_AGENT = 1_000_000n; // 1 USDC — agent self-listing
 export const BOOST_FEE = 5_000_000n; // 5 USDC — featured boost (30 days)
 export const VERIFIED_FEE = 20_000_000n; // 20 USDC — verified agent badge
 export const API_CALL_FEE = 1_000n; // $0.001 — per metered API call
 
-export const LISTING_FEE_DISPLAY = "10";
-export const UPDATE_FEE_DISPLAY = "5";
+export const LISTING_FEE_DISPLAY = "1";
+export const UPDATE_FEE_DISPLAY = "1";
 export const LISTING_FEE_AGENT_DISPLAY = "1";
 export const BOOST_FEE_DISPLAY = "5";
 export const VERIFIED_FEE_DISPLAY = "20";
