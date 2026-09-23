@@ -1,24 +1,32 @@
-import { Menu, X, Wallet, Sun, Moon } from "lucide-react";
+import { Menu, X, Wallet, Sun, Moon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { useTheme } from "@/components/ThemeProvider";
 import { TREASURY_ADDRESS } from "@/lib/web3";
 import { useChainContext } from "@/contexts/ChainContext";
 import ChainDropdown from "@/components/ChainDropdown";
+import CommandPalette from "@/components/CommandPalette";
+import type { Partner } from "@/lib/partners";
+
+interface HeaderProps {
+  partners?: Partner[];
+}
 
 const baseNavLinks = [
   { label: "Directory", href: "/" },
   { label: "Swap", href: "/swap" },
   { label: "AI Agents", href: "/ai-agents" },
   { label: "Map", href: "/map" },
+  { label: "Leaderboard", href: "/leaderboard" },
   { label: "My Listings", href: "/my-listings" },
   { label: "Insights", href: "/insights" },
 ];
 
-const Header = () => {
+const Header = ({ partners = [] }: HeaderProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
   const location = useLocation();
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
@@ -42,10 +50,23 @@ const Header = () => {
     open(isConnected ? { view: "Account" } : undefined);
   };
 
-  
+  // ⌘K / Ctrl+K global shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/40">
+    <>
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         <Link to="/" className="flex items-center gap-2.5">
           <div className="flex items-baseline gap-1">
@@ -75,6 +96,17 @@ const Header = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
+          {/* ⌘K search trigger */}
+          <button
+            onClick={() => setCmdOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground rounded-lg border border-border bg-card hover:bg-muted transition-colors"
+            aria-label="Open search"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>Search</span>
+            <kbd className="ml-1 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded hidden xl:inline">⌘K</kbd>
+          </button>
+
           <ChainDropdown chainId={chainId} onChange={setChainId} />
 
           <button
@@ -157,7 +189,9 @@ const Header = () => {
           </div>
         </div>
       )}
-    </header>
+      </header>
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} partners={partners} />
+    </>
   );
 };
 

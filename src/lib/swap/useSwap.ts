@@ -293,6 +293,7 @@ export function useSwap({
     setSwapState("idle");
     setTxHash(undefined);
     setErrorMessage("");
+    setLastCalldata(null);
   }, []);
 
   return { swapState, txHash, errorMessage, needsApproval, approve, swap, reset, lastCalldata, calldataHistory };

@@ -9,21 +9,25 @@ import { Button } from "@/components/ui/button";
 import { fetchPartners, type Partner } from "@/lib/partners";
 
 // Region → approximate lat/lng for visual map placement
+// Keys match REGIONS in lib/partners.ts exactly
 const regionCoords: Record<string, { lat: number; lng: number }> = {
   Global: { lat: 20, lng: 0 },
   "North America": { lat: 40, lng: -100 },
-  "Latin America": { lat: -15, lng: -60 },
+  "South America": { lat: -15, lng: -60 },
   Europe: { lat: 50, lng: 10 },
   Africa: { lat: 5, lng: 20 },
-  "Asia Pacific": { lat: 25, lng: 105 },
-  "Middle East": { lat: 28, lng: 45 },
-  "Emerging Markets": { lat: 0, lng: 30 },
+  Asia: { lat: 25, lng: 105 },
+  Other: { lat: -30, lng: 140 },
 };
 
 const regionFlags: Record<string, string> = {
-  Global: "🌍", "North America": "🇺🇸", "Latin America": "🌎",
-  Europe: "🇪🇺", Africa: "🌍", "Asia Pacific": "🌏",
-  "Middle East": "🕌", "Emerging Markets": "🚀",
+  Global: "🌍",
+  "North America": "🇺🇸",
+  "South America": "🌎",
+  Europe: "🇪🇺",
+  Africa: "🌍",
+  Asia: "🌏",
+  Other: "📍",
 };
 
 const MapView = () => {

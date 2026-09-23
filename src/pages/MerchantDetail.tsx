@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BadgeCheck, ExternalLink, ArrowLeft, Copy, Check } from "lucide-react";
+import { BadgeCheck, ExternalLink, ArrowLeft, Copy, Check, Share2, Send, Trophy } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Partner } from "@/lib/partners";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const chainColors: Record<string, string> = {
   Ethereum: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
@@ -70,6 +71,30 @@ const MerchantDetail = () => {
         setLoading(false);
       });
   }, [id]);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: partner?.name, url });
+      } catch {
+        // user cancelled or browser denied — fall back to copy
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Link copied!", description: url });
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied!", description: url });
+    }
+  };
+
+  const handleShareX = () => {
+    const text = encodeURIComponent(
+      `Check out ${partner?.name} on USDC Directory — accepting USDC worldwide 💵`
+    );
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, "_blank", "noopener");
+  };
 
   const handleCopyAddress = () => {
     return;
@@ -235,7 +260,6 @@ const MerchantDetail = () => {
           <div className="space-y-4">
             {/* Actions */}
             <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-              {/* Visit Site — shown whenever website URL exists */}
               {partner?.website && partner.website.trim() !== "" && (
                 <Button
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
@@ -246,14 +270,65 @@ const MerchantDetail = () => {
                   </a>
                 </Button>
               )}
+
+              {/* Pay with USDC */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Send className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-semibold text-foreground">Pay with USDC</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Send USDC directly to this merchant via Base or Arc Mainnet.
+                </p>
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground font-semibold rounded-lg"
+                  onClick={() => {
+                    window.location.href = `/swap?to=${encodeURIComponent(partner?.name || "")}`;
+                  }}
+                >
+                  Send USDC →
+                </Button>
+              </div>
+
+              {/* Share */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1.5"
+                  onClick={handleShare}
+                >
+                  <Share2 className="h-3.5 w-3.5" /> Share
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 gap-1.5"
+                      onClick={handleShareX}
+                    >
+                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                      Post
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Share on X (Twitter)</TooltipContent>
+                </Tooltip>
+              </div>
             </div>
 
             {/* Score card */}
             {score > 0 && (
               <div className="bg-card border border-border rounded-xl p-5">
-                <h2 className="font-semibold text-foreground mb-3 text-sm">USDC Score</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-semibold text-foreground text-sm">USDC Score</h2>
+                  <Link to="/leaderboard" className="text-xs text-primary hover:underline flex items-center gap-1">
+                    <Trophy className="h-3 w-3" /> Leaderboard
+                  </Link>
+                </div>
                 <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-16">
+                  <div className="relative w-16 h-16 flex-shrink-0">
                     <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
                       <circle cx="32" cy="32" r="28" fill="none" strokeWidth="4" className="stroke-muted" />
                       <circle
@@ -271,8 +346,11 @@ const MerchantDetail = () => {
                     <p className="font-medium text-foreground mb-0.5">
                       {score >= 80 ? "Excellent" : score >= 60 ? "Good" : "Building"}
                     </p>
-                    <p>Integration strength across the USDC ecosystem.</p>
+                    <p>USDC integration strength across 5 dimensions.</p>
                   </div>
+                </div>
+                <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${score}%` }} />
                 </div>
               </div>
             )}
@@ -291,6 +369,14 @@ const MerchantDetail = () => {
                     {new Date(partner.created_at).toLocaleDateString()}
                   </dd>
                 </div>
+                {partner.verified && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Status</dt>
+                    <dd className="text-primary font-medium flex items-center gap-1">
+                      <BadgeCheck className="h-3.5 w-3.5" /> Verified
+                    </dd>
+                  </div>
+                )}
               </dl>
             </div>
           </div>

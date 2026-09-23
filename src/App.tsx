@@ -27,6 +27,7 @@ const Swap = lazy(() => import("./pages/Swap.tsx"));
 const AdminFeatured = lazy(() => import("./pages/AdminFeatured.tsx"));
 const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 const DeploymentStatus = lazy(() => import("./pages/DeploymentStatus.tsx"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const RouteFallback = () => (
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/admin/featured" element={<AdminFeatured />} />
               <Route path="/admin/listings" element={<AdminListings />} />
               <Route path="/deployment-status" element={<DeploymentStatus />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

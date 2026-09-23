@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import HeroSection from "@/components/HeroSection";
 import PartnerCard from "@/components/PartnerCard";
 import { fetchPartners, type Partner } from "@/lib/partners";
+import USDCStatsTicker from "@/components/USDCStatsTicker";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -105,7 +106,8 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO path="/" />
-      <Header />
+      <Header partners={uniquePartners} />
+      <USDCStatsTicker partnerCount={uniquePartners.length} />
       <HeroSection
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -147,6 +149,7 @@ const Index = () => {
               onToggleRegion={toggleRegion}
               selectedNetworks={selectedNetworks}
               onToggleNetwork={toggleNetwork}
+              counts={categoryCounts}
             />
           </aside>
 
