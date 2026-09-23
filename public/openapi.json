@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "USDC Directory Agent API",
-    "version": "1.1.0",
-    "description": "Self-list on any chain — EVM, Solana, Sui, or Near — for 5 USDC. Native x402 (gasless EIP-3009) on Base. All other chains: pay USDC to treasury and submit tx hash via X-Payment-TxHash + X-Payment-Chain.",
+    "version": "1.2.0",
+    "description": "Self-list on any chain (EVM, Solana, Sui, or Near) for 1 USDC. Native x402 gasless path on Arc and Base. All other chains: pay USDC to treasury and submit tx hash via X-Payment-TxHash + X-Payment-Chain.",
     "contact": { "name": "USDC Directory", "email": "agents@usdc.directory", "url": "https://usdc.directory" }
   },
   "servers": [
@@ -16,7 +16,8 @@
     "solana_treasury": "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be",
     "sui_treasury": "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979",
     "near_treasury": "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171",
-    "supported_chains": ["base","ethereum","arbitrum","optimism","polygon","avalanche","bnb","linea","monad","solana","sui","near"]
+    "supported_chains": ["arc","base","ethereum","arbitrum","optimism","polygon","avalanche","bnb","linea","monad","solana","sui","near"],
+    "x402_gasless_chains": ["arc","base","ethereum","arbitrum","optimism","polygon","avalanche"]
   },
   "paths": {
     "/agents": {
@@ -25,12 +26,12 @@
         "x-x402-price": { "amount": "1000", "asset": "USDC", "decimals": 6 },
         "responses": {
           "200": { "description": "OK" },
-          "402": { "description": "Payment required — see X-PAYMENT challenge body" }
+          "402": { "description": "Payment required" }
         }
       },
       "post": {
         "summary": "Self-list a new AI agent (any chain)",
-        "x-x402-price": { "amount": "5000000", "asset": "USDC", "decimals": 6 },
+        "x-x402-price": { "amount": "1000000", "asset": "USDC", "decimals": 6 },
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": {
@@ -38,13 +39,30 @@
             "required": ["name", "wallet_address", "description"],
             "properties": {
               "name": { "type": "string", "maxLength": 100 },
-              "wallet_address": { "type": "string", "pattern": "^0x[a-fA-F0-9]{40}$" },
+              "wallet_address": { "type": "string", "description": "EVM/Solana/Sui/Near wallet address of the agent" },
               "description": { "type": "string", "maxLength": 300 },
-              "logo_url": { "type": "string", "format": "uri" }
+              "logo_url": { "type": "string", "format": "uri" },
+              "website": { "type": "string", "format": "uri", "maxLength": 255 },
+              "networks": { "type": "array", "items": { "type": "string" }, "maxItems": 10, "description": "Chains the agent operates on" },
+              "capabilities": { "type": "array", "items": { "type": "string" }, "maxItems": 20, "description": "Agent capability tags, e.g. payments, search, trading" }
             }
           } } }
         },
         "responses": { "201": { "description": "Created" }, "402": { "description": "Payment required" } }
+      }
+    },
+    "/agents/search": {
+      "get": {
+        "summary": "Search AI agents by name or description",
+        "x-x402-price": { "amount": "1000", "asset": "USDC", "decimals": 6 },
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Search query (matches name and description)" }
+        ],
+        "responses": {
+          "200": { "description": "OK" },
+          "400": { "description": "q param required" },
+          "402": { "description": "Payment required" }
+        }
       }
     },
     "/agents/{id}": {

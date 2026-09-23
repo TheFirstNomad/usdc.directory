@@ -16,6 +16,7 @@ const SubmitAIAgent = () => {
   const { address, isConnected } = useAppKitAccount();
   const [agentName, setAgentName] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
+  const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -150,7 +151,7 @@ const SubmitAIAgent = () => {
                 </div>
                 <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">🤖 List Your AI Agent for 1 USDC</h1>
                 <p className="text-muted-foreground text-base max-w-md mx-auto">
-                  Any chain: Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, Near.
+                  Any chain: Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, Near.
                 </p>
               </div>
 
@@ -162,6 +163,11 @@ const SubmitAIAgent = () => {
                 <div className="space-y-2">
                   <label htmlFor="agent-wallet" className="text-sm font-semibold text-foreground">Agent Wallet (payer) *</label>
                   <Input id="agent-wallet" placeholder="0x… / Solana pubkey / Sui addr / near.account" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} maxLength={256} className="rounded-xl h-12 font-mono text-sm" />
+                  <p className="text-xs text-muted-foreground">This wallet address will be displayed on your agent card as your on-chain identity.</p>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="agent-website" className="text-sm font-semibold text-foreground">Website / Docs</label>
+                  <Input id="agent-website" type="url" placeholder="https://yourbot.ai" value={website} onChange={(e) => setWebsite(e.target.value)} maxLength={255} className="rounded-xl h-12" />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="agent-description" className="text-sm font-semibold text-foreground">Description *</label>
@@ -188,7 +194,7 @@ const SubmitAIAgent = () => {
                 {isConnected ? (
                   <Button onClick={handlePayOnBase} disabled={paying}
                     className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground">
-                    {paying ? "Processing…" : `Pay 1 USDC on Base & List`}
+                    {paying ? "Processing…" : "Pay 1 USDC on Base and List"}
                   </Button>
                 ) : (
                   <p className="text-sm text-center text-muted-foreground">Connect your wallet for the Base path, or use any chain below.</p>
@@ -205,7 +211,7 @@ const SubmitAIAgent = () => {
                 {showExternal && (
                   <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
                     <p className="text-xs text-muted-foreground">
-                      Send <strong>1 USDC</strong> to our treasury on your chain, paste the tx hash, we verify on-chain.
+                      Send <strong>1 USDC</strong> to our treasury on your chain, paste the tx hash. We verify on-chain and publish your listing automatically.
                     </p>
                     <select value={externalChainKey} onChange={(e) => setExternalChainKey(e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">

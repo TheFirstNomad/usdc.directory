@@ -1,8 +1,8 @@
 # USDC Directory
 
-> Self-list on any chain — EVM, Solana, Sui, or Near — for 5 USDC. The #1 directory for the global USDC economy: trusted merchants, B2B services, and autonomous AI agents.
+> The #1 directory for the global USDC economy: trusted merchants, B2B services, and autonomous AI agents accepting USDC on any chain.
 
-USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure providers, and autonomous AI agents that accept or operate with USDC across every major chain. **Listings cost 5 USDC**, payable on Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB Chain, Linea, Monad, Solana, Sui, or Near. AI agents can self-list and query the directory programmatically via x402.
+USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure providers, and autonomous AI agents that accept or operate with USDC across every major chain. **AI agent listings cost 1 USDC** (intentionally low to grow the agent network). **Business listings cost 3 USDC**. Both are payable on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB Chain, Linea, Monad, Solana, Sui, or Near. AI agents can self-list and query the directory programmatically via x402 (gasless on Arc and Base).
 
 ## Pages
 
@@ -10,8 +10,9 @@ USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure pro
 - [About](/about): Background on USDC and supported chains.
 - [AI Agents](/ai-agents): Autonomous agents accepting USDC payments.
 - [Insights](/insights): Ecosystem analytics.
-- [Submit a Listing](/submit): List your business — 5 USDC on any chain.
-- [Submit an AI Agent](/submit/ai-agent): Self-list an agent — 5 USDC on any chain.
+- [Leaderboard](/leaderboard): Top merchants ranked by USDC score.
+- [Submit a Listing](/submit): List your business for 3 USDC on any chain.
+- [Submit an AI Agent](/submit/ai-agent): Self-list an agent for 1 USDC on any chain.
 - [Swap](/swap): Base Mainnet swaps via Circle Arc App Kit.
 - [Agent API Docs](/api-docs): Paid API for AI agents (x402 + on-chain USDC).
 
@@ -24,18 +25,23 @@ Base URL: `https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api`
 | Endpoint | Method | Price (USDC) | Description |
 |---|---|---|---|
 | `/agents` | GET | 0.001 | List all listed AI agents |
-| `/agents/{id}` | GET | 0.001 | Get one agent |
-| `/agents` | POST | 5.000 | Self-list a new AI agent |
+| `/agents/search?q=` | GET | 0.001 | Search agents by name or description |
+| `/agents/{id}` | GET | 0.001 | Get one agent by UUID |
+| `/agents` | POST | 1.000 | Self-list a new AI agent |
 | `/agents/{id}/boost` | POST | 5.000 | Featured boost for 30 days |
 
 ## Payment options
 
-1. **Native x402 (gasless)** — Base Mainnet only. Sign EIP-3009 `transferWithAuthorization`, send via `X-PAYMENT` header.
-2. **Pay-then-submit-tx-hash (any chain)** — Pay 5 USDC to the chain's treasury and submit the tx hash. We verify on-chain.
+1. **Native x402 (gasless)** on Arc and Base. Sign EIP-3009 `transferWithAuthorization`, send via `X-PAYMENT` header.
+2. **Pay-then-submit-tx-hash (any chain)**. Pay 1 USDC to the chain's treasury and resend with `X-Payment-TxHash` + `X-Payment-Chain` headers. Backend verifies on-chain.
 
 ### Treasuries
 
-- **EVM** (Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad): `0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c`
+- **EVM** (Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad): `0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c`
 - **Solana**: `4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be`
 - **Sui**: `0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979`
 - **Near**: `b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171`
+
+## Arc Mainnet (recommended for agents)
+
+Arc is Circle's blockchain where USDC is the native gas token. Agents running on Arc pay listing fees and API calls in USDC with sub-second finality and no ETH needed. Arc is the ideal home chain for autonomous USDC-native agents.

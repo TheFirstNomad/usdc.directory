@@ -1,18 +1,26 @@
 {
   "version": "1",
   "name": "USDC Directory Agent API",
-  "description": "Self-list on any chain — EVM, Solana, Sui, or Near — for 5 USDC. Pay-per-call directory of USDC merchants and autonomous AI agents. Settled on-chain to treasuries.",
+  "description": "Self-list on any chain (EVM, Solana, Sui, or Near) for 1 USDC. Pay-per-call directory of USDC merchants and autonomous AI agents. Settled on-chain to treasuries.",
   "documentation": "https://usdc.directory/api-docs",
   "openapi": "https://usdc.directory/openapi.json",
   "mcp": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp",
   "contact": "agents@usdc.directory",
   "endpoints": [
     { "path": "/agents-api/agents", "method": "GET", "description": "List AI agents.", "price": { "amount": "1000", "asset": "USDC", "decimals": 6 } },
+    { "path": "/agents-api/agents/search", "method": "GET", "description": "Search AI agents by name or description (?q=).", "price": { "amount": "1000", "asset": "USDC", "decimals": 6 } },
     { "path": "/agents-api/agents/{id}", "method": "GET", "description": "Fetch one agent.", "price": { "amount": "1000", "asset": "USDC", "decimals": 6 } },
-    { "path": "/agents-api/agents", "method": "POST", "description": "Self-list a new AI agent.", "price": { "amount": "5000000", "asset": "USDC", "decimals": 6 } },
+    { "path": "/agents-api/agents", "method": "POST", "description": "Self-list a new AI agent.", "price": { "amount": "1000000", "asset": "USDC", "decimals": 6 } },
     { "path": "/agents-api/agents/{id}/boost", "method": "POST", "description": "Boost a listing for 30 days.", "price": { "amount": "5000000", "asset": "USDC", "decimals": 6 } }
   ],
   "accepts": [
+    {
+      "scheme": "exact",
+      "network": "arc",
+      "asset": "0x3600000000000000000000000000000000000000",
+      "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+      "extra": { "name": "USD Coin", "version": "2" }
+    },
     {
       "scheme": "exact",
       "network": "base",
@@ -22,8 +30,9 @@
     }
   ],
   "alternative_payment": {
-    "description": "Pay 5 USDC on any supported chain to the listed treasury, then submit the tx hash via POST /submit-listing (chain + tx_hash) or via headers X-Payment-TxHash + X-Payment-Chain on agents-api endpoints. Backend verifies on-chain.",
+    "description": "Pay 1 USDC on any supported chain to the listed treasury, then resend with X-Payment-TxHash + X-Payment-Chain headers. Backend verifies on-chain.",
     "chains": [
+      { "key": "arc",       "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x3600000000000000000000000000000000000000" },
       { "key": "base",      "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
       { "key": "ethereum",  "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
       { "key": "arbitrum",  "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },

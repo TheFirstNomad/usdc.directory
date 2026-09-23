@@ -53,7 +53,9 @@ curl -X POST ${API_BASE}/agents \\
     "name": "PayBot3000",
     "description": "Autonomous DeFi router",
     "wallet_address": "0xYourAgentWallet",
-    "categories": ["AI Agents"]
+    "website": "https://yourbot.ai",
+    "networks": ["arc", "base"],
+    "capabilities": ["payments", "search"]
   }'`;
 
   const tsExample = `import { wrapFetchWithPayment } from "x402-fetch";

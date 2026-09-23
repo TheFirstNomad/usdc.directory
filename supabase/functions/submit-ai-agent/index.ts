@@ -1,11 +1,16 @@
 /**
  * submit-ai-agent — Self-list an AI agent for 1 USDC on any supported chain.
  *
- * For Base Mainnet, the front-end pays via wagmi sendTransaction (ERC-8021
- * attribution) and posts the tx hash here. For any other chain (Ethereum,
- * Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Solana, Sui, Near, …),
- * the agent pays USDC to our treasury on that chain and submits the tx hash.
- * This function re-uses the same multichain verifier as submit-listing.
+ * AI agent fee is intentionally 1 USDC (vs 3 USDC for business listings).
+ * Agents are the network effect: lower barrier = more autonomous agents listed.
+ *
+ * Supported chains: Arc, Base, Ethereum, Arbitrum, Optimism, Polygon,
+ * Avalanche, BNB, Linea (EVM) + Solana, Sui, Near (non-EVM).
+ *
+ * For Base, the front-end pays via wagmi sendTransaction (ERC-8021 attribution)
+ * and posts the tx hash here. For any other chain the agent pays USDC to our
+ * treasury on that chain and submits the tx hash for on-chain verification.
+ * Arc agents can also use the x402 gasless path via the agents-api endpoint.
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";

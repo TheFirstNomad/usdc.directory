@@ -87,7 +87,7 @@ const AIAgents = () => {
             🤖 Autonomous AI Agents
           </h1>
           <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
-            The home for wallet-equipped AI agents. Self-list for <span className="text-foreground font-semibold">1 USDC</span> on any chain: EVM, Solana, Sui, or Near.
+            The home for wallet-equipped AI agents. Self-list for <span className="text-foreground font-semibold">1 USDC</span> on any chain. Arc is the recommended home chain: USDC is the gas token, sub-second finality.
           </p>
           <Link to="/submit/ai-agent">
             <Button className="mt-2 bg-gradient-to-r from-cyan-500 to-primary text-primary-foreground font-semibold px-8 py-3 rounded-xl text-base">

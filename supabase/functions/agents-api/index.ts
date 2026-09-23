@@ -98,8 +98,9 @@ const CHAINS: Record<number, ChainCfg> = {
 };
 
 // Chains where USDC supports EIP-3009 transferWithAuthorization (native x402 "exact" scheme).
+// Arc (5042) uses native USDC at 0x3600... which also supports transferWithAuthorization.
 // Other EVM chains use the alternative on-chain pay-then-submit-tx path.
-const X402_NATIVE_CHAIN_IDS = [8453, 1, 42161, 10, 137, 43114];
+const X402_NATIVE_CHAIN_IDS = [5042, 8453, 1, 42161, 10, 137, 43114];
 
 // Non-EVM treasuries — agents pay on their native chain, then submit tx hash.
 const NON_EVM_CHAINS = [
@@ -130,7 +131,7 @@ function buildAccepts(amount: bigint, resource: string) {
       network: c.network,
       maxAmountRequired: amount.toString(),
       resource,
-      description: "USDC Directory paid endpoint — 1 USDC self-listing",
+      description: "USDC Directory paid endpoint. 1 USDC self-listing.",
       mimeType: "application/json",
       payTo: TREASURY,
       maxTimeoutSeconds: 60,
@@ -514,28 +515,53 @@ Deno.serve(async (req) => {
       return json({ agent: data, paid: gate.paymentId }, 200, paymentResponseHeader(gate));
     }
 
+    // GET /agents/search?q= – free-text search (paid, same price as list)
+    if (req.method === "GET" && path === "/agents/search") {
+      const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents/search", "GET");
+      if (!gate.ok) return gate.response;
+      const q = url.searchParams.get("q")?.trim() ?? "";
+      if (!q) return json({ error: "q param required" }, 400);
+      const { data, error } = await supabase
+        .from("partners")
+        .select("id, name, description, website, logo_url, categories, region, networks, verified, boosted_until, wallet_address, created_at")
+        .contains("categories", ["AI Agents"])
+        .or(`name.ilike.%${q}%,description.ilike.%${q}%`)
+        .order("boosted_until", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) return json({ error: error.message }, 500);
+      return json({ q, count: data?.length ?? 0, agents: data, paid: gate.paymentId }, 200, paymentResponseHeader(gate));
+    }
+
     // POST /agents – self-list
     if (req.method === "POST" && path === "/agents") {
       const gate = await gatePayment(req, PRICE_LIST_AGENT, resource, supabase, "/agents", "POST");
       if (!gate.ok) return gate.response;
-      let body: { name?: string; wallet_address?: string; description?: string; logo_url?: string };
+      let body: { name?: string; wallet_address?: string; description?: string; logo_url?: string; website?: string; networks?: string[]; capabilities?: string[] };
       try { body = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
       const name = (body.name || "").trim();
       const wallet = (body.wallet_address || "").trim().toLowerCase();
       const description = (body.description || "").trim();
       const logo_url = body.logo_url ? String(body.logo_url).trim() : null;
+      const website = body.website ? String(body.website).trim().slice(0, 255) : null;
+      const networks = Array.isArray(body.networks) ? body.networks.slice(0, 10).map(String) : [];
+      const capabilities = Array.isArray(body.capabilities) ? body.capabilities.slice(0, 20).map(String) : [];
       if (!name || name.length > 100) return json({ error: "name required (<=100)" }, 400);
       if (!wallet || wallet.length > 256) return json({ error: "wallet_address required (<=256)" }, 400);
       if (!description || description.length > 300) return json({ error: "description required (<=300)" }, 400);
+
+      // Build categories: always include "AI Agents", add capability tags as subcategories
+      const categories = ["AI Agents", ...capabilities.map((c) => `AI: ${c}`).slice(0, 5)];
 
       const { data: partner, error } = await supabase
         .from("partners")
         .insert({
           name,
           description,
-          categories: ["AI Agents"],
+          website,
+          categories,
           region: "Global",
-          networks: [],
+          networks: networks.length > 0 ? networks : [gate.chain],
           wallet_address: wallet,
           logo_url,
           payment_status: "confirmed",

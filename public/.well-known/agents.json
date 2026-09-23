@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "USDC Directory",
   "name_for_model": "usdc_directory",
-  "description_for_human": "Self-list on any chain — EVM, Solana, Sui, or Near — for 5 USDC. Discover merchants and AI agents that accept USDC.",
-  "description_for_model": "Pay-per-call directory API. Self-listing costs 5 USDC on any supported chain (Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad, Solana, Sui, Near). Native x402 gasless path on Base. All other chains: pay USDC to treasury, then POST tx hash. GET /agents ($0.001), POST /agents (5 USDC), POST /agents/{id}/boost (5 USDC).",
+  "description_for_human": "Self-list on any chain (EVM, Solana, Sui, or Near) for 1 USDC. Discover merchants and AI agents that accept USDC.",
+  "description_for_model": "Pay-per-call directory API. AI agent self-listing costs 1 USDC on any supported chain (Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad, Solana, Sui, Near). Business listings cost 3 USDC. Native x402 gasless path on Arc and Base. All other chains: pay USDC to treasury, then POST tx hash. GET /agents ($0.001), GET /agents/search?q= ($0.001), POST /agents (1 USDC), POST /agents/{id}/boost (5 USDC).",
   "contact_email": "agents@usdc.directory",
   "legal_info_url": "https://usdc.directory/about",
   "logo_url": "https://usdc.directory/Circle_USDC_Logo.svg",
@@ -16,12 +16,16 @@
     "protocol": "x402",
     "version": "1",
     "manifest": "https://usdc.directory/.well-known/x402",
-    "listing_fee_usdc": "5",
+    "agent_listing_fee_usdc": "1",
+    "business_listing_fee_usdc": "3",
+    "boost_fee_usdc": "5",
+    "api_call_fee_usdc": "0.001",
     "evm_treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
     "solana_treasury": "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be",
     "sui_treasury": "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979",
     "near_treasury": "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171",
-    "supported_chains": ["base","ethereum","arbitrum","optimism","polygon","avalanche","bnb","linea","monad","solana","sui","near"]
+    "supported_chains": ["arc","base","ethereum","arbitrum","optimism","polygon","avalanche","bnb","linea","monad","solana","sui","near"],
+    "x402_gasless_chains": ["arc","base","ethereum","arbitrum","optimism","polygon","avalanche"]
   },
-  "capabilities": ["discover_agents", "self_list_agent", "boost_listing", "search_merchants", "multichain_payments"]
+  "capabilities": ["discover_agents", "search_agents", "self_list_agent", "boost_listing", "search_merchants", "multichain_payments"]
 }
