@@ -216,7 +216,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       <div className="space-y-4 text-center">
         <h3 className="text-xl font-bold text-foreground">{fee} USDC</h3>
         <p className="text-sm text-muted-foreground">
-          {type === "listing" ? "One-time listing fee" : "One-time update fee"} — pay on Base or any chain
+          {type === "listing" ? "One-time listing fee" : "One-time update fee"} — pay on {chainLabel} or any chain
         </p>
         <Button onClick={() => open()}
           className="w-full bg-gradient-to-r from-primary to-[hsl(var(--accent))] text-primary-foreground font-semibold py-6 rounded-xl text-base">
@@ -232,13 +232,12 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     );
   }
 
-  const walletOnBase = walletChainId === BASE_CHAIN_ID;
-  const needsSwitch = !walletOnBase;
+  const needsSwitch = walletChainId !== activeChainId;
 
   const handleSwitch = async () => {
     try {
-      await switchChainAsync({ chainId: BASE_CHAIN_ID });
-      toast({ title: "Switched to Base Mainnet" });
+      await switchChainAsync({ chainId: activeChainId });
+      toast({ title: `Switched to ${chainLabel}` });
     } catch (e: unknown) {
       toast({ title: "Network switch failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
     }
