@@ -220,7 +220,7 @@ const Swap = () => {
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
                 <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  Swaps on Arc Mainnet are routed through Circle App Kit — USDC pays the gas.
+                  Swaps on Arc Mainnet are routed through Circle App Kit. USDC pays the gas.
                 </p>
               </div>
             </div>

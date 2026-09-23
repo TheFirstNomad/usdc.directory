@@ -144,7 +144,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
         setError(`Payment confirmed on-chain but listing save failed: ${message}. Save your tx hash: ${hash} and contact support.`);
         toast({
-          title: "Listing save failed — save your tx hash!",
+          title: "Listing save failed. Save your tx hash!",
           description: `Tx: ${hash.slice(0, 16)}… | ${message}`,
           variant: "destructive",
         });
@@ -219,7 +219,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       <div className="space-y-4 text-center">
         <h3 className="text-xl font-bold text-foreground">{fee} USDC</h3>
         <p className="text-sm text-muted-foreground">
-          {type === "listing" ? "One-time listing fee" : "One-time update fee"} — pay on {chainLabel} or any chain
+          {type === "listing" ? "One-time listing fee" : "One-time update fee"}: pay on {chainLabel} or any chain
         </p>
         <Button onClick={() => open()}
           className="w-full bg-gradient-to-r from-primary to-[hsl(var(--accent))] text-primary-foreground font-semibold py-6 rounded-xl text-base">
@@ -252,7 +252,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3 text-left">
         <div className="flex items-center gap-2">
           <Globe2 className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold text-foreground">Pay on any chain — paste tx hash</span>
+          <span className="text-sm font-semibold text-foreground">Pay on any chain / paste tx hash</span>
         </div>
         <p className="text-xs text-muted-foreground">
           Send <strong>{fee} USDC</strong> to our treasury on your chain, then paste the transaction hash. We verify on-chain and publish your listing automatically.
@@ -322,7 +322,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
           <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <p className="text-xs text-foreground/90">
-            <strong>Arc Mainnet</strong> is live — USDC is the gas token, so listing fees settle in seconds.
+            <strong>Arc Mainnet</strong> is live. USDC is the gas token, so listing fees settle in seconds.
           </p>
         </div>
       )}

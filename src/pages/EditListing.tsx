@@ -177,7 +177,7 @@ const EditListing = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title={`Edit ${partner.name} — 1 USDC`} description={`Update your listing for ${partner.name} on USDC Directory.`} path={`/edit/${id}`} />
+      <SEO title={`Edit ${partner.name} (1 USDC)`} description={`Update your listing for ${partner.name} on USDC Directory.`} path={`/edit/${id}`} />
       <Header />
 
       <section className="bg-gradient-to-b from-primary/5 to-background py-14 px-6">

@@ -10,7 +10,7 @@ const Footer = () => {
               <span className="font-semibold text-xl tracking-tight text-foreground">Directory</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed mb-4">
-              The #1 everyday directory for USDC worldwide — merchants, B2B services, and AI agents accepting the world's leading digital dollar.
+              The #1 everyday directory for USDC worldwide. Merchants, B2B services, and AI agents accepting the world's leading digital dollar.
             </p>
             <div className="flex items-center gap-2">
               <a

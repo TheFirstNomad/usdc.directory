@@ -57,7 +57,7 @@ const MapView = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="World Map — USDC Merchants Worldwide"
+        title="World Map: USDC Merchants Worldwide"
         description="Explore USDC-accepting merchants across every region on our interactive world map."
         path="/map"
       />
@@ -170,7 +170,7 @@ const MapView = () => {
             animate={{ opacity: 1, y: 0 }}
           >
             <h2 className="text-lg font-bold text-foreground mb-4">
-              {regionFlags[selectedRegion]} {selectedRegion} — {selectedPartners.length} Merchants
+              {regionFlags[selectedRegion]} {selectedRegion}: {selectedPartners.length} Merchants
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {selectedPartners.map((p) => (

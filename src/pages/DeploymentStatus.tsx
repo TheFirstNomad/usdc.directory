@@ -106,7 +106,7 @@ export default function DeploymentStatus() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SEO title="Deployment Status — USDC Directory" description="Live mount-status check for usdc.directory" />
+      <SEO title="Deployment Status: USDC Directory" description="Live mount-status check for usdc.directory" />
       <Header />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-4xl">
         <div className="flex items-center justify-between mb-8">

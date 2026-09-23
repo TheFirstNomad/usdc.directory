@@ -24,7 +24,7 @@ const useCases = [
   },
   {
     title: "Merchant Payments",
-    desc: "Accept USDC at point-of-sale or online — convert to local currency instantly.",
+    desc: "Accept USDC at point-of-sale or online, then convert to local currency instantly.",
     emoji: "🛒",
   },
   {
@@ -49,7 +49,7 @@ const About = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="About USDC"
-        description="Learn about USDC — the world's leading regulated digital dollar, backed 1:1 by cash and U.S. Treasuries, issued by Circle."
+        description="Learn about USDC, the world's leading regulated digital dollar, backed 1:1 by cash and U.S. Treasuries, issued by Circle."
         path="/about"
         jsonLd={{
           "@context": "https://schema.org",

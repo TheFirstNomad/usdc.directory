@@ -63,7 +63,7 @@ const getReadableSwapError = (error: unknown) => {
     return "Wallet provider unavailable. Please open your wallet and try again.";
   }
   if (normalized.includes("failed to fetch") || normalized.includes("networkerror") || normalized.includes("cors")) {
-    return "Swap service unavailable — network blocked the request. Disable any ad-blocker for this site and try again.";
+    return "Swap service unavailable. The network blocked the request. Disable any ad-blocker for this site and try again.";
   }
   if (normalized.includes("swap service") || normalized.includes("temporarily unavailable") || normalized.includes("authorization failed") || normalized.includes("too many swap")) {
     return normalizedMessage;

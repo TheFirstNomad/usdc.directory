@@ -130,10 +130,21 @@ export async function createViemAdapterFromWallet(passedProvider?: unknown) {
     );
   }
 
-  // Ensure the wallet is unlocked
-  await (provider as { request: (args: { method: string }) => Promise<unknown> }).request({
-    method: "eth_requestAccounts",
-  });
+  // Request accounts only if we don't already have access (avoids repeated popups)
+  try {
+    const accounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> }).request({
+      method: "eth_accounts",
+    }) as string[];
+    if (!accounts || accounts.length === 0) {
+      await (provider as { request: (args: { method: string }) => Promise<unknown> }).request({
+        method: "eth_requestAccounts",
+      });
+    }
+  } catch {
+    await (provider as { request: (args: { method: string }) => Promise<unknown> }).request({
+      method: "eth_requestAccounts",
+    });
+  }
 
   return await createViemAdapterFromProvider({
     provider,

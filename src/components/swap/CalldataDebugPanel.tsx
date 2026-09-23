@@ -142,7 +142,7 @@ export default function CalldataDebugPanel({ data, history = [] }: Props) {
           />
 
           <p className="text-[10px] text-muted-foreground/80 leading-relaxed pt-1">
-            Paste the suffix above into BaseScan's transaction <span className="font-semibold">Input Data</span> field — it must appear at the end of the calldata to confirm builder attribution.
+            Paste the suffix above into BaseScan's transaction <span className="font-semibold">Input Data</span> field. It must appear at the end of the calldata to confirm builder attribution.
           </p>
         </div>
       )}

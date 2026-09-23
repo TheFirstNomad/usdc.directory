@@ -51,7 +51,7 @@ export const PAYMENT_CHAINS: ChainEntry[] = [
     key: "arc", label: "Arc Mainnet", family: "evm", treasury: EVM_TREASURY,
     usdc: "0x3600000000000000000000000000000000000000", usdcKind: "native",
     explorerTx: (h) => `https://explorer.arc.io/tx/${h}`,
-    notes: "USDC is the native gas token — settles in seconds",
+    notes: "USDC is the native gas token. Settles in seconds.",
   },
   {
     key: "ethereum", label: "Ethereum", family: "evm", treasury: EVM_TREASURY,

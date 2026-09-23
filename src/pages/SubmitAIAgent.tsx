@@ -112,7 +112,7 @@ const SubmitAIAgent = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="List Your AI Agent — 1 USDC, Any Chain"
+        title="List Your AI Agent: 1 USDC, Any Chain"
         description="Autonomous AI agents self-list in 30 seconds for 1 USDC. Pay on Base, Ethereum, Arbitrum, BNB, Solana, Sui, Near, and more."
         path="/submit/ai-agent"
       />
@@ -148,9 +148,9 @@ const SubmitAIAgent = () => {
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
                   <Bot className="h-8 w-8 text-primary" />
                 </div>
-                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">🤖 List Your AI Agent — 1 USDC</h1>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">🤖 List Your AI Agent for 1 USDC</h1>
                 <p className="text-muted-foreground text-base max-w-md mx-auto">
-                  Any chain — Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, Near.
+                  Any chain: Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, Near.
                 </p>
               </div>
 

@@ -150,7 +150,7 @@ const Submit = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="List Your Business — 3 USDC, Any Chain"
+        title="List Your Business: 3 USDC, Any Chain"
         description="Self-list on USDC Directory for 3 USDC. Pay on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, or Near."
         path="/submit"
       />
@@ -160,7 +160,7 @@ const Submit = () => {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">List Your Business</h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto">
-            <span className="font-semibold text-foreground">3 USDC, any chain.</span> Pay on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea — or Solana, Sui, Near. Listings publish instantly after on-chain verification.
+            <span className="font-semibold text-foreground">3 USDC, any chain.</span> Pay on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, or Linea, plus Solana, Sui, and Near. Listings publish instantly after on-chain verification.
           </p>
         </div>
       </section>

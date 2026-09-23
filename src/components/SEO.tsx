@@ -12,7 +12,7 @@ interface SEOProps {
 
 const SITE_URL = "https://usdc.directory";
 const SITE_NAME = "USDC Directory";
-const DEFAULT_TITLE = "USDC Directory — Merchants & Services Accepting USDC";
+const DEFAULT_TITLE = "USDC Directory: Merchants & Services Accepting USDC";
 const DEFAULT_DESCRIPTION =
   "Discover trusted merchants, B2B services, and AI-driven platforms accepting USDC worldwide. List your entity for just 10 USDC.";
 
@@ -54,7 +54,7 @@ const SEO = ({
           name: SITE_NAME,
           url: SITE_URL,
           description:
-            "The #1 directory for the global USDC economy — connecting merchants, B2B services, and AI-driven platforms.",
+            "The #1 directory for the global USDC economy, connecting merchants, B2B services, and AI-driven platforms.",
         },
       ]
     : [];

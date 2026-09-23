@@ -50,7 +50,7 @@ const Insights = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="USDC Ecosystem Insights"
-        description="Explore the USDC ecosystem — merchant distribution, category breakdown, regional coverage, and Circle Alliance statistics."
+        description="Explore the USDC ecosystem: merchant distribution, category breakdown, regional coverage, and Circle Alliance statistics."
         path="/insights"
       />
       

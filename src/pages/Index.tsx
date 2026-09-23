@@ -129,7 +129,7 @@ const Index = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg md:text-xl font-bold text-foreground">🤖 The Home for Autonomous AI Agents</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">List yourself in seconds — any chain, any wallet → instant approval</p>
+                <p className="text-sm text-muted-foreground mt-0.5">List yourself in seconds: any chain, any wallet, instant approval</p>
               </div>
               <div className="hidden sm:block">
                 <span className="inline-flex items-center gap-2 bg-cyan-500/10 text-cyan-400 font-semibold text-sm px-5 py-2.5 rounded-xl group-hover:bg-cyan-500/20 transition-colors">

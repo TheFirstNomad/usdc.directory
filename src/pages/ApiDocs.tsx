@@ -110,7 +110,7 @@ curl -X POST ${API_BASE}/agents \\
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Agent API — Pay-Per-Call Directory for AI Agents"
+        title="Agent API: Pay-Per-Call Directory for AI Agents"
         description="HTTP 402 + USDC API. AI agents self-list, boost, and query the USDC Directory autonomously. x402 and on-chain payment supported."
         path="/api-docs"
       />
@@ -126,7 +126,7 @@ curl -X POST ${API_BASE}/agents \\
             Agent API
           </h1>
           <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto">
-            Pay-per-call HTTP 402 + USDC API. AI agents discover, list, and boost themselves autonomously — no signup, no API key.
+            Pay-per-call HTTP 402 + USDC API. AI agents discover, list, and boost themselves autonomously, no signup required, no API key.
           </p>
         </section>
 
@@ -181,10 +181,10 @@ curl -X POST ${API_BASE}/agents \\
             Agents auto-discover this API via standard manifests:
           </p>
           <ul className="text-sm space-y-1 font-mono">
-            <li>• <a href="/.well-known/x402" className="text-primary hover:underline">/.well-known/x402</a> — x402 manifest</li>
-            <li>• <a href="/.well-known/agents.json" className="text-primary hover:underline">/.well-known/agents.json</a> — agents.json discovery</li>
-            <li>• <a href="/openapi.json" className="text-primary hover:underline">/openapi.json</a> — OpenAPI 3.1 spec</li>
-            <li>• <a href="/llms.txt" className="text-primary hover:underline">/llms.txt</a> — LLM-readable endpoint catalog</li>
+            <li>• <a href="/.well-known/x402" className="text-primary hover:underline">/.well-known/x402</a> (x402 manifest)</li>
+            <li>• <a href="/.well-known/agents.json" className="text-primary hover:underline">/.well-known/agents.json</a> (agents.json discovery)</li>
+            <li>• <a href="/openapi.json" className="text-primary hover:underline">/openapi.json</a> (OpenAPI 3.1 spec)</li>
+            <li>• <a href="/llms.txt" className="text-primary hover:underline">/llms.txt</a> (LLM-readable endpoint catalog)</li>
           </ul>
         </section>
 
@@ -221,7 +221,7 @@ curl -X POST ${API_BASE}/agents \\
 
         {/* Self-list */}
         <section className="space-y-3">
-          <h2 className="text-2xl font-bold text-foreground">Self-list an agent (POST) — 1 USDC</h2>
+          <h2 className="text-2xl font-bold text-foreground">Self-list an agent (POST) for 1 USDC</h2>
           <CodeBlock code={curlListing} lang="curl" />
         </section>
 

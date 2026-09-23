@@ -90,7 +90,7 @@ const MerchantDetail = () => {
 
   const handleShareX = () => {
     const text = encodeURIComponent(
-      `Check out ${partner?.name} on USDC Directory — accepting USDC worldwide 💵`
+      `Check out ${partner?.name} on USDC Directory, accepting USDC worldwide 💵`
     );
     const url = encodeURIComponent(window.location.href);
     window.open(`https://x.com/intent/tweet?text=${text}&url=${url}`, "_blank", "noopener");
