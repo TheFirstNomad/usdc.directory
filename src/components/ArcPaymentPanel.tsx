@@ -18,6 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAppKitAccount, useAppKit } from "@reown/appkit/react";
 import { useSendTransaction, usePublicClient, useChainId, useSwitchChain } from "wagmi";
+import { encodeFunctionData, parseAbi } from "viem";
 import {
   getExplorerUrl, getExplorerName, getChainLabel, type PaymentChainId,
 } from "@/lib/arcAppKit";
@@ -26,7 +27,16 @@ import {
   BASE_CHAIN_ID, BASE_USDC_ADDRESS, type BasePaymentDebug,
 } from "@/lib/basePayment";
 import { useChainContext } from "@/contexts/ChainContext";
-import { PAYMENT_CHAINS, LISTING_FEE_USDC, getChain } from "@/lib/multichainPayments";
+import {
+  PAYMENT_CHAINS, LISTING_FEE_USDC, LISTING_FEE_BASE_UNITS, EVM_TREASURY, getChain,
+} from "@/lib/multichainPayments";
+
+// ── Arc Mainnet listing payment constants ──
+const ARC_CHAIN_ID = 5042 as const;
+const ARC_USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as const;
+const ERC20_TRANSFER_ABI = parseAbi([
+  "function transfer(address to, uint256 amount) returns (bool)",
+]);
 
 interface ArcPaymentPanelProps {
   type: "listing" | "update";
