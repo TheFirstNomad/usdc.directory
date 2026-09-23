@@ -14,9 +14,9 @@ import { useAppKitAccount } from "@reown/appkit/react";
 
 const STEPS = [
   { title: "Business Info", description: "Tell us about your business" },
-  { title: "Location", description: "Where are your customers?" },
+  { title: "Location & Wallet", description: "Connect your wallet to continue" },
   { title: "Preview", description: "Review your listing" },
-  { title: "Pay & List", description: "1 USDC on any chain" },
+  { title: "Pay & List", description: "3 USDC on any chain" },
 ];
 
 const PRESENCE_TYPES = ["Online Only", "Physical Locations", "Both"];
@@ -75,7 +75,7 @@ const Submit = () => {
       fd.append("file", form.logo_file);
       // Use connected wallet if available, otherwise use a generic identifier.
       // The wallet is only used for the storage filename — not for auth.
-      fd.append("wallet_address", address || `anon-${Date.now()}`);
+      fd.append("wallet_address", address || "");
       const res = await fetch(`${supabaseUrl}/functions/v1/upload-logo`, { method: "POST", body: fd });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
@@ -93,12 +93,13 @@ const Submit = () => {
 
   const nextStep = async () => {
     if (!validateStep()) return;
-    if (step === 0 && form.logo_file && !logoUrl) {
-      if (!isConnected) {
-        // logo upload requires a wallet for storage path; let users skip and add later if needed
-        toast({ title: "Connect wallet to upload a logo, or skip it for now", variant: "destructive" });
-        return;
-      }
+    // Step 1 (Location & Wallet): require wallet connect before proceeding.
+    if (step === 1 && !isConnected) {
+      toast({ title: "Please connect your wallet to continue", description: "A connected wallet is required to upload a logo and pay for your listing.", variant: "destructive" });
+      return;
+    }
+    // Upload logo when moving from step 1 → 2 (wallet is now guaranteed connected).
+    if (step === 1 && form.logo_file && !logoUrl) {
       await uploadLogo();
     }
     if (step < STEPS.length - 1) setStep(step + 1);
@@ -133,7 +134,7 @@ const Submit = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-3">🎉 Listed Successfully!</h1>
             <p className="text-muted-foreground mb-4">
-              Your 1 USDC payment was verified on-chain and your listing is now live in the global USDC Directory.
+              Your 3 USDC payment was verified on-chain and your listing is now live in the global USDC Directory.
             </p>
             {orderId && (
               <p className="text-xs text-muted-foreground font-mono break-all mb-6">Tx: {orderId}</p>
@@ -149,8 +150,8 @@ const Submit = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="List Your Business — 1 USDC, Any Chain"
-        description="Self-list on USDC Directory for 1 USDC. Pay on Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, or Near."
+        title="List Your Business — 3 USDC, Any Chain"
+        description="Self-list on USDC Directory for 3 USDC. Pay on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, or Near."
         path="/submit"
       />
       <Header />
@@ -241,6 +242,23 @@ const Submit = () => {
 
           {step === 1 && (
             <div className="space-y-4">
+              {/* Wallet connect gate — required before logo upload and payment */}
+              <div className={`rounded-xl border p-4 flex items-center justify-between gap-4 ${isConnected ? "border-green-500/40 bg-green-500/5" : "border-yellow-500/40 bg-yellow-500/5"}`}>
+                <div>
+                  <p className={`text-sm font-semibold ${isConnected ? "text-green-600 dark:text-green-400" : "text-yellow-700 dark:text-yellow-400"}`}>
+                    {isConnected ? `✅ Wallet connected` : "⚠️ Connect your wallet to continue"}
+                  </p>
+                  {isConnected && address && (
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5 truncate max-w-xs">{address}</p>
+                  )}
+                  {!isConnected && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Required to upload your logo and pay for your listing.</p>
+                  )}
+                </div>
+                {!isConnected && (
+                  <w3m-button size="sm" />
+                )}
+              </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Business Presence</label>
                 <div className="flex flex-wrap gap-2">
@@ -315,7 +333,7 @@ const Submit = () => {
               <div className="bg-card border border-border rounded-xl p-4">
                 <h4 className="font-semibold text-foreground text-sm mb-2">What you get:</h4>
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  <li>✅ Instant listing once 1 USDC payment is verified on-chain</li>
+                  <li>✅ Instant listing once 3 USDC payment is verified on-chain</li>
                   <li>✅ Searchable by category, region, and network</li>
                   <li>✅ Eligible for homepage featuring & boost</li>
                   <li>✅ Discoverable to AI agents via paid x402 API</li>

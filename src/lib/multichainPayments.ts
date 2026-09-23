@@ -3,7 +3,7 @@
  *
  * The native gasless x402 path (EIP-3009 transferWithAuthorization) runs on
  * Base Mainnet only. Every other chain uses the "paste tx hash" alternative-
- * payment path: the agent pays 5 USDC to our treasury on their own chain,
+ * payment path: the submitter pays 3 USDC to our treasury on their own chain,
  * then submits the tx hash to `submit-listing`, which verifies the on-chain
  * transfer before inserting the listing.
  *
