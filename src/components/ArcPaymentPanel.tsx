@@ -34,6 +34,7 @@ import {
 // ── Arc Mainnet listing payment constants ──
 const ARC_CHAIN_ID = 5042 as const;
 const ARC_USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as const;
+// Fee is defined in multichainPayments — import keeps it in sync across all chains
 const ERC20_TRANSFER_ABI = parseAbi([
   "function transfer(address to, uint256 amount) returns (bool)",
 ]);
@@ -141,11 +142,13 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         await persistListing(type, hash, address!, submissionData, activeChainKey);
       } catch (saveErr: unknown) {
         const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
+        setError(`Payment confirmed on-chain but listing save failed: ${message}. Save your tx hash: ${hash} and contact support.`);
         toast({
-          title: "Payment ok but listing save failed",
-          description: `Contact support with your tx hash. (${message})`,
+          title: "Listing save failed — save your tx hash!",
+          description: `Tx: ${hash.slice(0, 16)}… | ${message}`,
           variant: "destructive",
         });
+        return; // do NOT call onSuccess — user is not listed yet
       }
       setPaidChain(activeChainKey);
       setTxHash(hash);

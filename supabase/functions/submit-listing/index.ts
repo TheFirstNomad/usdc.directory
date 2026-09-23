@@ -22,7 +22,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FEE_BASE_UNITS = 1_000_000n; // 1 USDC, 6 decimals
+const FEE_BASE_UNITS = 3_000_000n; // 3 USDC, 6 decimals
 const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
 const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
 const SUI_TREASURY = "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979".toLowerCase();
@@ -37,7 +37,8 @@ interface EvmChain {
   usdc: string; // contract address (any-case)
 }
 const EVM_CHAINS: Record<string, EvmChain> = {
-  base:      { rpc: "https://mainnet.base.org",                       usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
+  arc:       { rpc: "https://rpc.mainnet.arc.io",                      usdc: "0x3600000000000000000000000000000000000000" },
+  base:      { rpc: "https://mainnet.base.org",                        usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
   ethereum:  { rpc: "https://eth.llamarpc.com",                        usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
   arbitrum:  { rpc: "https://arb1.arbitrum.io/rpc",                    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },
   optimism:  { rpc: "https://mainnet.optimism.io",                     usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" },

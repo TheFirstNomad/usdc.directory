@@ -66,21 +66,27 @@ const Submit = () => {
   };
 
   const uploadLogo = async () => {
-    if (!form.logo_file || !address) return null;
+    if (!form.logo_file) return null;
     setUploadingLogo(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
       const fd = new FormData();
       fd.append("file", form.logo_file);
-      fd.append("wallet_address", address);
+      // Use connected wallet if available, otherwise use a generic identifier.
+      // The wallet is only used for the storage filename — not for auth.
+      fd.append("wallet_address", address || `anon-${Date.now()}`);
       const res = await fetch(`${supabaseUrl}/functions/v1/upload-logo`, { method: "POST", body: fd });
-      if (!res.ok) throw new Error("Upload failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Upload failed");
+      }
       const data = await res.json();
       setLogoUrl(data.url);
       return data.url;
-    } catch {
-      toast({ title: "Logo upload failed", variant: "destructive" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Logo upload failed";
+      toast({ title: "Logo upload failed", description: msg, variant: "destructive" });
       return null;
     } finally { setUploadingLogo(false); }
   };
@@ -153,7 +159,7 @@ const Submit = () => {
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-3">List Your Business</h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto">
-            <span className="font-semibold text-foreground">1 USDC, any chain.</span> Pay on Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea — or Solana, Sui, Near. Listings publish instantly after on-chain verification.
+            <span className="font-semibold text-foreground">3 USDC, any chain.</span> Pay on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea — or Solana, Sui, Near. Listings publish instantly after on-chain verification.
           </p>
         </div>
       </section>
@@ -296,7 +302,7 @@ const Submit = () => {
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
                 <Eye className="h-5 w-5 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">This is how your listing will appear. Continue to pay 1 USDC.</p>
+                <p className="text-sm text-muted-foreground">This is how your listing will appear. Continue to pay 3 USDC.</p>
               </div>
             </div>
           )}

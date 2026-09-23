@@ -18,8 +18,8 @@
  * inline maps) to verify transfers.
  */
 
-export const LISTING_FEE_USDC = "1";
-export const LISTING_FEE_BASE_UNITS = 1_000_000n; // 6 decimals
+export const LISTING_FEE_USDC = "3";
+export const LISTING_FEE_BASE_UNITS = 3_000_000n; // 6 decimals
 
 export const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 export const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";

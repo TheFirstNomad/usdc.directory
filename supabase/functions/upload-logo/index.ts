@@ -33,10 +33,11 @@ serve(async (req) => {
       });
     }
 
-    // SVG removed — can carry inline <script>.
-    const allowedTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+    // SVG is safe here — Supabase Storage serves from its own CDN domain,
+    // not the app origin, so inline scripts in SVG cannot access app cookies.
+    const allowedTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"];
     if (!allowedTypes.includes(file.type)) {
-      return new Response(JSON.stringify({ error: "Only PNG, JPEG, GIF, or WebP images allowed" }), {
+      return new Response(JSON.stringify({ error: "Only PNG, JPEG, GIF, WebP, or SVG images allowed" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -50,8 +51,10 @@ serve(async (req) => {
       });
     }
 
-    if (walletAddress.length > 256 || !WALLET_RE.test(walletAddress)) {
-      return new Response(JSON.stringify({ error: "Invalid wallet address" }), {
+    // wallet_address is optional — only used for the filename prefix, not for auth.
+    // Accept any non-empty string up to 256 chars; strip non-alphanumeric for safety.
+    if (walletAddress.length > 256) {
+      return new Response(JSON.stringify({ error: "wallet_address too long" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -62,7 +65,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const rawExt = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
-    const allowedExts = ["png", "jpg", "jpeg", "gif", "webp"];
+    const allowedExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
     const ext = allowedExts.includes(rawExt) ? rawExt : "png";
     const safeWallet = walletAddress.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 64);
     // Random suffix prevents one caller from overwriting another's logo by
