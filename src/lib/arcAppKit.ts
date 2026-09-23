@@ -2,8 +2,8 @@
  * Circle Arc App Kit integration
  *
  * Handles:
- * - kit.send()   – listing payments (testnet + mainnet)
- * - kit.swap()   – token swaps (testnet + mainnet)
+ * - kit.send()   – listing payments (Base + Arc mainnet)
+ * - kit.swap()   – token swaps (Base + Arc mainnet)
  *
  * All execution goes through Circle App Kit. The Uniswap V3 Quoter is still
  * used separately for Base mainnet price display (read-only).

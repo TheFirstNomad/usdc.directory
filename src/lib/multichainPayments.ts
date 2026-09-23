@@ -48,6 +48,12 @@ export const PAYMENT_CHAINS: ChainEntry[] = [
     notes: "Native x402 gasless path supported",
   },
   {
+    key: "arc", label: "Arc Mainnet", family: "evm", treasury: EVM_TREASURY,
+    usdc: "0x3600000000000000000000000000000000000000", usdcKind: "native",
+    explorerTx: (h) => `https://explorer.arc.io/tx/${h}`,
+    notes: "USDC is the native gas token — settles in seconds",
+  },
+  {
     key: "ethereum", label: "Ethereum", family: "evm", treasury: EVM_TREASURY,
     usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", usdcKind: "native",
     explorerTx: (h) => `https://etherscan.io/tx/${h}`,

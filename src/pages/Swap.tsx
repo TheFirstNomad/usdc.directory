@@ -56,9 +56,9 @@ const Swap = () => {
 
   const chainConfig = CHAINS[selectedChainId];
   const popularPairs = POPULAR_PAIRS[selectedChainId] ?? [];
-  const isArcTestnet = selectedChainId === 5042;
+  const isArc = selectedChainId === 5042;
   // Skip wrong-chain check on Arc — Circle SDK handles chain context
-  const wrongChain = isConnected && !isArcTestnet && walletChainId !== selectedChainId;
+  const wrongChain = isConnected && !isArc && walletChainId !== selectedChainId;
 
   /* ── chain switch ── */
   const handleChainChange = useCallback((id: SupportedChainId) => {
@@ -215,7 +215,7 @@ const Swap = () => {
           </div>
 
           {/* Arc Mainnet info banner */}
-          {isArcTestnet && (
+          {isArc && (
             <div className="w-full max-w-[460px] mb-4 animate-fade-in">
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
                 <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
@@ -498,7 +498,7 @@ const Swap = () => {
                             </span>
                           </div>
                         )}
-                        {!isArcTestnet && (
+                        {!isArc && (
                           <div className="flex justify-between">
                             <span>DEX Fee (Uniswap)</span>
                             <span className="text-foreground">{poolFee / 10000}%</span>
@@ -522,7 +522,7 @@ const Swap = () => {
                 )}
               </div>
               {/* ERC-8021 calldata debug panel (Base mainnet only) */}
-              {!isArcTestnet && <CalldataDebugPanel data={lastCalldata} history={calldataHistory} />}
+              {!isArc && <CalldataDebugPanel data={lastCalldata} history={calldataHistory} />}
         </main>
 
         <Footer />

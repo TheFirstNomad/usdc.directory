@@ -28,9 +28,6 @@ export const ARC_TOKENS: TokenInfo[] = [
   { symbol: "EURC", name: "Euro Coin", address: "0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1", decimals: 6, logoUrl: "/tokens/eurc.png", isStable: true },
 ];
 
-/** @deprecated use ARC_TOKENS */
-export const ARC_TESTNET_TOKENS = ARC_TOKENS;
-
 export const TOKENS_BY_CHAIN: Record<number, TokenInfo[]> = {
   8453: BASE_TOKENS,
   5042: ARC_TOKENS,

@@ -6,7 +6,7 @@ interface ChainContextValue {
   chainId: SupportedChainId;
   setChainId: (id: SupportedChainId) => void;
   chainConfig: (typeof CHAINS)[SupportedChainId];
-  isArcTestnet: boolean;
+  isArc: boolean;
 }
 
 const ChainContext = createContext<ChainContextValue | null>(null);
@@ -51,10 +51,10 @@ export const ChainProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const chainConfig = CHAINS[chainId];
-  const isArcTestnet = chainId === 5042;
+  const isArc = chainId === 5042;
 
   return (
-    <ChainContext.Provider value={{ chainId, setChainId, chainConfig, isArcTestnet }}>
+    <ChainContext.Provider value={{ chainId, setChainId, chainConfig, isArc }}>
       {children}
     </ChainContext.Provider>
   );
