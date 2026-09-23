@@ -324,25 +324,27 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         </div>
       )}
 
-      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
-        <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-        <p className="text-xs text-foreground/80">
-          Native gasless x402 path runs on <strong>Base Mainnet</strong> with our <strong>ERC-8021 builder code</strong> (<code className="font-mono">bc_madq6cms</code>) attribution.
-        </p>
-      </div>
+      {isBase && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
+          <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-foreground/80">
+            Native gasless x402 path runs on <strong>Base Mainnet</strong> with our <strong>ERC-8021 builder code</strong> (<code className="font-mono">bc_madq6cms</code>) attribution.
+          </p>
+        </div>
+      )}
 
       {needsSwitch && (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-foreground/90">
-              Your wallet is on a different network. Switch to <strong>Base Mainnet</strong> to use the gasless path, or scroll down to pay from any other chain.
+              Your wallet is on a different network. Switch to <strong>{chainLabel}</strong> to pay directly, or scroll down to pay from any other chain.
             </p>
           </div>
           <Button onClick={handleSwitch} disabled={switching} variant="outline"
             className="w-full rounded-lg border-amber-500/40 hover:bg-amber-500/10" size="sm">
             {switching ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Switching…</>
-              : <><RefreshCw className="h-4 w-4 mr-2" /> Switch wallet to Base Mainnet</>}
+              : <><RefreshCw className="h-4 w-4 mr-2" /> Switch wallet to {chainLabel}</>}
           </Button>
         </div>
       )}
@@ -350,8 +352,8 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       <Button onClick={handlePay} disabled={paying || needsSwitch || switching}
         className="w-full bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground font-semibold py-6 rounded-xl text-base">
         {paying ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Processing Payment…</>
-          : needsSwitch ? <>Switch to Base to pay with wallet</>
-          : <>💰 Pay {fee} USDC on Base</>}
+          : needsSwitch ? <>Switch to {chainLabel} to pay with wallet</>
+          : <>💰 Pay {fee} USDC on {chainLabel}</>}
       </Button>
 
 
@@ -378,8 +380,10 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
 
       <div className="bg-muted/50 rounded-xl p-4">
         <p className="text-xs text-muted-foreground">
-          🔵 Direct on-chain USDC transfer to treasury. Base USDC:{" "}
-          <code className="font-mono">{BASE_USDC_ADDRESS.slice(0, 10)}…</code>
+          🔵 Direct on-chain USDC transfer to treasury. {chainLabel} USDC:{" "}
+          <code className="font-mono">
+            {(isArc ? ARC_USDC_ADDRESS : BASE_USDC_ADDRESS).slice(0, 10)}…
+          </code>
         </p>
       </div>
     </div>
