@@ -19,7 +19,6 @@ const baseNavLinks = [
   { label: "Swap", href: "/swap" },
   { label: "AI Agents", href: "/ai-agents" },
   { label: "Map", href: "/map" },
-  { label: "Leaderboard", href: "/leaderboard" },
   { label: "My Listings", href: "/my-listings" },
   { label: "Insights", href: "/insights" },
 ];
