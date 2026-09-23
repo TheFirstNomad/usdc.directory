@@ -76,6 +76,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
 
   const { sendTransactionAsync } = useSendTransaction();
   const basePublicClient = usePublicClient({ chainId: BASE_CHAIN_ID });
+  const arcPublicClient = usePublicClient({ chainId: ARC_CHAIN_ID });
   const walletChainId = useChainId();
   const { switchChainAsync, isPending: switching } = useSwitchChain();
 
@@ -97,7 +98,9 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const chainLabel = getChainLabel(paymentChainId);
   const explorerName = getExplorerName(paymentChainId);
   const isBase = paymentChainId === BASE_CHAIN_ID;
-  const isArc = paymentChainId === 5042;
+  const isArc = paymentChainId === ARC_CHAIN_ID;
+  const activeChainId: PaymentChainId = isArc ? ARC_CHAIN_ID : BASE_CHAIN_ID;
+  const activeChainKey = isArc ? "arc" : "base";
 
   // ── Base Mainnet pay path ──
   const payOnBase = async (): Promise<string> => {
@@ -113,12 +116,29 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     return hash;
   };
 
+  // ── Arc Mainnet pay path (USDC ERC-20 transfer, USDC is also gas) ──
+  const payOnArc = async (): Promise<string> => {
+    if (!address) throw new Error("Wallet not connected");
+    const data = encodeFunctionData({
+      abi: ERC20_TRANSFER_ABI,
+      functionName: "transfer",
+      args: [EVM_TREASURY as `0x${string}`, LISTING_FEE_BASE_UNITS],
+    });
+    const hash = await sendTransactionAsync({
+      to: ARC_USDC_ADDRESS, data,
+      account: address as `0x${string}`,
+      chainId: ARC_CHAIN_ID, value: 0n,
+    } as Parameters<typeof sendTransactionAsync>[0]);
+    if (arcPublicClient) await arcPublicClient.waitForTransactionReceipt({ hash });
+    return hash;
+  };
+
   const handlePay = async () => {
     setPaying(true); setError(null); setBaseDebug(null);
     try {
-      const hash = await payOnBase();
+      const hash = isArc ? await payOnArc() : await payOnBase();
       try {
-        await persistListing(type, hash, address!, submissionData, "base");
+        await persistListing(type, hash, address!, submissionData, activeChainKey);
       } catch (saveErr: unknown) {
         const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
         toast({
@@ -127,12 +147,12 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
           variant: "destructive",
         });
       }
-      setPaidChain("base");
+      setPaidChain(activeChainKey);
       setTxHash(hash);
       toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
       onSuccess(hash);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Payment failed on Base";
+      const msg = err instanceof Error ? err.message : `Payment failed on ${chainLabel}`;
       setError(msg);
       toast({ title: "Payment failed", description: msg, variant: "destructive" });
     } finally { setPaying(false); }
