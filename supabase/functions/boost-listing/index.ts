@@ -1,6 +1,7 @@
-// Boost a listing for 30 days. Frontend pays 5 USDC on-chain first, then calls this.
-// The payment transaction is verified on-chain (and de-duplicated) before the
-// boost is applied — an unverified tx hash is never accepted.
+// Get Featured: list your business in the Featured carousel for 30 days.
+// Payment is 25 USDC on-chain. The transaction is verified on-chain and
+// de-duplicated before the boost is applied. Paying sets featured=true
+// automatically — no admin action needed.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { verifyUsdcPayment, normalizeChainKey } from "../_shared/payment-verify.ts";
@@ -10,7 +11,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const BOOST_FEE_UNITS = 5_000_000n; // 5 USDC (6 decimals)
+const BOOST_FEE_UNITS = 25_000_000n; // 25 USDC (6 decimals)
+const MAX_FEATURED_SLOTS = 8;
+const BOOST_DAYS = 30;
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -41,7 +44,7 @@ serve(async (req) => {
     // Ownership check
     const { data: partner, error: pErr } = await supabase
       .from("partners")
-      .select("id, wallet_address")
+      .select("id, wallet_address, featured, boosted_until")
       .eq("id", partner_id)
       .single();
 
@@ -55,6 +58,20 @@ serve(async (req) => {
       .maybeSingle();
     if (existing) return json({ error: "This payment has already been used for a boost" }, 409);
 
+    // Check available featured slots — only count active (not-expired) featured listings
+    const now = new Date().toISOString();
+    const { count: activeSlots } = await supabase
+      .from("partners")
+      .select("id", { count: "exact", head: true })
+      .eq("featured", true)
+      .or(`boosted_until.is.null,boosted_until.gt.${now}`);
+
+    if ((activeSlots ?? 0) >= MAX_FEATURED_SLOTS) {
+      return json({
+        error: `All ${MAX_FEATURED_SLOTS} featured slots are currently taken. Check back soon or contact us.`,
+      }, 409);
+    }
+
     // Verify the on-chain USDC transfer to the treasury
     const verified = await verifyUsdcPayment(chainKey, payment_tx, BOOST_FEE_UNITS);
     if (!verified.ok) {
@@ -62,8 +79,7 @@ serve(async (req) => {
       return json({ error: `Payment verification failed: ${verified.error}` }, 402);
     }
 
-    // Authorisation is bound to the wallet that actually sent the funds on-chain.
-    // The client-supplied wallet_address is never trusted for ownership.
+    // Auth: payer wallet must match the listing owner
     const verifiedPayer = String(verified.payer ?? "").toLowerCase();
     if (!verifiedPayer || verifiedPayer === "unknown") {
       return json({ error: "Could not determine the paying wallet from the transaction" }, 402);
@@ -72,12 +88,13 @@ serve(async (req) => {
       return json({ error: "The paying wallet is not the owner of this listing" }, 403);
     }
 
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + BOOST_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
+    // Record the boost
     const { error: bErr } = await supabase.from("agent_boosts").insert({
       partner_id,
       chain: chainKey,
-      amount_usdc: 5_000_000,
+      amount_usdc: 25_000_000,
       payment_id: payment_tx,
       expires_at: expiresAt,
     });
@@ -86,9 +103,10 @@ serve(async (req) => {
       return json({ error: "Failed to apply boost" }, 500);
     }
 
+    // Set featured=true and boosted_until — paying = carousel slot automatically
     const { error: uErr } = await supabase
       .from("partners")
-      .update({ boosted_until: expiresAt })
+      .update({ featured: true, boosted_until: expiresAt })
       .eq("id", partner_id);
 
     if (uErr) {
@@ -96,7 +114,7 @@ serve(async (req) => {
       return json({ error: "Failed to apply boost" }, 500);
     }
 
-    return json({ id: partner_id, boosted_until: expiresAt });
+    return json({ id: partner_id, boosted_until: expiresAt, featured: true });
   } catch (err) {
     console.error("boost-listing error:", err);
     return json({ error: "Internal server error" }, 500);

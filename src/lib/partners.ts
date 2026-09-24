@@ -18,7 +18,7 @@ export interface Partner {
   verified?: boolean;
 }
 
-const PARTNER_COLS = "id, name, description, website, logo_url, logo_emoji, categories, region, use_cases, featured, created_at, usdc_score, networks, boosted_until, verified";
+const PARTNER_COLS = "id, name, description, website, logo_url, logo_emoji, categories, region, use_cases, featured, created_at, usdc_score, networks, boosted_until, verified, wallet_address";
 
 export async function fetchPartners(): Promise<Partner[]> {
   const { data, error } = await supabase

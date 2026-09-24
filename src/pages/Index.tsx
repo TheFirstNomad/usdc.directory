@@ -50,7 +50,13 @@ const Index = () => {
       prev.includes(network) ? prev.filter((n) => n !== network) : [...prev, network]
     );
 
-  const featuredPartners = useMemo(() => uniquePartners.filter((p) => p.featured), [uniquePartners]);
+  // Show featured partners + any active boosts in the carousel
+  const featuredPartners = useMemo(() => {
+    const now = Date.now();
+    return uniquePartners.filter(
+      (p) => p.featured || (p.boosted_until && new Date(p.boosted_until).getTime() > now)
+    );
+  }, [uniquePartners]);
   const partnerNames = useMemo(() => uniquePartners.map((p) => p.name), [uniquePartners]);
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};

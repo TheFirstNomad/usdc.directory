@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BadgeCheck, ExternalLink, ArrowLeft, Copy, Check, Share2, Send, Trophy } from "lucide-react";
+import { BadgeCheck, ExternalLink, ArrowLeft, Share2, Send, Trophy, Star, Zap } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -63,7 +63,7 @@ const MerchantDetail = () => {
     if (!id) return;
     supabase
       .from("partners_public" as any)
-      .select("id, name, description, website, logo_url, logo_emoji, categories, region, use_cases, featured, created_at, usdc_score, networks")
+      .select("id, name, description, website, logo_url, logo_emoji, categories, region, use_cases, featured, created_at, usdc_score, networks, boosted_until, verified")
       .eq("id", id)
       .single()
       .then(({ data, error }) => {
@@ -317,6 +317,51 @@ const MerchantDetail = () => {
                 </Tooltip>
               </div>
             </div>
+
+            {/* Get Featured card */}
+            {(() => {
+              const isBoosted = partner.boosted_until && new Date(partner.boosted_until).getTime() > Date.now();
+              if (isBoosted) {
+                return (
+                  <div className="bg-amber-500/5 border border-amber-400/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap className="h-4 w-4 text-amber-400" />
+                      <p className="text-sm font-semibold text-foreground">Featured</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      This listing is featured in the carousel until{" "}
+                      <span className="text-foreground font-medium">
+                        {new Date(partner.boosted_until!).toLocaleDateString()}
+                      </span>.
+                    </p>
+                  </div>
+                );
+              }
+              return (
+                <div className="bg-card border border-border rounded-xl p-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                    <p className="text-sm font-semibold text-foreground">Get Featured</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Appear in the Featured carousel at the top of the directory for 30 days. Seen by every visitor.
+                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xl font-extrabold text-foreground">25 USDC</span>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">30 days</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="w-full bg-gradient-to-r from-amber-500 to-primary text-white font-semibold rounded-lg"
+                    onClick={() => {
+                      window.location.href = `/my-listings`;
+                    }}
+                  >
+                    <Star className="h-3.5 w-3.5 mr-1.5" /> Get Featured
+                  </Button>
+                </div>
+              );
+            })()}
 
             {/* Score card */}
             {score > 0 && (

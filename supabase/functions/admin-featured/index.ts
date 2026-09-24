@@ -57,9 +57,9 @@ Deno.serve(async (req: Request) => {
           .select("id", { count: "exact", head: true })
           .eq("featured", true);
 
-        if ((count ?? 0) >= 4) {
+        if ((count ?? 0) >= 8) {
           return new Response(
-            JSON.stringify({ error: "Maximum 4 featured listings allowed. Unfeature one first." }),
+            JSON.stringify({ error: "Maximum 8 featured listings allowed. Unfeature one first." }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
