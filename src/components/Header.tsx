@@ -19,8 +19,6 @@ const baseNavLinks = [
   { label: "Swap", href: "/swap" },
   { label: "AI Agents", href: "/ai-agents" },
   { label: "Map", href: "/map" },
-  { label: "My Listings", href: "/my-listings" },
-  { label: "Insights", href: "/insights" },
 ];
 
 const Header = ({ partners = [] }: HeaderProps) => {

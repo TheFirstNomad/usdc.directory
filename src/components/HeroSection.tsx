@@ -79,7 +79,7 @@ const HeroSection = forwardRef<HTMLElement, HeroSectionProps>(({
 
         <p className="text-muted-foreground text-base sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
           Discover trusted merchants, B2B services, and AI-driven platforms accepting{" "}
-          <span className="font-semibold text-foreground">USDC</span> worldwide. List your entity for just 10 USDC.
+          <span className="font-semibold text-foreground">USDC</span> worldwide. List your business for 3 USDC.
         </p>
 
         {/* Search bar */}

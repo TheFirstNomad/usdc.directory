@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchX, LayoutGrid, Map as MapIcon, ArrowUpDown, Bot } from "lucide-react";
+import { SearchX, ArrowUpDown, Bot } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import ShimmerCard from "@/components/ShimmerCard";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
 import CategoryFilter from "@/components/CategoryFilter";
-import CategoryChips from "@/components/CategoryChips";
+
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
   const [sortBy, setSortBy] = useState<"name" | "newest" | "score">("newest");
 
   // React Query caches partners across routes so revisits are instant.
@@ -154,13 +153,6 @@ const Index = () => {
           </aside>
 
           <div className="flex-1">
-            <div className="mb-4">
-              <CategoryChips
-                selectedCategories={selectedCategories}
-                onToggleCategory={toggleCategory}
-                counts={categoryCounts}
-              />
-            </div>
             <div className="flex items-center justify-between mb-5">
               <p className="text-sm text-muted-foreground font-medium">
                 {loading ? "Loading…" : `${filteredPartners.length} merchants`}
@@ -174,26 +166,10 @@ const Index = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="newest">Newest</SelectItem>
-                      <SelectItem value="name">Name A–Z</SelectItem>
+                      <SelectItem value="name">Name A-Z</SelectItem>
                       <SelectItem value="score">USDC Score</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="flex items-center bg-card border border-border rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`p-2 transition-colors ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                    aria-label="Grid view"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("map")}
-                    className={`p-2 transition-colors ${viewMode === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                    aria-label="Map view"
-                  >
-                    <MapIcon className="h-4 w-4" />
-                  </button>
                 </div>
                 {hasFilters && (
                   <button onClick={clearAll} className="text-xs text-primary hover:underline font-medium">
@@ -203,17 +179,7 @@ const Index = () => {
               </div>
             </div>
 
-            {viewMode === "map" ? (
-              <div className="bg-card border border-border rounded-2xl h-96 flex items-center justify-center">
-                <div className="text-center">
-                  <MapIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-lg font-semibold text-foreground mb-1">Map View</p>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    Interactive map coming soon. Find physical USDC merchants near you worldwide.
-                  </p>
-                </div>
-              </div>
-            ) : loading ? (
+            {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <ShimmerCard key={i} />

@@ -12,14 +12,11 @@ const FeaturedCarousel = ({ partners }: { partners: Partner[] }) => {
 
   return (
     <section className="py-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center mb-4">
         <h2 className="text-base font-bold text-foreground flex items-center gap-2">
           <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
           Featured Listings
         </h2>
-        <Link to="/leaderboard" className="text-xs text-primary hover:underline font-medium">
-          View leaderboard →
-        </Link>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
         {uniquePartners.map((p) => {

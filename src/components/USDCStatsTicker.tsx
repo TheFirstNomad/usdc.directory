@@ -4,20 +4,18 @@
  * Falls back to known static values if the API is unavailable.
  */
 import { useEffect, useState } from "react";
-import { TrendingUp, Globe, DollarSign, Zap } from "lucide-react";
+import { TrendingUp, Globe, DollarSign } from "lucide-react";
 
 interface Stats {
   supply: string;
   volume24h: string;
   chains: string;
-  partners: string;
 }
 
 const FALLBACK: Stats = {
   supply: "$78B+",
   volume24h: "$8B+",
   chains: "30+",
-  partners: "300+",
 };
 
 function formatBillions(n: number): string {
@@ -31,12 +29,10 @@ const STAT_ITEMS = (s: Stats) => [
   { icon: DollarSign, label: "USDC Supply", value: s.supply, color: "text-primary" },
   { icon: TrendingUp, label: "24h Volume", value: s.volume24h, color: "text-emerald-400" },
   { icon: Globe, label: "Blockchains", value: s.chains, color: "text-sky-400" },
-  { icon: Zap, label: "Circle Partners", value: s.partners, color: "text-amber-400" },
 ];
 
-export default function USDCStatsTicker() {
+export default function USDCStatsTicker({ partnerCount }: { partnerCount?: number }) {
   const [stats, setStats] = useState<Stats>(FALLBACK);
-  const [live, setLive] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -54,9 +50,7 @@ export default function USDCStatsTicker() {
           supply: supply ? formatBillions(supply) : FALLBACK.supply,
           volume24h: vol ? formatBillions(vol) : FALLBACK.volume24h,
           chains: FALLBACK.chains,
-          partners: FALLBACK.partners,
         });
-        setLive(true);
       })
       .catch(() => {
         // silently fall back to static values
@@ -69,23 +63,27 @@ export default function USDCStatsTicker() {
   return (
     <div className="w-full border-b border-border/50 bg-card/40 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between overflow-x-auto scrollbar-hide gap-0 divide-x divide-border/40">
+        <div className="flex items-center gap-0 divide-x divide-border/40 overflow-x-auto scrollbar-hide">
+          {partnerCount !== undefined && partnerCount > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2.5 flex-shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[11px] text-muted-foreground leading-none">{partnerCount.toLocaleString()} merchants</p>
+              </div>
+            </div>
+          )}
           {items.map(({ icon: Icon, label, value, color }) => (
             <div
               key={label}
-              className="flex items-center gap-2 px-4 py-2.5 flex-1 min-w-[120px] flex-shrink-0"
+              className="flex items-center gap-2 px-4 py-2.5 flex-shrink-0"
             >
               <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${color}`} />
               <div className="min-w-0">
-                <p className="text-[11px] text-muted-foreground leading-none truncate">{label}</p>
+                <p className="text-[11px] text-muted-foreground leading-none whitespace-nowrap">{label}</p>
                 <p className={`text-sm font-bold leading-tight ${color}`}>{value}</p>
               </div>
             </div>
           ))}
-          <div className="flex items-center gap-1.5 px-4 py-2.5 flex-shrink-0">
-            <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${live ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"}`} />
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap">{live ? "Live" : "Cached"}</span>
-          </div>
         </div>
       </div>
     </div>
