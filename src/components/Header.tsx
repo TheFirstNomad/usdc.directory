@@ -187,7 +187,7 @@ const Header = ({ partners = [] }: HeaderProps) => {
         </div>
       )}
       </header>
-      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} partners={partners} />
+      <CommandPalette open={cmdOpen} onOpenChange={setCmdOpen} partners={partners} />
     </>
   );
 };

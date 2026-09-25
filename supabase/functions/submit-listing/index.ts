@@ -24,6 +24,7 @@ const corsHeaders = {
 
 const FEE_STANDARD    = 3_000_000n;  // 3 USDC — standard listing
 const FEE_FEATURED    = 28_000_000n; // 28 USDC — featured listing (standard + 25 USDC carousel slot)
+const FEE_UPDATE      = 1_000_000n;  // 1 USDC — edit an existing listing
 const FEE_BASE_UNITS  = FEE_STANDARD; // default used by verifyEvm / verifySolana / etc.
 const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
 const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
@@ -53,6 +54,23 @@ const EVM_CHAINS: Record<string, EvmChain> = {
 const SUPPORTED_CHAINS = new Set<string>([
   ...Object.keys(EVM_CHAINS), "monad", "solana", "sui", "near",
 ]);
+
+/**
+ * Normalises every chain spelling the front-end or an agent might send, so a
+ * confirmed payment is never rejected over naming (e.g. "Arc Mainnet" → "arc").
+ */
+function normalizeChainKey(raw: unknown): string {
+  const c = String(raw ?? "base").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (c === "arc" || c === "arc_mainnet" || c === "arcmainnet" || c === "5042") return "arc";
+  if (c === "base" || c === "base_mainnet" || c === "8453") return "base";
+  if (c === "bsc" || c === "bnb_chain" || c === "binance" || c === "binance_smart_chain") return "bnb";
+  if (c === "eth" || c === "mainnet" || c === "ethereum_mainnet") return "ethereum";
+  if (c === "matic") return "polygon";
+  if (c === "avax") return "avalanche";
+  if (c === "op" || c === "op_mainnet") return "optimism";
+  if (c === "arb" || c === "arbitrum_one") return "arbitrum";
+  return c;
+}
 
 const ALLOWED_CATEGORIES = new Set([
   "AI & Agentic Platforms","Bridge Apps","Bridge SDKs","DeFi Apps","Digital Wallets",
@@ -87,7 +105,7 @@ async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNI
   if (!cfg) {
     // Monad and other newer chains: we accept any tx hash format but cannot verify on-chain yet.
     // For now, allow only if the chain has a configured RPC.
-    return { ok: false, error: `On-chain verification not yet configured for ${chainKey}. Use Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, or Linea for now.` };
+    return { ok: false, error: `On-chain verification not yet configured for ${chainKey}. Use Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, or Linea for now.` };
   }
   if (!EVM_TX_RE.test(txHash)) return { ok: false, error: "Invalid EVM tx hash" };
 
@@ -120,7 +138,7 @@ async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNI
 }
 
 // ── Solana verification (SPL token transfer of USDC mint to treasury) ─
-async function verifySolana(txHash: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifySolana(txHash: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   if (!SOLANA_TX_RE.test(txHash)) return { ok: false, error: "Invalid Solana tx signature" };
   try {
     const res = await fetch("https://api.mainnet-beta.solana.com", {
@@ -159,7 +177,7 @@ async function verifySolana(txHash: string): Promise<{ ok: true; payer: string }
 }
 
 // ── Sui verification ────────────────────────────────────────────────
-async function verifySui(txHash: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifySui(txHash: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   try {
     const res = await fetch("https://fullnode.mainnet.sui.io", {
       method: "POST",
@@ -192,7 +210,7 @@ async function verifySui(txHash: string): Promise<{ ok: true; payer: string } | 
 }
 
 // ── Near verification ───────────────────────────────────────────────
-async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifyNear(txHash: string, signer?: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   try {
     // Near RPC `tx` requires both hash and signer_id. We try signer if provided, else use treasury.
     const senderHint = signer && signer.length > 0 ? signer : NEAR_TREASURY;
@@ -222,7 +240,7 @@ async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; 
             const ev = JSON.parse(log.slice("EVENT_JSON:".length));
             if (ev.standard === "nep141" && ev.event === "ft_transfer") {
               for (const d of ev.data ?? []) {
-                if (d.new_owner_id === NEAR_TREASURY && BigInt(d.amount) >= FEE_BASE_UNITS) { ok = true; break; }
+                if (d.new_owner_id === NEAR_TREASURY && BigInt(d.amount) >= minFee) { ok = true; break; }
               }
             }
           } catch { /* ignore */ }
@@ -238,11 +256,11 @@ async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; 
   }
 }
 
-async function verifyPayment(chain: string, txHash: string, signerHint?: string) {
-  if (chain === "solana") return verifySolana(txHash);
-  if (chain === "sui") return verifySui(txHash);
-  if (chain === "near") return verifyNear(txHash, signerHint);
-  return verifyEvm(chain, txHash);
+async function verifyPayment(chain: string, txHash: string, signerHint?: string, minFee: bigint = FEE_BASE_UNITS) {
+  if (chain === "solana") return verifySolana(txHash, minFee);
+  if (chain === "sui") return verifySui(txHash, minFee);
+  if (chain === "near") return verifyNear(txHash, signerHint, minFee);
+  return verifyEvm(chain, txHash, minFee);
 }
 
 function validateData(data: any): { ok: true; out: any } | { ok: false; error: string } {
@@ -292,7 +310,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { type, tx_hash, wallet_address, data } = body ?? {};
-    const chain = String(body?.chain ?? "base").toLowerCase();
+    const chain = normalizeChainKey(body?.chain);
+    const tier = String(body?.tier ?? "standard").toLowerCase() === "featured" ? "featured" : "standard";
 
     if (type !== "listing" && type !== "update")
       return json({ error: "type must be 'listing' or 'update'" }, 400);
@@ -302,6 +321,10 @@ Deno.serve(async (req) => {
       return json({ error: `Unsupported chain '${chain}'. Supported: ${[...SUPPORTED_CHAINS].join(", ")}` }, 400);
     if (typeof wallet_address !== "string" || wallet_address.trim().length < 1 || wallet_address.length > 256)
       return json({ error: "Invalid wallet_address" }, 400);
+
+    // Required on-chain amount for this request.
+    const requiredFee =
+      type === "update" ? FEE_UPDATE : tier === "featured" ? FEE_FEATURED : FEE_STANDARD;
 
     const dv = validateData(data);
     if (!dv.ok) return json({ error: dv.error }, 400);
@@ -410,8 +433,5 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-ent-Type": "application/json" },
   });
 }
