@@ -14,10 +14,9 @@ const Footer = () => (
   <footer className="border-t border-border/60 bg-background py-14 px-6">
     <div className="max-w-7xl mx-auto">
 
-      {/* Main grid */}
       <div className="flex flex-col lg:flex-row items-start justify-between gap-12">
 
-        {/* Brand column */}
+        {/* Brand */}
         <div className="max-w-[220px] flex-shrink-0">
           <div className="flex items-baseline gap-1 mb-3">
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] bg-clip-text text-transparent">
@@ -44,9 +43,7 @@ const Footer = () => (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 flex-1">
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">
-              Directory
-            </h4>
+            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">Directory</h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li><a href="/" className="hover:text-foreground transition-colors">Browse All</a></li>
               <li><a href="/map" className="hover:text-foreground transition-colors">World Map</a></li>
@@ -56,9 +53,7 @@ const Footer = () => (
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">
-              Build
-            </h4>
+            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">Get Listed</h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li><a href="/submit" className="hover:text-foreground transition-colors">List Your Business</a></li>
               <li><a href="/submit/ai-agent" className="hover:text-foreground transition-colors">List AI Agent</a></li>
@@ -68,29 +63,19 @@ const Footer = () => (
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">
-              Learn
-            </h4>
+            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">Learn</h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li><a href="/about" className="hover:text-foreground transition-colors">About USDC</a></li>
               <li><a href="/ai-agents" className="hover:text-foreground transition-colors">AI Agents</a></li>
               <li>
-                <a
-                  href="https://developers.circle.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors inline-flex items-center gap-1"
-                >
+                <a href="https://developers.circle.com" target="_blank" rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors inline-flex items-center gap-1">
                   Circle Docs <ExternalArrow />
                 </a>
               </li>
               <li>
-                <a
-                  href="https://www.circle.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors inline-flex items-center gap-1"
-                >
+                <a href="https://www.circle.com/" target="_blank" rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors inline-flex items-center gap-1">
                   Circle.com <ExternalArrow />
                 </a>
               </li>
@@ -98,27 +83,22 @@ const Footer = () => (
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">
-              Contact
-            </h4>
+            <h4 className="font-semibold text-foreground mb-4 text-[11px] uppercase tracking-widest">Contact</h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li>
-                <a
-                  href="mailto:hello@usdc.directory"
-                  className="hover:text-foreground transition-colors"
-                >
+                <a href="mailto:hello@usdc.directory" className="hover:text-foreground transition-colors">
                   hello@usdc.directory
                 </a>
               </li>
               <li>
-                <a
-                  href="https://x.com/usdcdirectory"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-foreground transition-colors inline-flex items-center gap-1.5"
-                >
-                  <XIcon />
-                  <span>@usdcdirectory</span>
+                <a href="https://x.com/usdcdirectory" target="_blank" rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors">
+                  DM us on X
+                </a>
+              </li>
+              <li>
+                <a href="/submit" className="hover:text-foreground transition-colors">
+                  Submit a Listing
                 </a>
               </li>
             </ul>
@@ -138,22 +118,10 @@ const Footer = () => (
             <span>All systems operational</span>
           </div>
           <span className="text-border select-none">|</span>
-          <a
-            href="https://www.circle.com/legal/privacy-policy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            Privacy
-          </a>
-          <a
-            href="https://www.circle.com/legal/terms-of-service"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            Terms
-          </a>
+          <a href="https://www.circle.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors">Privacy</a>
+          <a href="https://www.circle.com/legal/terms-of-service" target="_blank" rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors">Terms</a>
         </div>
       </div>
 

@@ -22,7 +22,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FEE_BASE_UNITS = 3_000_000n; // 3 USDC, 6 decimals
+const FEE_STANDARD    = 3_000_000n;  // 3 USDC — standard listing
+const FEE_FEATURED    = 28_000_000n; // 28 USDC — featured listing (standard + 25 USDC carousel slot)
+const FEE_BASE_UNITS  = FEE_STANDARD; // default used by verifyEvm / verifySolana / etc.
 const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
 const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
 const SUI_TREASURY = "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979".toLowerCase();
@@ -80,7 +82,7 @@ const ERC20_TRANSFER_ABI = parseAbi([
 ]);
 
 // ── EVM verification ────────────────────────────────────────────────
-async function verifyEvm(chainKey: string, txHash: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   const cfg = EVM_CHAINS[chainKey];
   if (!cfg) {
     // Monad and other newer chains: we accept any tx hash format but cannot verify on-chain yet.
@@ -110,7 +112,7 @@ async function verifyEvm(chainKey: string, txHash: string): Promise<{ ok: true; 
         }
       } catch { /* not a Transfer log */ }
     }
-    if (total < FEE_BASE_UNITS) return { ok: false, error: `Insufficient payment: ${total} < ${FEE_BASE_UNITS} required` };
+    if (total < minFee) return { ok: false, error: `Insufficient payment: ${total} < ${minFee} required` };
     return { ok: true, payer: payer ?? "unknown" };
   } catch (e) {
     return { ok: false, error: `RPC error: ${(e as Error).message}` };
@@ -147,7 +149,7 @@ async function verifySolana(txHash: string): Promise<{ ok: true; payer: string }
       const postAmt = BigInt(p.uiTokenAmount?.amount ?? "0");
       if (postAmt > preAmt) delta += postAmt - preAmt;
     }
-    if (delta < FEE_BASE_UNITS) return { ok: false, error: `Insufficient USDC to treasury: ${delta} < ${FEE_BASE_UNITS}` };
+    if (delta < minFee) return { ok: false, error: `Insufficient USDC to treasury: ${delta} < ${minFee}` };
     // Payer = fee payer (first signer)
     payer = tx.transaction?.message?.accountKeys?.[0]?.pubkey ?? null;
     return { ok: true, payer: payer ?? "unknown" };
@@ -181,7 +183,7 @@ async function verifySui(txHash: string): Promise<{ ok: true; payer: string } | 
       const amt = BigInt(bc.amount);
       if (amt > 0n) delta += amt;
     }
-    if (delta < FEE_BASE_UNITS) return { ok: false, error: `Insufficient USDC to Sui treasury: ${delta} < ${FEE_BASE_UNITS}` };
+    if (delta < minFee) return { ok: false, error: `Insufficient USDC to Sui treasury: ${delta} < ${minFee}` };
     const payer = tx.transaction?.data?.sender ?? "unknown";
     return { ok: true, payer };
   } catch (e) {
@@ -214,7 +216,7 @@ async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; 
       for (const log of logs) {
         // Standard ft_transfer event log: 'EVENT_JSON:{...}' OR plain "Transfer X from A to B"
         const m = /Transfer\s+(\d+)\s+from\s+\S+\s+to\s+(\S+)/.exec(log);
-        if (m && m[2] === NEAR_TREASURY && BigInt(m[1]) >= FEE_BASE_UNITS) { ok = true; break; }
+        if (m && m[2] === NEAR_TREASURY && BigInt(m[1]) >= minFee) { ok = true; break; }
         if (log.startsWith("EVENT_JSON:")) {
           try {
             const ev = JSON.parse(log.slice("EVENT_JSON:".length));
@@ -320,7 +322,7 @@ Deno.serve(async (req) => {
     if (dup) return json({ error: "Transaction hash already used" }, 409);
 
     // ── Verify the on-chain payment ──
-    const verification = await verifyPayment(chain, tx_hash, wallet_address);
+    const verification = await verifyPayment(chain, tx_hash, wallet_address, requiredFee);
     if (!verification.ok) return json({ error: `Payment verification failed: ${verification.error}` }, 402);
 
     // The wallet that actually sent the funds on-chain is the only identity we
@@ -330,16 +332,21 @@ Deno.serve(async (req) => {
       return json({ error: "Could not determine the paying wallet from the transaction" }, 402);
 
     if (type === "listing") {
+      const isFeatured = tier === "featured";
+      const boostedUntil = isFeatured
+        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
       const { data: newPartner, error: partnerErr } = await supabase
         .from("partners")
         .insert({
           name: company_name, description, website, categories, region, logo_url,
-          // Owner = verified on-chain payer, not the client-claimed address.
           wallet_address: verifiedPayer,
           payment_status: "confirmed",
           payment_id: dedupKey,
           networks: [chain],
-          featured: false,
+          featured: isFeatured,
+          ...(boostedUntil ? { boosted_until: boostedUntil } : {}),
         })
         .select("id")
         .single();
@@ -359,7 +366,7 @@ Deno.serve(async (req) => {
         partner_id: newPartner.id,
       });
 
-      return json({ success: true, partner_id: newPartner.id, chain, verified_payer: verification.payer });
+      return json({ success: true, partner_id: newPartner.id, chain, tier, featured: isFeatured, verified_payer: verification.payer });
     }
 
     // type === "update"
@@ -403,5 +410,8 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+ent-Type": "application/json" },
   });
 }

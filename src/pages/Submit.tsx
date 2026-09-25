@@ -16,7 +16,8 @@ const STEPS = [
   { title: "Business Info", description: "Tell us about your business" },
   { title: "Location & Wallet", description: "Connect your wallet to continue" },
   { title: "Preview", description: "Review your listing" },
-  { title: "Pay & List", description: "3 USDC on any chain" },
+  { title: "Choose Your Plan", description: "Standard or Featured listing" },
+  { title: "Pay & List", description: "Pay securely on any chain" },
 ];
 
 const PRESENCE_TYPES = ["Online Only", "Physical Locations", "Both"];
@@ -28,6 +29,7 @@ const Submit = () => {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(searchParams.get("success") === "true");
   const [orderId, setOrderId] = useState(searchParams.get("order") || "");
+  const [tier, setTier] = useState<"standard" | "featured">("standard");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [form, setForm] = useState({
@@ -112,6 +114,8 @@ const Submit = () => {
     setSubmitted(true);
   };
 
+  const listingFee = tier === "featured" ? "28" : "3";
+
   const submissionData = {
     company_name: form.company_name,
     contact_email: form.contact_email,
@@ -120,6 +124,7 @@ const Submit = () => {
     categories: form.categories,
     region: form.region,
     logo_url: logoUrl,
+    tier,
   };
 
   if (submitted) {
@@ -134,7 +139,8 @@ const Submit = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-3">🎉 Listed Successfully!</h1>
             <p className="text-muted-foreground mb-4">
-              Your 3 USDC payment was verified on-chain and your listing is now live in the global USDC Directory.
+              Your payment was verified on-chain and your listing is now live in the global USDC Directory.
+              {tier === "featured" && " Your listing is featured in the homepage carousel for 30 days."}
             </p>
             {orderId && (
               <p className="text-xs text-muted-foreground font-mono break-all mb-6">Tx: {orderId}</p>
@@ -326,18 +332,64 @@ const Submit = () => {
           )}
 
           {step === 3 && (
-            <div className="space-y-6">
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6">
-                <ArcPaymentPanel type="listing" submissionData={submissionData} onSuccess={handlePaymentSuccess} />
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">Choose how you want to list your business. You can upgrade to Featured at any time from My Listings.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Standard */}
+                <button
+                  type="button"
+                  onClick={() => setTier("standard")}
+                  className={`rounded-2xl border-2 p-5 text-left transition-all ${tier === "standard" ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-foreground text-base">Standard</span>
+                    <span className="text-2xl font-extrabold text-foreground">3 <span className="text-sm font-medium text-muted-foreground">USDC</span></span>
+                  </div>
+                  <ul className="space-y-1.5 text-xs text-muted-foreground">
+                    <li>✅ Appears in the directory immediately</li>
+                    <li>✅ Searchable by category, region, network</li>
+                    <li>✅ Discoverable to AI agents via API</li>
+                    <li>✅ Any chain, any wallet</li>
+                  </ul>
+                  {tier === "standard" && <p className="mt-3 text-xs font-semibold text-primary">Selected</p>}
+                </button>
+
+                {/* Featured */}
+                <button
+                  type="button"
+                  onClick={() => setTier("featured")}
+                  className={`rounded-2xl border-2 p-5 text-left transition-all relative ${tier === "featured" ? "border-yellow-500 bg-yellow-500/5" : "border-border bg-card hover:border-yellow-500/40"}`}
+                >
+                  <div className="absolute -top-2.5 left-4">
+                    <span className="bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Most Visible</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-foreground text-base">Featured</span>
+                    <span className="text-2xl font-extrabold text-foreground">28 <span className="text-sm font-medium text-muted-foreground">USDC</span></span>
+                  </div>
+                  <ul className="space-y-1.5 text-xs text-muted-foreground">
+                    <li>⭐ Everything in Standard</li>
+                    <li>⭐ Homepage carousel placement</li>
+                    <li>⭐ Featured badge on your card</li>
+                    <li>⭐ 30 days guaranteed visibility</li>
+                  </ul>
+                  {tier === "featured" && <p className="mt-3 text-xs font-semibold text-yellow-600 dark:text-yellow-400">Selected</p>}
+                </button>
               </div>
-              <div className="bg-card border border-border rounded-xl p-4">
-                <h4 className="font-semibold text-foreground text-sm mb-2">What you get:</h4>
-                <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  <li>✅ Instant listing once 3 USDC payment is verified on-chain</li>
-                  <li>✅ Searchable by category, region, and network</li>
-                  <li>✅ Eligible for homepage featuring & boost</li>
-                  <li>✅ Discoverable to AI agents via paid x402 API</li>
-                </ul>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className={`rounded-xl border p-4 flex items-center justify-between ${tier === "featured" ? "border-yellow-500/40 bg-yellow-500/5" : "border-primary/20 bg-primary/5"}`}>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{tier === "featured" ? "⭐ Featured Listing" : "Standard Listing"}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tier === "featured" ? "Homepage carousel for 30 days" : "Directory listing, searchable immediately"}</p>
+                </div>
+                <span className="text-xl font-extrabold text-foreground">{listingFee} <span className="text-sm font-medium text-muted-foreground">USDC</span></span>
+              </div>
+              <div className="bg-card border border-border rounded-xl p-6">
+                <ArcPaymentPanel type="listing" submissionData={submissionData} onSuccess={handlePaymentSuccess} />
               </div>
             </div>
           )}
