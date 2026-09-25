@@ -272,8 +272,12 @@ function validateData(data: any): { ok: true; out: any } | { ok: false; error: s
 
   let website: string | null = null;
   if (data.website) {
-    const w = String(data.website).trim();
-    if (w.length > 200 || !isValidUrl(w)) return { ok: false, error: "Invalid website URL" };
+    let w = String(data.website).trim();
+    // Auto-prepend https:// so bare domains like "monast.io" are accepted.
+    if (w.length > 0 && !w.startsWith("http://") && !w.startsWith("https://")) {
+      w = "https://" + w;
+    }
+    if (w.length > 200 || !isValidUrl(w)) return { ok: false, error: "Invalid website URL — use https://yoursite.com" };
     website = w;
   }
   let contact_email: string | null = null;

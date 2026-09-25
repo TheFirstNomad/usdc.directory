@@ -205,7 +205,20 @@ const Submit = () => {
               </div>
               <div>
                 <label htmlFor="submit-website" className="block text-sm font-medium text-foreground mb-1.5">Website</label>
-                <Input id="submit-website" type="url" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://yourcompany.com (optional)" maxLength={255} />
+                <Input
+                  id="submit-website"
+                  type="url"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v && !v.startsWith("http://") && !v.startsWith("https://")) {
+                      setForm((f) => ({ ...f, website: "https://" + v }));
+                    }
+                  }}
+                  placeholder="yourcompany.com or https://yourcompany.com (optional)"
+                  maxLength={255}
+                />
               </div>
               <div>
                 <label htmlFor="submit-description" className="block text-sm font-medium text-foreground mb-1.5">Description *</label>
