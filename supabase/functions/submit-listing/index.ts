@@ -24,6 +24,7 @@ const corsHeaders = {
 
 const FEE_STANDARD    = 3_000_000n;  // 3 USDC — standard listing
 const FEE_FEATURED    = 28_000_000n; // 28 USDC — featured listing (standard + 25 USDC carousel slot)
+const FEE_UPDATE      = 1_000_000n;  // 1 USDC — edit an existing listing
 const FEE_BASE_UNITS  = FEE_STANDARD; // default used by verifyEvm / verifySolana / etc.
 const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
 const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
@@ -53,6 +54,23 @@ const EVM_CHAINS: Record<string, EvmChain> = {
 const SUPPORTED_CHAINS = new Set<string>([
   ...Object.keys(EVM_CHAINS), "monad", "solana", "sui", "near",
 ]);
+
+/**
+ * Normalises every chain spelling the front-end or an agent might send, so a
+ * confirmed payment is never rejected over naming (e.g. "Arc Mainnet" → "arc").
+ */
+function normalizeChainKey(raw: unknown): string {
+  const c = String(raw ?? "base").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (c === "arc" || c === "arc_mainnet" || c === "arcmainnet" || c === "5042") return "arc";
+  if (c === "base" || c === "base_mainnet" || c === "8453") return "base";
+  if (c === "bsc" || c === "bnb_chain" || c === "binance" || c === "binance_smart_chain") return "bnb";
+  if (c === "eth" || c === "mainnet" || c === "ethereum_mainnet") return "ethereum";
+  if (c === "matic") return "polygon";
+  if (c === "avax") return "avalanche";
+  if (c === "op" || c === "op_mainnet") return "optimism";
+  if (c === "arb" || c === "arbitrum_one") return "arbitrum";
+  return c;
+}
 
 const ALLOWED_CATEGORIES = new Set([
   "AI & Agentic Platforms","Bridge Apps","Bridge SDKs","DeFi Apps","Digital Wallets",
@@ -292,7 +310,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const { type, tx_hash, wallet_address, data } = body ?? {};
-    const chain = String(body?.chain ?? "base").toLowerCase();
+    const chain = normalizeChainKey(body?.chain);
+    const tier = String(body?.tier ?? "standard").toLowerCase() === "featured" ? "featured" : "standard";
 
     if (type !== "listing" && type !== "update")
       return json({ error: "type must be 'listing' or 'update'" }, 400);
@@ -302,6 +321,10 @@ Deno.serve(async (req) => {
       return json({ error: `Unsupported chain '${chain}'. Supported: ${[...SUPPORTED_CHAINS].join(", ")}` }, 400);
     if (typeof wallet_address !== "string" || wallet_address.trim().length < 1 || wallet_address.length > 256)
       return json({ error: "Invalid wallet_address" }, 400);
+
+    // Required on-chain amount for this request.
+    const requiredFee =
+      type === "update" ? FEE_UPDATE : tier === "featured" ? FEE_FEATURED : FEE_STANDARD;
 
     const dv = validateData(data);
     if (!dv.ok) return json({ error: dv.error }, 400);
