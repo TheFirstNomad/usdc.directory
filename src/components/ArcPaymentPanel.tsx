@@ -416,6 +416,23 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
 
       {error && <p className="text-sm text-destructive text-center">{error}</p>}
 
+      {unsavedPayment && (
+        <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Your payment is confirmed and safe. Retry the save — no extra charge.
+          </p>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-mono text-muted-foreground truncate">{unsavedPayment.hash}</span>
+            <button onClick={() => copy(unsavedPayment.hash)} className="text-primary hover:text-primary/80 shrink-0">
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <Button onClick={handleRetrySave} disabled={retrying} className="w-full rounded-xl font-semibold">
+            {retrying ? "Retrying…" : "Retry saving my listing"}
+          </Button>
+        </div>
+      )}
+
       {baseDebug && (
         <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
           <div className="flex items-center justify-between">
