@@ -45,28 +45,56 @@ interface ArcPaymentPanelProps {
   onSuccess: (txHash: string) => void;
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Saves the listing after payment. Because the money has already moved on-chain,
+ * this NEVER gives up on a transient failure: it retries network errors and
+ * server-side (5xx) errors with backoff. Only a definitive rejection (4xx) or a
+ * duplicate (409 — already saved) stops the loop.
+ */
 async function persistListing(
   type: "listing" | "update",
   txHash: string,
   walletAddress: string,
   submissionData: Record<string, unknown>,
   chain: string,
+  attempts = 4,
 ) {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const supabaseUrl =
     import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
-  const res = await fetch(`${supabaseUrl}/functions/v1/submit-listing`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      type, tx_hash: txHash, chain, wallet_address: walletAddress, data: submissionData,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(err.error || "Failed to save listing");
+
+  let lastError = "Failed to save listing";
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/submit-listing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type, tx_hash: txHash, chain, wallet_address: walletAddress, data: submissionData,
+        }),
+      });
+      if (res.ok) return res.json();
+
+      const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      lastError = err.error || `HTTP ${res.status}`;
+
+      // Already saved by a previous attempt — treat as success.
+      if (res.status === 409) return { success: true, duplicate: true };
+      // Client-side rejection won't get better by retrying.
+      if (res.status < 500 && res.status !== 408 && res.status !== 429) {
+        throw new Error(lastError);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // A thrown definitive rejection propagates immediately.
+      if (msg === lastError && !/fetch|network|load failed/i.test(msg)) throw e;
+      lastError = msg;
+    }
+    if (attempt < attempts) await sleep(1200 * attempt);
   }
-  return res.json();
+  throw new Error(lastError);
 }
 
 const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelProps) => {
