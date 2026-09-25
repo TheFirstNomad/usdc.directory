@@ -37,22 +37,29 @@ const NEAR_USDC_CONTRACT = "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad
 
 interface EvmChain {
   rpc: string;
-  usdc: string; // contract address (any-case)
+  rpcFallback?: string; // secondary RPC tried if the primary times out
+  usdc: string;         // contract address (any-case)
+  usdcDecimals?: number; // defaults to 6; BNB Peg-USDC uses 18
 }
 const EVM_CHAINS: Record<string, EvmChain> = {
   arc:       { rpc: "https://rpc.mainnet.arc.io",                      usdc: "0x3600000000000000000000000000000000000000" },
   base:      { rpc: "https://mainnet.base.org",                        usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
-  ethereum:  { rpc: "https://eth.llamarpc.com",                        usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+  // Ethereum: primary is LlamaRPC, Cloudflare is the fallback to prevent timeout failures.
+  ethereum:  { rpc: "https://eth.llamarpc.com", rpcFallback: "https://cloudflare-eth.com", usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
   arbitrum:  { rpc: "https://arb1.arbitrum.io/rpc",                    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },
   optimism:  { rpc: "https://mainnet.optimism.io",                     usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" },
   polygon:   { rpc: "https://polygon-rpc.com",                         usdc: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" },
   avalanche: { rpc: "https://api.avax.network/ext/bc/C/rpc",           usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" },
-  bnb:       { rpc: "https://bsc-dataseed.binance.org",                usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
+  // BNB: Binance-Peg USDC has 18 decimals (not 6). usdcDecimals tells verifyEvm
+  // to normalise the raw Transfer value before comparing against the fee.
+  bnb:       { rpc: "https://bsc-dataseed.binance.org",                usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", usdcDecimals: 18 },
   linea:     { rpc: "https://rpc.linea.build",                         usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff" },
+  // Monad mainnet: native USDC bridged via LayerZero OFT.
+  monad:     { rpc: "https://monad-mainnet.drpc.org",                  usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3" },
 };
 
 const SUPPORTED_CHAINS = new Set<string>([
-  ...Object.keys(EVM_CHAINS), "monad", "solana", "sui", "near",
+  ...Object.keys(EVM_CHAINS), "solana", "sui", "near",
 ]);
 
 /**
@@ -100,39 +107,53 @@ const ERC20_TRANSFER_ABI = parseAbi([
 ]);
 
 // ── EVM verification ────────────────────────────────────────────────
+async function verifyEvmWithRpc(rpc: string, cfg: EvmChain, txHash: string, minFee: bigint): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+  const client = createPublicClient({ transport: http(rpc) });
+  const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+  if (!receipt || receipt.status !== "success") return { ok: false, error: "Transaction not successful" };
+
+  const usdcAddr = getAddress(cfg.usdc).toLowerCase();
+  // BNB Peg-USDC has 18 decimals; all other USDC contracts use 6.
+  // Normalise to 6-decimal units before comparing against the fee threshold.
+  const srcDecimals = cfg.usdcDecimals ?? 6;
+  const scaleFactor = srcDecimals > 6 ? 10n ** BigInt(srcDecimals - 6) : 1n;
+
+  let total = 0n;
+  let payer: string | null = null;
+  for (const log of receipt.logs) {
+    if (log.address.toLowerCase() !== usdcAddr) continue;
+    try {
+      const decoded = decodeEventLog({ abi: ERC20_TRANSFER_ABI, data: log.data, topics: log.topics });
+      if (decoded.eventName === "Transfer") {
+        const args = decoded.args as { from: string; to: string; value: bigint };
+        if (args.to.toLowerCase() === EVM_TREASURY) {
+          // Normalise to 6-decimal units for the fee comparison.
+          total += args.value / scaleFactor;
+          if (!payer) payer = args.from.toLowerCase();
+        }
+      }
+    } catch { /* not a Transfer log */ }
+  }
+  if (total < minFee) return { ok: false, error: `Insufficient payment: ${total} units (6-decimal) < ${minFee} required` };
+  return { ok: true, payer: payer ?? "unknown" };
+}
+
 async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   const cfg = EVM_CHAINS[chainKey];
-  if (!cfg) {
-    // Monad and other newer chains: we accept any tx hash format but cannot verify on-chain yet.
-    // For now, allow only if the chain has a configured RPC.
-    return { ok: false, error: `On-chain verification not yet configured for ${chainKey}. Use Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, or Linea for now.` };
-  }
+  if (!cfg) return { ok: false, error: `On-chain verification not configured for ${chainKey}.` };
   if (!EVM_TX_RE.test(txHash)) return { ok: false, error: "Invalid EVM tx hash" };
 
   try {
-    const client = createPublicClient({ transport: http(cfg.rpc) });
-    const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
-    if (!receipt || receipt.status !== "success") return { ok: false, error: "Transaction not successful" };
-
-    const usdcAddr = getAddress(cfg.usdc).toLowerCase();
-    let total = 0n;
-    let payer: string | null = null;
-    for (const log of receipt.logs) {
-      if (log.address.toLowerCase() !== usdcAddr) continue;
-      try {
-        const decoded = decodeEventLog({ abi: ERC20_TRANSFER_ABI, data: log.data, topics: log.topics });
-        if (decoded.eventName === "Transfer") {
-          const args = decoded.args as { from: string; to: string; value: bigint };
-          if (args.to.toLowerCase() === EVM_TREASURY) {
-            total += args.value;
-            if (!payer) payer = args.from.toLowerCase();
-          }
-        }
-      } catch { /* not a Transfer log */ }
-    }
-    if (total < minFee) return { ok: false, error: `Insufficient payment: ${total} < ${minFee} required` };
-    return { ok: true, payer: payer ?? "unknown" };
+    return await verifyEvmWithRpc(cfg.rpc, cfg, txHash, minFee);
   } catch (e) {
+    // Primary RPC failed — try fallback if configured (e.g. Cloudflare for Ethereum).
+    if (cfg.rpcFallback) {
+      try {
+        return await verifyEvmWithRpc(cfg.rpcFallback, cfg, txHash, minFee);
+      } catch (e2) {
+        return { ok: false, error: `RPC error (primary + fallback): ${(e2 as Error).message}` };
+      }
+    }
     return { ok: false, error: `RPC error: ${(e as Error).message}` };
   }
 }

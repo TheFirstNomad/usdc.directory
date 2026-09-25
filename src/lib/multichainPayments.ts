@@ -91,9 +91,10 @@ export const PAYMENT_CHAINS: ChainEntry[] = [
   },
   {
     key: "monad", label: "Monad", family: "evm", treasury: EVM_TREASURY,
+    usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3",
     usdcKind: "bridged",
     explorerTx: (h) => `https://explorer.monad.xyz/tx/${h}`,
-    notes: "Any audited bridged USDC accepted on mainnet",
+    notes: "Bridged USDC via LayerZero OFT on Monad mainnet",
   },
   // ── Non-EVM mainnets ────────────────────────────────────────────
   {
