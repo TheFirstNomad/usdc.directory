@@ -105,7 +105,7 @@ async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNI
   if (!cfg) {
     // Monad and other newer chains: we accept any tx hash format but cannot verify on-chain yet.
     // For now, allow only if the chain has a configured RPC.
-    return { ok: false, error: `On-chain verification not yet configured for ${chainKey}. Use Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, or Linea for now.` };
+    return { ok: false, error: `On-chain verification not yet configured for ${chainKey}. Use Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, or Linea for now.` };
   }
   if (!EVM_TX_RE.test(txHash)) return { ok: false, error: "Invalid EVM tx hash" };
 
