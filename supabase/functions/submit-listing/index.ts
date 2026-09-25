@@ -120,7 +120,7 @@ async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNI
 }
 
 // ── Solana verification (SPL token transfer of USDC mint to treasury) ─
-async function verifySolana(txHash: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifySolana(txHash: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   if (!SOLANA_TX_RE.test(txHash)) return { ok: false, error: "Invalid Solana tx signature" };
   try {
     const res = await fetch("https://api.mainnet-beta.solana.com", {
@@ -159,7 +159,7 @@ async function verifySolana(txHash: string): Promise<{ ok: true; payer: string }
 }
 
 // ── Sui verification ────────────────────────────────────────────────
-async function verifySui(txHash: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifySui(txHash: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   try {
     const res = await fetch("https://fullnode.mainnet.sui.io", {
       method: "POST",
@@ -192,7 +192,7 @@ async function verifySui(txHash: string): Promise<{ ok: true; payer: string } | 
 }
 
 // ── Near verification ───────────────────────────────────────────────
-async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
+async function verifyNear(txHash: string, signer?: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
   try {
     // Near RPC `tx` requires both hash and signer_id. We try signer if provided, else use treasury.
     const senderHint = signer && signer.length > 0 ? signer : NEAR_TREASURY;
@@ -222,7 +222,7 @@ async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; 
             const ev = JSON.parse(log.slice("EVENT_JSON:".length));
             if (ev.standard === "nep141" && ev.event === "ft_transfer") {
               for (const d of ev.data ?? []) {
-                if (d.new_owner_id === NEAR_TREASURY && BigInt(d.amount) >= FEE_BASE_UNITS) { ok = true; break; }
+                if (d.new_owner_id === NEAR_TREASURY && BigInt(d.amount) >= minFee) { ok = true; break; }
               }
             }
           } catch { /* ignore */ }
@@ -238,11 +238,11 @@ async function verifyNear(txHash: string, signer?: string): Promise<{ ok: true; 
   }
 }
 
-async function verifyPayment(chain: string, txHash: string, signerHint?: string) {
-  if (chain === "solana") return verifySolana(txHash);
-  if (chain === "sui") return verifySui(txHash);
-  if (chain === "near") return verifyNear(txHash, signerHint);
-  return verifyEvm(chain, txHash);
+async function verifyPayment(chain: string, txHash: string, signerHint?: string, minFee: bigint = FEE_BASE_UNITS) {
+  if (chain === "solana") return verifySolana(txHash, minFee);
+  if (chain === "sui") return verifySui(txHash, minFee);
+  if (chain === "near") return verifyNear(txHash, signerHint, minFee);
+  return verifyEvm(chain, txHash, minFee);
 }
 
 function validateData(data: any): { ok: true; out: any } | { ok: false; error: string } {
@@ -410,8 +410,5 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-ent-Type": "application/json" },
   });
 }
