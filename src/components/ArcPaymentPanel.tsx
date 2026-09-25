@@ -114,6 +114,8 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const [paidChain, setPaidChain] = useState<string>("base");
   const [error, setError] = useState<string | null>(null);
   const [baseDebug, setBaseDebug] = useState<BasePaymentDebug | null>(null);
+  const [unsavedPayment, setUnsavedPayment] = useState<{ hash: string; chainKey: string; payer: string } | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   // External "paste tx hash" multichain path
   const [showExternal, setShowExternal] = useState(false);
@@ -162,31 +164,46 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     return hash;
   };
 
+  /** Saves a confirmed payment; keeps the hash around so the user can retry. */
+  const saveAfterPayment = async (hash: string, chainKey: string, payer: string) => {
+    try {
+      await persistListing(type, hash, payer, submissionData, chainKey);
+    } catch (saveErr: unknown) {
+      const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
+      setUnsavedPayment({ hash, chainKey, payer });
+      setError(`Your payment is confirmed on-chain and safe. Saving the listing didn't go through yet: ${message}. Tap "Retry saving my listing" below — you will not be charged again.`);
+      toast({
+        title: "Payment safe — listing not saved yet",
+        description: "Tap Retry saving my listing. No second payment needed.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    setUnsavedPayment(null);
+    setPaidChain(chainKey);
+    setTxHash(hash);
+    toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
+    onSuccess(hash);
+    return true;
+  };
+
   const handlePay = async () => {
     setPaying(true); setError(null); setBaseDebug(null);
     try {
       const hash = isArc ? await payOnArc() : await payOnBase();
-      try {
-        await persistListing(type, hash, address!, submissionData, activeChainKey);
-      } catch (saveErr: unknown) {
-        const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
-        setError(`Payment confirmed on-chain but listing save failed: ${message}. Save your tx hash: ${hash} and contact support.`);
-        toast({
-          title: "Listing save failed. Save your tx hash!",
-          description: `Tx: ${hash.slice(0, 16)}… | ${message}`,
-          variant: "destructive",
-        });
-        return; // do NOT call onSuccess — user is not listed yet
-      }
-      setPaidChain(activeChainKey);
-      setTxHash(hash);
-      toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
-      onSuccess(hash);
+      await saveAfterPayment(hash, activeChainKey, address!);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : `Payment failed on ${chainLabel}`;
       setError(msg);
       toast({ title: "Payment failed", description: msg, variant: "destructive" });
     } finally { setPaying(false); }
+  };
+
+  const handleRetrySave = async () => {
+    if (!unsavedPayment) return;
+    setRetrying(true); setError(null);
+    await saveAfterPayment(unsavedPayment.hash, unsavedPayment.chainKey, unsavedPayment.payer);
+    setRetrying(false);
   };
 
   const handleExternalSubmit = async () => {
