@@ -45,56 +45,36 @@ interface ArcPaymentPanelProps {
   onSuccess: (txHash: string) => void;
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-/**
- * Saves the listing after payment. Because the money has already moved on-chain,
- * this NEVER gives up on a transient failure: it retries network errors and
- * server-side (5xx) errors with backoff. Only a definitive rejection (4xx) or a
- * duplicate (409 — already saved) stops the loop.
- */
 async function persistListing(
   type: "listing" | "update",
   txHash: string,
   walletAddress: string,
   submissionData: Record<string, unknown>,
   chain: string,
-  attempts = 4,
 ) {
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const supabaseUrl =
     import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
-
-  let lastError = "Failed to save listing";
-  for (let attempt = 1; attempt <= attempts; attempt++) {
-    try {
-      const res = await fetch(`${supabaseUrl}/functions/v1/submit-listing`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type, tx_hash: txHash, chain, wallet_address: walletAddress, data: submissionData,
-        }),
-      });
-      if (res.ok) return res.json();
-
-      const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-      lastError = err.error || `HTTP ${res.status}`;
-
-      // Already saved by a previous attempt — treat as success.
-      if (res.status === 409) return { success: true, duplicate: true };
-      // Client-side rejection won't get better by retrying.
-      if (res.status < 500 && res.status !== 408 && res.status !== 429) {
-        throw new Error(lastError);
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      // A thrown definitive rejection propagates immediately.
-      if (msg === lastError && !/fetch|network|load failed/i.test(msg)) throw e;
-      lastError = msg;
-    }
-    if (attempt < attempts) await sleep(1200 * attempt);
+  // tier must sit at the top level of the request body — the backend reads body.tier,
+  // not body.data.tier. Extract it from submissionData before sending.
+  const { tier: listingTier, ...listingData } = submissionData as Record<string, unknown> & { tier?: string };
+  const res = await fetch(`${supabaseUrl}/functions/v1/submit-listing`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type,
+      tx_hash: txHash,
+      chain,
+      wallet_address: walletAddress,
+      tier: listingTier ?? "standard",
+      data: listingData,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(err.error || "Failed to save listing");
   }
-  throw new Error(lastError);
+  return res.json();
 }
 
 const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelProps) => {
@@ -113,9 +93,10 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const [txHash, setTxHash] = useState<string | null>(null);
   const [paidChain, setPaidChain] = useState<string>("base");
   const [error, setError] = useState<string | null>(null);
-  const [baseDebug, setBaseDebug] = useState<BasePaymentDebug | null>(null);
-  const [unsavedPayment, setUnsavedPayment] = useState<{ hash: string; chainKey: string; payer: string } | null>(null);
+  const [saveFailedHash, setSaveFailedHash] = useState<string | null>(null);
+  const [saveFailedChain, setSaveFailedChain] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
+  const [baseDebug, setBaseDebug] = useState<BasePaymentDebug | null>(null);
 
   // External "paste tx hash" multichain path
   const [showExternal, setShowExternal] = useState(false);
@@ -164,34 +145,28 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     return hash;
   };
 
-  /** Saves a confirmed payment; keeps the hash around so the user can retry. */
-  const saveAfterPayment = async (hash: string, chainKey: string, payer: string) => {
-    try {
-      await persistListing(type, hash, payer, submissionData, chainKey);
-    } catch (saveErr: unknown) {
-      const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
-      setUnsavedPayment({ hash, chainKey, payer });
-      setError(`Your payment is confirmed on-chain and safe. Saving the listing didn't go through yet: ${message}. Tap "Retry saving my listing" below — you will not be charged again.`);
-      toast({
-        title: "Payment safe — listing not saved yet",
-        description: "Tap Retry saving my listing. No second payment needed.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    setUnsavedPayment(null);
-    setPaidChain(chainKey);
-    setTxHash(hash);
-    toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
-    onSuccess(hash);
-    return true;
-  };
-
   const handlePay = async () => {
     setPaying(true); setError(null); setBaseDebug(null);
     try {
       const hash = isArc ? await payOnArc() : await payOnBase();
-      await saveAfterPayment(hash, activeChainKey, address!);
+      try {
+        await persistListing(type, hash, address!, submissionData, activeChainKey);
+      } catch (saveErr: unknown) {
+        const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
+        setSaveFailedHash(hash);
+        setSaveFailedChain(activeChainKey);
+        setError(`Your payment is confirmed and safe. Saving the listing didn't go through yet: ${message}. Tap "Retry saving my listing" below — you will not be charged again.`);
+        toast({
+          title: "Payment safe — listing not saved yet",
+          description: "Tap Retry saving my listing. No second payment needed.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setPaidChain(activeChainKey);
+      setTxHash(hash);
+      toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
+      onSuccess(hash);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : `Payment failed on ${chainLabel}`;
       setError(msg);
@@ -199,11 +174,22 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     } finally { setPaying(false); }
   };
 
-  const handleRetrySave = async () => {
-    if (!unsavedPayment) return;
+  const handleRetry = async () => {
+    if (!saveFailedHash || !saveFailedChain || !address) return;
     setRetrying(true); setError(null);
-    await saveAfterPayment(unsavedPayment.hash, unsavedPayment.chainKey, unsavedPayment.payer);
-    setRetrying(false);
+    try {
+      await persistListing(type, saveFailedHash, address, submissionData, saveFailedChain);
+      setSaveFailedHash(null);
+      setSaveFailedChain(null);
+      setPaidChain(saveFailedChain);
+      setTxHash(saveFailedHash);
+      toast({ title: "Listing saved!", description: "Your listing is now live." });
+      onSuccess(saveFailedHash);
+    } catch (retryErr: unknown) {
+      const message = retryErr instanceof Error ? retryErr.message : String(retryErr);
+      setError(`Retry failed: ${message}. Your tx hash: ${saveFailedHash} — contact hello@usdc.directory.`);
+      toast({ title: "Retry failed", description: message, variant: "destructive" });
+    } finally { setRetrying(false); }
   };
 
   const handleExternalSubmit = async () => {
@@ -414,22 +400,26 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       </div>
       {showExternal && renderExternalForm()}
 
-      {error && <p className="text-sm text-destructive text-center">{error}</p>}
-
-      {unsavedPayment && (
-        <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Your payment is confirmed and safe. Retry the save — no extra charge.
-          </p>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-mono text-muted-foreground truncate">{unsavedPayment.hash}</span>
-            <button onClick={() => copy(unsavedPayment.hash)} className="text-primary hover:text-primary/80 shrink-0">
-              <Copy className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <Button onClick={handleRetrySave} disabled={retrying} className="w-full rounded-xl font-semibold">
-            {retrying ? "Retrying…" : "Retry saving my listing"}
-          </Button>
+      {error && (
+        <div className="space-y-3">
+          <p className="text-sm text-destructive text-center">{error}</p>
+          {saveFailedHash && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 space-y-3">
+              <p className="text-xs text-foreground font-medium">Your payment is confirmed and safe. Retry the save — no extra charge.</p>
+              <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+                <span className="text-xs font-mono text-muted-foreground truncate flex-1">{saveFailedHash}</span>
+                <button onClick={() => copy(saveFailedHash, "Tx hash copied")} className="text-primary shrink-0">
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <Button onClick={handleRetry} disabled={retrying}
+                className="w-full bg-primary text-primary-foreground rounded-lg">
+                {retrying
+                  ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Retrying…</>
+                  : "Retry saving my listing"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
