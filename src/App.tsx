@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Web3Provider } from "@/components/Web3Provider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ChainProvider } from "@/contexts/ChainContext";
+import AdminGuard from "@/components/AdminGuard";
 import Index from "./pages/Index.tsx";
 
 // Lazy-load all secondary routes. Keeps the initial JS bundle small —
