@@ -4,7 +4,7 @@ const SITE = "https://usdc.directory";
 
 const STATIC_PATHS = [
   "/", "/about", "/submit", "/submit/ai-agent", "/insights",
-  "/acquire", "/license", "/map", "/ai-agents", "/api-docs", "/swap",
+  "/acquire", "/license", "/map", "/ai-agents", "/api-docs",
 ];
 
 Deno.serve(async (req) => {
