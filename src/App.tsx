@@ -28,7 +28,6 @@ const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 const DeploymentStatus = lazy(() => import("./pages/DeploymentStatus.tsx"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
-const AdminGuard = lazy(() => import("./components/AdminGuard.tsx"));
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
