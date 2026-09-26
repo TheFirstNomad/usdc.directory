@@ -23,17 +23,7 @@ import { ERC20_ABI } from "@/lib/swap/contracts";
 import { useQuote } from "@/lib/swap/useQuote";
 import { useSwap } from "@/lib/swap/useSwap";
 import { useChainContext } from "@/contexts/ChainContext";
-
-/* rough fiat prices for display */
-const FIAT_PRICES: Record<string, number> = {
-  ETH: 3450, WETH: 3450, USDC: 1, DAI: 1, USDbC: 1,
-  cbBTC: 96500, AERO: 0.75, DEGEN: 0.008, EURC: 1.08,
-};
-const fiat = (symbol: string, amount: number) => {
-  const p = FIAT_PRICES[symbol];
-  if (!p || !amount) return null;
-  return (p * amount).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
-};
+import { useFiatPrices } from "@/hooks/useFiatPrices";
 
 const Swap = () => {
   const { open: openWallet } = useAppKit();
@@ -43,6 +33,12 @@ const Swap = () => {
   const { switchChain } = useSwitchChain();
 
   const { chainId: globalChainId, setChainId: setGlobalChainId } = useChainContext();
+  const { prices: FIAT_PRICES } = useFiatPrices();
+  const fiat = (symbol: string, amount: number) => {
+    const p = FIAT_PRICES[symbol];
+    if (!p || !amount) return null;
+    return (p * amount).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+  };
 
   const [selectedChainId, setSelectedChainId] = useState<SupportedChainId>(globalChainId);
   const tokens = TOKENS_BY_CHAIN[selectedChainId] ?? [];
@@ -521,8 +517,8 @@ const Swap = () => {
                   </div>
                 )}
               </div>
-              {/* ERC-8021 calldata debug panel (Base mainnet only) */}
-              {!isArc && <CalldataDebugPanel data={lastCalldata} history={calldataHistory} />}
+              {/* ERC-8021 calldata debug panel — dev builds only */}
+              {!isArc && import.meta.env.DEV && <CalldataDebugPanel data={lastCalldata} history={calldataHistory} />}
         </main>
 
         <Footer />

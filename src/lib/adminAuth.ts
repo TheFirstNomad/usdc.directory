@@ -7,6 +7,9 @@
  * NOTE: Signatures are one-shot on the server. Do NOT cache them.
  */
 
+/** The owner wallet that controls all admin edge functions. Must match OWNER_WALLET in _shared/admin-auth.ts. */
+export const OWNER_WALLET = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
+
 export function buildAdminMessage(timestamp: number): string {
   return `USDC Directory Admin\nTimestamp: ${timestamp}`;
 }

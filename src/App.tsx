@@ -59,10 +59,10 @@ const App = () => (
               <Route path="/edit/:id" element={<EditListing />} />
               <Route path="/map" element={<MapView />} />
               <Route path="/my-listings" element={<MyListings />} />
-              <Route path="/admin/payments" element={<AdminPayments />} />
-              <Route path="/admin/agents" element={<AdminAgents />} />
-              <Route path="/admin/featured" element={<AdminFeatured />} />
-              <Route path="/admin/listings" element={<AdminListings />} />
+              <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
+              <Route path="/admin/agents" element={<AdminGuard><AdminAgents /></AdminGuard>} />
+              <Route path="/admin/featured" element={<AdminGuard><AdminFeatured /></AdminGuard>} />
+              <Route path="/admin/listings" element={<AdminGuard><AdminListings /></AdminGuard>} />
               <Route path="/deployment-status" element={<DeploymentStatus />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="*" element={<NotFound />} />

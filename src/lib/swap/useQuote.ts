@@ -3,6 +3,7 @@ import { parseUnits } from "viem";
 import { UNISWAP_V3_QUOTER_V2, QUOTER_V2_ABI } from "./contracts";
 import type { TokenInfo } from "./tokens";
 import { WETH_ADDRESS, getPoolFee } from "./tokens";
+import { useFiatPrices, eurcRateFromPrices } from "@/hooks/useFiatPrices";
 
 export function useQuote({
   tokenIn,
@@ -56,22 +57,23 @@ export function useQuote({
     query: { enabled: shouldFetchV3, refetchInterval: 15_000 },
   });
 
-  // ── Arc Mainnet: Use 1:1 stablecoin estimate (no on-chain V2 liquidity available) ──
+  // ── Arc Mainnet: live EURC/USDC estimate from CoinGecko ──
   // Arc Mainnet USDC/EURC swaps are executed via Circle App Kit's built-in swap,
   // so we provide an estimated quote here for display purposes.
+  // Rate is fetched live (60s refresh) and falls back to compile-time constants.
+  const { prices: livePrices } = useFiatPrices();
+  const { usdcPerEurc, eurcPerUsdc } = eurcRateFromPrices(livePrices);
+
   if (isArc) {
     const bothStable = tokenIn?.isStable && tokenOut?.isStable;
-    // For USDC/EURC, approximate 1:1.08 rate (or inverse)
     let estimatedOut: bigint | null = null;
     if (amountInParsed > 0n && tokenIn && tokenOut && bothStable) {
       if (tokenIn.symbol === "USDC" && tokenOut.symbol === "EURC") {
-        // 1 USDC ≈ 0.926 EURC (1/1.08)
-        estimatedOut = (amountInParsed * 926n) / 1000n;
+        estimatedOut = (amountInParsed * eurcPerUsdc) / 10000n;
       } else if (tokenIn.symbol === "EURC" && tokenOut.symbol === "USDC") {
-        // 1 EURC ≈ 1.08 USDC
-        estimatedOut = (amountInParsed * 1080n) / 1000n;
+        estimatedOut = (amountInParsed * usdcPerEurc) / 10000n;
       } else {
-        estimatedOut = amountInParsed; // same stablecoin fallback
+        estimatedOut = amountInParsed;
       }
     }
     return {
