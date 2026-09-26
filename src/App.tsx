@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,7 +23,6 @@ const AdminAgents = lazy(() => import("./pages/AdminAgents.tsx"));
 const SubmitAIAgent = lazy(() => import("./pages/SubmitAIAgent.tsx"));
 const AIAgents = lazy(() => import("./pages/AIAgents.tsx"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs.tsx"));
-const Swap = lazy(() => import("./pages/Swap.tsx"));
 const AdminFeatured = lazy(() => import("./pages/AdminFeatured.tsx"));
 const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 const DeploymentStatus = lazy(() => import("./pages/DeploymentStatus.tsx"));
@@ -53,7 +52,8 @@ const App = () => (
               <Route path="/submit/ai-agent" element={<SubmitAIAgent />} />
               <Route path="/ai-agents" element={<AIAgents />} />
               <Route path="/api-docs" element={<ApiDocs />} />
-              <Route path="/swap" element={<Swap />} />
+              {/* Swap temporarily disabled — will return powered by Circle App Kit */}
+              <Route path="/swap" element={<Navigate to="/" replace />} />
               <Route path="/insights" element={<Insights />} />
               <Route path="/merchant/:id" element={<MerchantDetail />} />
               <Route path="/edit/:id" element={<EditListing />} />
