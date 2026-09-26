@@ -5,8 +5,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { useTheme } from "@/components/ThemeProvider";
 import { TREASURY_ADDRESS } from "@/lib/web3";
-import { useChainContext } from "@/contexts/ChainContext";
-import ChainDropdown from "@/components/ChainDropdown";
 import CommandPalette from "@/components/CommandPalette";
 import type { Partner } from "@/lib/partners";
 
@@ -16,7 +14,6 @@ interface HeaderProps {
 
 const baseNavLinks = [
   { label: "Directory", href: "/" },
-  { label: "Swap", href: "/swap" },
   { label: "AI Agents", href: "/ai-agents" },
   { label: "Map", href: "/map" },
 ];
@@ -28,7 +25,6 @@ const Header = ({ partners = [] }: HeaderProps) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { theme, toggleTheme } = useTheme();
-  const { chainId, setChainId } = useChainContext();
 
   const isOwner = address?.toLowerCase() === TREASURY_ADDRESS.toLowerCase();
   const navLinks = useMemo(
@@ -104,7 +100,6 @@ const Header = ({ partners = [] }: HeaderProps) => {
             <kbd className="ml-1 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded hidden xl:inline">⌘K</kbd>
           </button>
 
-          <ChainDropdown chainId={chainId} onChange={setChainId} />
 
           <button
             onClick={toggleTheme}
@@ -160,7 +155,6 @@ const Header = ({ partners = [] }: HeaderProps) => {
             </Link>
           ))}
           <div className="pt-3 space-y-2">
-            <ChainDropdown chainId={chainId} onChange={setChainId} />
             <button
               onClick={toggleTheme}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl border border-border bg-card"

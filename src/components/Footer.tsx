@@ -58,7 +58,6 @@ const Footer = () => (
               <li><a href="/submit" className="hover:text-foreground transition-colors">List Your Business</a></li>
               <li><a href="/submit/ai-agent" className="hover:text-foreground transition-colors">List AI Agent</a></li>
               <li><a href="/api-docs" className="hover:text-foreground transition-colors">API Docs</a></li>
-              <li><a href="/swap" className="hover:text-foreground transition-colors">Swap USDC</a></li>
             </ul>
           </div>
 
