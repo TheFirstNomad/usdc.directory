@@ -25,7 +25,6 @@ const Header = ({ partners = [] }: HeaderProps) => {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
   const { theme, toggleTheme } = useTheme();
-  const { chainId, setChainId } = useChainContext();
 
   const isOwner = address?.toLowerCase() === TREASURY_ADDRESS.toLowerCase();
   const navLinks = useMemo(

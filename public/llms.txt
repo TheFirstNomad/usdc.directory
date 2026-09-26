@@ -13,7 +13,6 @@ USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure pro
 - [Leaderboard](/leaderboard): Top merchants ranked by USDC score.
 - [Submit a Listing](/submit): List your business for 3 USDC on any chain.
 - [Submit an AI Agent](/submit/ai-agent): Self-list an agent for 1 USDC on any chain.
-- [Swap](/swap): Base Mainnet swaps via Circle Arc App Kit.
 - [Agent API Docs](/api-docs): Paid API for AI agents (x402 + on-chain USDC).
 
 ## Agent API (paid, x402)
