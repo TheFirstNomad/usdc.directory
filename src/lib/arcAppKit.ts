@@ -227,14 +227,17 @@ export async function payBoostFee(
  * transparently rewritten to our `circle-proxy` edge function.
  */
 const CIRCLE_API_ORIGIN = "https://api.circle.com";
-const PROXY_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/circle-proxy`;
+// Derive the edge function URL from VITE_SUPABASE_URL (always set by Lovable/Supabase)
+// e.g. https://xyzabc.supabase.co → https://xyzabc.supabase.co/functions/v1/circle-proxy
+const _supabaseBase = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+const PROXY_URL = _supabaseBase ? `${_supabaseBase}/functions/v1/circle-proxy` : "";
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 declare global {
   var __circleProxyInstalled: boolean | undefined;
 }
 
-if (typeof globalThis !== "undefined" && !globalThis.__circleProxyInstalled) {
+if (typeof globalThis !== "undefined" && !globalThis.__circleProxyInstalled && PROXY_URL) {
   const originalFetch = globalThis.fetch.bind(globalThis);
 
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
