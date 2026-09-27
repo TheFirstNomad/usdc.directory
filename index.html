@@ -5,26 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google-site-verification" content="X5ZmCQkEVjdzAeiSi-HDz5ZBd_SJpBS7o2paPkwWvvE" />
 
-    <!-- Security hardening: keep XSS blast radius small without breaking React/Vite, Reown/WalletConnect, Supabase, or Circle Arc -->
+    <!-- Security hardening: CSP kept intentionally permissive on frame-ancestors
+         so Lovable preview/embed and wallet modal iframes work correctly. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        base-uri 'self';
-        form-action 'self';
-        frame-ancestors 'none';
-        object-src 'none';
-        upgrade-insecure-requests;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:;
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com;
-        img-src 'self' data: blob: https:;
-        media-src 'self' data: blob: https:;
-        worker-src 'self' blob:;
-        frame-src 'self' https: blob:;
-        connect-src 'self' https: wss: data: blob:;
-        manifest-src 'self';
-      "
+      content="default-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; worker-src 'self' blob:; frame-src 'self' https: blob:; connect-src 'self' https: wss: data: blob:; manifest-src 'self';"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
