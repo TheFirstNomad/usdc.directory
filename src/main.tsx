@@ -4,11 +4,14 @@ import "./polyfills";
 
 import { createRoot } from "react-dom/client";
 import ErrorBoundary from "./components/ErrorBoundary";
-import App from "./App.tsx";
+import AppBootstrap from "./components/AppBootstrap";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(
+const mountNode = document.getElementById("root") ?? document.body.appendChild(document.createElement("div"));
+mountNode.id = "root";
+
+createRoot(mountNode).render(
   <ErrorBoundary>
-    <App />
+    <AppBootstrap />
   </ErrorBoundary>
 );
