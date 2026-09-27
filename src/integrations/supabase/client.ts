@@ -3,16 +3,54 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+// Guard: if env vars are missing, render a visible config error instead of
+// crashing silently and producing a blank screen. Both vars are required.
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  // Inject a visible error into the DOM immediately so users and developers
+  // see something useful instead of a blank dark page.
+  if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      const root = document.getElementById("root");
+      if (root && root.innerHTML.trim() === "") {
+        root.innerHTML = `
+          <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0e1a;font-family:system-ui,sans-serif;padding:24px;">
+            <div style="max-width:480px;text-align:center;color:#e2e8f0;">
+              <div style="font-size:40px;margin-bottom:16px;">⚙️</div>
+              <h1 style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">Configuration Error</h1>
+              <p style="font-size:14px;color:#94a3b8;line-height:1.6;margin-bottom:16px;">
+                VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY must be set in
+                the project environment variables before deploying.
+              </p>
+              <p style="font-size:12px;color:#64748b;">
+                Set these in Lovable project settings under Environment Variables,
+                then redeploy.
+              </p>
+            </div>
+          </div>`;
+      }
+    });
+  }
+  // Also log clearly for developers
+  console.error(
+    "[usdc.directory] FATAL: VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY is missing.\n" +
+    "Set both in Lovable project settings → Environment Variables and redeploy."
+  );
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: brokeredPreviewStorage(),
-    persistSession: true,
-    autoRefreshToken: true,
+export const supabase = createClient<Database>(
+  SUPABASE_URL ?? "https://placeholder.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY ?? "placeholder",
+  {
+    auth: {
+      storage: brokeredPreviewStorage(),
+      persistSession: true,
+      autoRefreshToken: true,
+    },
   }
-});
+);

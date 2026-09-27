@@ -16,9 +16,13 @@ import type { AppKit } from "@circle-fin/app-kit";
 export const ARC_KIT_KEY: string = import.meta.env.VITE_ARC_KIT_KEY ?? "";
 
 if (!ARC_KIT_KEY || !ARC_KIT_KEY.startsWith("KIT_KEY:")) {
+  // Log clearly — does not blank the page since this is non-fatal for
+  // users who don't use the swap/pay features. Swap/pay calls will
+  // throw at runtime with a clear message if the key is absent.
   console.error(
-    "❌ VITE_ARC_KIT_KEY is missing or invalid. " +
-    "Set it in your .env file. Circle App Kit operations will fail."
+    "[usdc.directory] VITE_ARC_KIT_KEY is missing or invalid.\n" +
+    "Set it in Lovable project settings → Environment Variables.\n" +
+    "Swap and listing-payment features will not work until it is set."
   );
 }
 
