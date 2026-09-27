@@ -6,46 +6,61 @@ import { brokeredPreviewStorage } from './previewAuthStorage';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
-// Guard: if env vars are missing, render a visible config error instead of
-// crashing silently and producing a blank screen. Both vars are required.
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  // Inject a visible error into the DOM immediately so users and developers
-  // see something useful instead of a blank dark page.
+// Canonical project guard. If the URL is missing or points at the wrong
+// project, the app will show a clear operator error instead of silently
+// serving an empty directory from a wrong/placeholder database.
+const CANONICAL_HOST = "ddhytszijvfejnymrwgd.supabase.co";
+
+function getConfigError(): string | null {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    return "VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY must be set in Lovable project settings → Environment Variables.";
+  }
+  if (!SUPABASE_URL.includes(CANONICAL_HOST)) {
+    return `VITE_SUPABASE_URL is pointing at the wrong project.\n` +
+      `Expected: https://${CANONICAL_HOST}\n` +
+      `Got: ${SUPABASE_URL}\n` +
+      `Fix this in Lovable project settings → Environment Variables and redeploy.`;
+  }
+  return null;
+}
+
+const configError = getConfigError();
+
+if (configError) {
+  console.error(`[usdc.directory] FATAL CONFIG ERROR:\n${configError}`);
+  // Inject a visible error into the DOM so the blank screen has a message.
   if (typeof document !== "undefined") {
-    document.addEventListener("DOMContentLoaded", () => {
+    const inject = () => {
       const root = document.getElementById("root");
       if (root && root.innerHTML.trim() === "") {
         root.innerHTML = `
           <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0a0e1a;font-family:system-ui,sans-serif;padding:24px;">
-            <div style="max-width:480px;text-align:center;color:#e2e8f0;">
+            <div style="max-width:520px;text-align:center;color:#e2e8f0;">
               <div style="font-size:40px;margin-bottom:16px;">⚙️</div>
-              <h1 style="font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;">Configuration Error</h1>
-              <p style="font-size:14px;color:#94a3b8;line-height:1.6;margin-bottom:16px;">
-                VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY must be set in
-                the project environment variables before deploying.
-              </p>
+              <h1 style="font-size:20px;font-weight:700;color:#fff;margin-bottom:12px;">Configuration Error</h1>
+              <pre style="font-size:12px;color:#f87171;background:#1e1e2e;padding:16px;border-radius:8px;text-align:left;white-space:pre-wrap;word-break:break-all;margin-bottom:16px;">${configError}</pre>
               <p style="font-size:12px;color:#64748b;">
-                Set these in Lovable project settings under Environment Variables,
-                then redeploy.
+                Set the correct environment variables in Lovable project settings,
+                then click Publish to redeploy.
               </p>
             </div>
           </div>`;
       }
-    });
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", inject);
+    } else {
+      inject();
+    }
   }
-  // Also log clearly for developers
-  console.error(
-    "[usdc.directory] FATAL: VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY is missing.\n" +
-    "Set both in Lovable project settings → Environment Variables and redeploy."
-  );
 }
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(
-  SUPABASE_URL ?? "https://placeholder.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY ?? "placeholder",
+  SUPABASE_URL ?? `https://${CANONICAL_HOST}`,
+  SUPABASE_PUBLISHABLE_KEY ?? "misconfigured",
   {
     auth: {
       storage: brokeredPreviewStorage(),
@@ -54,3 +69,7 @@ export const supabase = createClient<Database>(
     },
   }
 );
+
+// Export config state for the health check component.
+export const supabaseConfigError = configError;
+export const supabaseConnectedHost = SUPABASE_URL ?? "(missing)";

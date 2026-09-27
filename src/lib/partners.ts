@@ -18,9 +18,14 @@ export interface Partner {
   verified?: boolean;
 }
 
+export interface FetchResult<T> {
+  data: T;
+  error: string | null;
+}
+
 const PARTNER_COLS = "id, name, description, website, logo_url, logo_emoji, categories, region, use_cases, featured, created_at, usdc_score, networks, boosted_until, verified";
 
-export async function fetchPartners(): Promise<Partner[]> {
+export async function fetchPartners(): Promise<FetchResult<Partner[]>> {
   const { data, error } = await supabase
     .from("partners_public" as any)
     .select(PARTNER_COLS)
@@ -28,13 +33,13 @@ export async function fetchPartners(): Promise<Partner[]> {
     .range(0, 2999);
 
   if (error) {
-    console.error("Error fetching partners:", error);
-    return [];
+    console.error("[usdc.directory] fetchPartners error:", error);
+    return { data: [], error: error.message };
   }
-  return (data as unknown as Partner[]) || [];
+  return { data: (data as unknown as Partner[]) || [], error: null };
 }
 
-export async function fetchFeaturedPartners(): Promise<Partner[]> {
+export async function fetchFeaturedPartners(): Promise<FetchResult<Partner[]>> {
   const { data, error } = await supabase
     .from("partners_public" as any)
     .select(PARTNER_COLS)
@@ -43,12 +48,11 @@ export async function fetchFeaturedPartners(): Promise<Partner[]> {
     .range(0, 2999);
 
   if (error) {
-    console.error("Error fetching featured partners:", error);
-    return [];
+    console.error("[usdc.directory] fetchFeaturedPartners error:", error);
+    return { data: [], error: error.message };
   }
-  return (data as unknown as Partner[]) || [];
+  return { data: (data as unknown as Partner[]) || [], error: null };
 }
-
 
 // Updated category list per usdc.directory spec
 export const CATEGORIES = [
@@ -58,59 +62,66 @@ export const CATEGORIES = [
   "DeFi Apps",
   "Digital Wallets",
   "Due Diligence & Advisory",
-  "Ecommerce",
-  "Exchanges",
-  "Fintechs",
+  "Exchange",
+  "Financial Services",
   "Gaming",
-  "Infrastructure Providers",
-  "Market Makers",
-  "Marketplaces",
-  "Neobanks",
-  "OTC Desks",
+  "Infrastructure & DevTools",
+  "Lending & Credit",
+  "Merchant / Retail",
+  "On / Off Ramp",
   "Payments",
-  "PR & Communications",
+  "Payroll & Accounting",
+  "Real Estate",
   "Remittances",
-  "Security",
+  "Staking & Yield",
+  "Stablecoin Protocol",
+  "Travel",
+];
+
+export const REGIONS = [
+  "Global",
+  "North America",
+  "South America",
+  "Europe",
+  "Africa",
+  "Asia",
+  "Other",
+];
+
+export const NETWORKS = [
+  "Arc",
+  "Base",
+  "Ethereum",
+  "Arbitrum",
+  "Optimism",
+  "Polygon",
+  "Avalanche",
+  "BNB Chain",
+  "Linea",
+  "Solana",
+  "Sui",
+  "Near",
 ];
 
 export const CATEGORY_EMOJIS: Record<string, string> = {
   "AI & Agentic Platforms": "🤖",
   "Bridge Apps": "🌉",
-  "Bridge SDKs": "🔗",
-  "DeFi Apps": "🏦",
+  "Bridge SDKs": "🔧",
+  "DeFi Apps": "📈",
   "Digital Wallets": "👛",
   "Due Diligence & Advisory": "🔍",
-  "Ecommerce": "🛒",
-  "Exchanges": "💱",
-  "Fintechs": "💳",
+  "Exchange": "🔄",
+  "Financial Services": "🏦",
   "Gaming": "🎮",
-  "Infrastructure Providers": "⚙️",
-  "Market Makers": "📊",
-  "Marketplaces": "🏪",
-  "Neobanks": "🏛️",
-  "OTC Desks": "💼",
+  "Infrastructure & DevTools": "⚙️",
+  "Lending & Credit": "💳",
+  "Merchant / Retail": "🛍️",
+  "On / Off Ramp": "🚀",
   "Payments": "💸",
-  "PR & Communications": "📢",
-  "Remittances": "💵",
-  "Security": "🔒",
-};
-
-export const REGIONS = [
-  "Global",
-  "Africa",
-  "Europe",
-  "Asia",
-  "North America",
-  "South America",
-  "Other",
-];
-
-export const REGION_FLAGS: Record<string, string> = {
-  Global: "🌍",
-  Africa: "🌍",
-  Europe: "🇪🇺",
-  Asia: "🌏",
-  "North America": "🇺🇸",
-  "South America": "🌎",
-  Other: "📍",
+  "Payroll & Accounting": "📊",
+  "Real Estate": "🏠",
+  "Remittances": "💱",
+  "Staking & Yield": "🌱",
+  "Stablecoin Protocol": "🪙",
+  "Travel": "✈️",
 };

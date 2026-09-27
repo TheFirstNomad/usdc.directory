@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SearchX, ArrowUpDown, Bot } from "lucide-react";
+import { SearchX, ArrowUpDown, Bot, AlertTriangle, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import ShimmerCard from "@/components/ShimmerCard";
@@ -24,12 +24,14 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<"name" | "newest" | "score">("newest");
 
   // React Query caches partners across routes so revisits are instant.
-  const { data: partners = [], isLoading: loading } = useQuery<Partner[]>({
+  const { data: result, isLoading: loading, refetch } = useQuery({
     queryKey: ["partners"],
     queryFn: fetchPartners,
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
+  const partners: Partner[] = result?.data ?? [];
+  const fetchError: string | null = result?.error ?? null;
 
   const uniquePartners = useMemo(() => {
     return Array.from(
@@ -84,7 +86,7 @@ const Index = () => {
         selectedRegions.length === 0 || selectedRegions.includes(p.region);
       const matchesNetwork =
         selectedNetworks.length === 0 ||
-        p.use_cases.some((uc) => selectedNetworks.includes(uc));
+        (p.networks ?? []).some((n) => selectedNetworks.includes(n));
       return matchesSearch && matchesCategory && matchesRegion && matchesNetwork;
     });
 
@@ -196,6 +198,21 @@ const Index = () => {
                 {filteredPartners.map((partner, i) => (
                   <PartnerCard key={partner.id} partner={partner} index={i} />
                 ))}
+              </div>
+            ) : fetchError ? (
+              <div className="text-center py-20">
+                <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                </div>
+                <p className="text-lg font-semibold text-foreground mb-1">Directory data unavailable</p>
+                <p className="text-sm text-muted-foreground mb-2 max-w-sm mx-auto">
+                  Could not load merchant listings. This is a temporary connection issue, not an empty directory.
+                </p>
+                <p className="text-xs text-muted-foreground/60 font-mono mb-5">{fetchError}</p>
+                <Button variant="outline" onClick={() => refetch()} className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Try again
+                </Button>
               </div>
             ) : (
               <div className="text-center py-20">

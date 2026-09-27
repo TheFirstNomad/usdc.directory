@@ -44,6 +44,31 @@ combined with a historical TRUNCATE migration.
 - The sitemap at `public/sitemap.xml` contains 1,188 URLs (1,177 merchants)
   and can serve as a reference for which listings existed
 
+## 2026-09-27 (Update): Phase 3 hardening applied
+
+### Confirmed root cause
+`fetchPartners()` was swallowing all Supabase errors and returning `[]`.
+`Index.tsx` showed "No merchants found" for both a failed query AND a
+genuinely empty database — making a misconfigured env var look identical to
+missing data. The canonical database `ddhytszijvfejnymrwgd` was intact.
+
+### Code changes applied
+1. `client.ts` — rejects non-canonical Supabase URL with a visible error page
+   instead of silently falling back to `placeholder.supabase.co`
+2. `partners.ts` — `fetchPartners()` now returns `{ data, error }` instead of
+   swallowing errors. Consumers can distinguish "query failed" from "0 results".
+3. `Index.tsx` — shows "Directory data unavailable" with a Retry button when
+   the query fails, vs "No merchants found" only when filters exclude everything
+4. `Index.tsx` — fixed network filter bug: was matching `p.use_cases` instead
+   of `p.networks`, hiding all network-filtered results
+5. Added `HealthCheck` component at `/admin/health` — shows connected host,
+   `partners_public` count, and last error. No secrets exposed.
+
+### Operator checklist (post-incident)
+If listings ever disappear again, visit `https://usdc.directory/admin/health`.
+It shows in plain text whether the connected host matches the canonical project.
+If it says "WRONG PROJECT", fix `VITE_SUPABASE_URL` in Lovable env settings.
+
 ### Prevention
 1. **Migration guard added**: `20260927000001_guard_truncate_migration.sql`
    is a no-op that warns loudly if `public.partners` is empty when migrations

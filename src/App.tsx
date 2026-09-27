@@ -29,6 +29,7 @@ const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 const DeploymentStatus = lazy(() => import("./pages/DeploymentStatus.tsx"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const HealthCheck = lazy(() => import("./components/HealthCheck.tsx"));
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/admin/listings" element={<AdminGuard><AdminListings /></AdminGuard>} />
               <Route path="/deployment-status" element={<DeploymentStatus />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/admin/health" element={<HealthCheck />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
