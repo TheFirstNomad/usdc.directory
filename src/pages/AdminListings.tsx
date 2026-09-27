@@ -73,9 +73,7 @@ const AdminListings = () => {
   const fetchData = useCallback(async () => {
     if (!isOwner || !address) return;
     setLoading(true);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-listings`,
         { headers }
@@ -93,9 +91,7 @@ const AdminListings = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleDelete = useCallback(async (id: string) => {
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-listings`,
         {
@@ -115,9 +111,7 @@ const AdminListings = () => {
   const handleSave = useCallback(async () => {
     if (!editPartner || !address) return;
     setSaving(true);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const payload = {
         id: editPartner.id,
         name: editPartner.name,
@@ -152,9 +146,7 @@ const AdminListings = () => {
   }, [editPartner, address, toast, getHeaders]);
 
   const handleToggleFeatured = useCallback(async (id: string, featured: boolean) => {
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-listings`,
         {
@@ -172,9 +164,7 @@ const AdminListings = () => {
 
   const handleModerate = useCallback(async (id: string, action: "approve" | "reject", reason?: string) => {
     setActionLoadingId(id);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-listings`,
         {
@@ -201,9 +191,7 @@ const AdminListings = () => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
     setBulkBusy(true);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-listings`,
         {
@@ -231,9 +219,7 @@ const AdminListings = () => {
 
   const fetchAudit = useCallback(async () => {
     setAuditLoading(true);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-listings?resource=audit`,
         { headers }

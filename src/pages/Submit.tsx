@@ -71,8 +71,7 @@ const Submit = () => {
     if (!form.logo_file) return null;
     setUploadingLogo(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://ddhytszijvfejnymrwgd.supabase.co";
       const fd = new FormData();
       fd.append("file", form.logo_file);
       // Use connected wallet if available, otherwise use a generic identifier.

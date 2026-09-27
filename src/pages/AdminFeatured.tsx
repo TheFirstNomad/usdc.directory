@@ -52,9 +52,7 @@ const AdminFeatured = () => {
   const fetchData = useCallback(async () => {
     if (!isOwner || !address) return;
     setLoading(true);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-featured`,
         { headers }
@@ -77,9 +75,7 @@ const AdminFeatured = () => {
   const toggleFeatured = async (partnerId: string, newValue: boolean) => {
     if (!address) return;
     setToggling(partnerId);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getHeaders();
+    try {      const headers = await getHeaders();
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-featured`,
         {

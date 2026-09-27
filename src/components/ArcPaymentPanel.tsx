@@ -52,9 +52,8 @@ async function persistListing(
   submissionData: Record<string, unknown>,
   chain: string,
 ) {
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const supabaseUrl =
-    import.meta.env.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
+    import.meta.env.VITE_SUPABASE_URL || "https://ddhytszijvfejnymrwgd.supabase.co";
   // tier must sit at the top level of the request body — the backend reads body.tier,
   // not body.data.tier. Extract it from submissionData before sending.
   const { tier: listingTier, ...listingData } = submissionData as Record<string, unknown> & { tier?: string };

@@ -58,9 +58,7 @@ const AdminAgents = () => {
   const fetchData = useCallback(async () => {
     if (!isOwner || !address) return;
     setLoading(true);
-    try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const headers = await getAdminAuthHeaders(address, (args: any) =>
+    try {      const headers = await getAdminAuthHeaders(address, (args: any) =>
         signMessageAsync({ ...args, account: address as `0x${string}` })
       );
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/admin-agents`, { headers });
