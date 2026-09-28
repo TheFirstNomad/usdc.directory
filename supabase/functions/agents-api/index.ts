@@ -25,7 +25,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-payment, x-payment-txhash, x-payment-chain",
-  "Access-Control-Expose-Headers": "x-payment-response",
+  "Access-Control-Expose-Headers": "x-payment-response, payment-required",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -141,28 +141,38 @@ function buildAccepts(amount: bigint, resource: string) {
   });
 }
 
-function require402(amount: bigint, resource: string, error?: string) {
-  return json(
-    {
-      error: error ?? "X-PAYMENT required",
-      x402Version: 1,
-      accepts: buildAccepts(amount, resource),
-      alternative: {
-        description:
-          "Pay USDC to the listed treasury on any supported chain (EVM, Solana, Sui, or Near), then resend with X-Payment-TxHash + X-Payment-Chain headers.",
-        treasury: TREASURY,
-        chains: [
-          ...Object.values(CHAINS).map((c) => ({
-            chainId: c.id, key: c.network, family: "evm",
-            name: c.name, treasury: TREASURY, usdc: c.usdc,
-          })),
-          ...NON_EVM_CHAINS,
-        ],
-      },
-    },
+// Base64 of the x402 v2 payment requirements, for the PAYMENT-REQUIRED header
+// that the Circle Agent Marketplace / Gateway CLI validator expects.
+function encodePaymentRequired(payload: unknown): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
 
-    402,
-  );
+function require402(amount: bigint, resource: string, error?: string) {
+  const accepts = buildAccepts(amount, resource);
+  const body = {
+    error: error ?? "X-PAYMENT required",
+    x402Version: 1,
+    accepts,
+    alternative: {
+      description:
+        "Pay USDC to the listed treasury on any supported chain (EVM, Solana, Sui, or Near), then resend with X-Payment-TxHash + X-Payment-Chain headers.",
+      treasury: TREASURY,
+      chains: [
+        ...Object.values(CHAINS).map((c) => ({
+          chainId: c.id, key: c.network, family: "evm",
+          name: c.name, treasury: TREASURY, usdc: c.usdc,
+        })),
+        ...NON_EVM_CHAINS,
+      ],
+    },
+  };
+
+  return json(body, 402, {
+    "PAYMENT-REQUIRED": encodePaymentRequired({ x402Version: 1, accepts }),
+  });
 }
 
 // ── On-chain verification: confirm a USDC Transfer to TREASURY of >= amount ──
@@ -477,7 +487,8 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const path = basePath(url);
-  const resource = `${url.origin}${url.pathname}`;
+  // Always advertise the canonical https resource URL (the edge runtime sees http internally).
+  const resource = `https://${url.host}${url.pathname}`;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
