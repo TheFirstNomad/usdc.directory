@@ -11,8 +11,9 @@ import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { useSendTransaction, useChainId, useSwitchChain, usePublicClient } from "wagmi";
 import { buildBaseUsdcTransferCalldata, BASE_CHAIN_ID } from "@/lib/basePayment";
 import { PAYMENT_CHAINS, getChain, LISTING_FEE_USDC } from "@/lib/multichainPayments";
-import { createViemAdapterFromWallet, payListingFee, ARC_CHAIN_ID } from "@/lib/arcAppKit";
-import type { Eip1193Provider } from "@reown/appkit/react";
+import { createViemAdapterFromWallet, payListingFee } from "@/lib/arcAppKit";
+
+const ARC_CHAIN_ID = 5042 as const;
 
 const CAPABILITIES = ["payments", "search", "trading", "content", "data", "automation", "defi", "nft", "gaming", "social"];
 
