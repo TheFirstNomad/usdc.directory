@@ -36,8 +36,8 @@ const MapView = () => {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPartners().then((data) => {
-      setPartners(data);
+    fetchPartners().then((res) => {
+      setPartners(res.data);
       setLoading(false);
     });
   }, []);

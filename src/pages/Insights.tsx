@@ -26,8 +26,8 @@ const Insights = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPartners().then((data) => {
-      setPartners(data);
+    fetchPartners().then((res) => {
+      setPartners(res.data);
       setLoading(false);
     });
   }, []);
