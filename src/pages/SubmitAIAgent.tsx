@@ -19,7 +19,7 @@ const CAPABILITIES = ["payments", "search", "trading", "content", "data", "autom
 
 const SubmitAIAgent = () => {
   const { address, isConnected } = useAppKitAccount();
-  const { walletProvider } = useAppKitProvider<Eip1193Provider>("eip155");
+  const { walletProvider } = useAppKitProvider("eip155") as { walletProvider?: unknown };
   const [agentName, setAgentName] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [website, setWebsite] = useState("");
