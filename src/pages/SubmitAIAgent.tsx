@@ -122,10 +122,10 @@ const SubmitAIAgent = () => {
     if (!isConnected || !address || !walletProvider) { toast.error("Connect your wallet first"); return; }
     setPayingArc(true);
     try {
-      const adapter = await createViemAdapterFromWallet(walletProvider, ARC_CHAIN_ID);
-      const hash = await payListingFee(adapter, LISTING_FEE_USDC, "arc");
-      await submitToBackend("arc", hash, address);
-      setSuccess({ txHash: hash, chain: "arc" });
+      const adapter = await createViemAdapterFromWallet(walletProvider);
+      const { txHash } = await payListingFee(adapter, ARC_CHAIN_ID, LISTING_FEE_USDC);
+      await submitToBackend("arc", txHash, address);
+      setSuccess({ txHash, chain: "arc" });
       toast.success("AI Agent listed on Arc!");
     } catch (err: unknown) {
       toast.error((err as Error).message || "Payment failed on Arc");
