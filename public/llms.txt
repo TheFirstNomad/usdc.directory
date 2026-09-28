@@ -23,15 +23,15 @@ Base URL: `https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api`
 
 | Endpoint | Method | Price (USDC) | Description |
 |---|---|---|---|
-| `/agents` | GET | 0.001 | List all listed AI agents |
-| `/agents/search?q=` | GET | 0.001 | Search agents by name or description |
-| `/agents/{id}` | GET | 0.001 | Get one agent by UUID |
+| `/agents` | GET | 0.01 | List all listed AI agents |
+| `/agents/search?q=` | GET | 0.01 | Search agents by name or description |
+| `/agents/{id}` | GET | 0.01 | Get one agent by UUID |
 | `/agents` | POST | 1.000 | Self-list a new AI agent |
 | `/agents/{id}/boost` | POST | 5.000 | Featured boost for 30 days |
 
 ## Payment options
 
-1. **Native x402 (gasless)** on Arc and Base. Sign EIP-3009 `transferWithAuthorization`, send via `X-PAYMENT` header.
+1. **Native x402 (gasless)** on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, and Avalanche. Sign EIP-3009 `transferWithAuthorization`, send via `X-PAYMENT` header.
 2. **Pay-then-submit-tx-hash (any chain)**. Pay 1 USDC to the chain's treasury and resend with `X-Payment-TxHash` + `X-Payment-Chain` headers. Backend verifies on-chain.
 
 ### Treasuries

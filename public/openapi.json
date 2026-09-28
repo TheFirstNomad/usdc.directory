@@ -23,7 +23,7 @@
     "/agents": {
       "get": {
         "summary": "List AI agents",
-        "x-x402-price": { "amount": "1000", "asset": "USDC", "decimals": 6 },
+        "x-x402-price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
         "responses": {
           "200": { "description": "OK" },
           "402": { "description": "Payment required" }
@@ -68,7 +68,7 @@
     "/agents/{id}": {
       "get": {
         "summary": "Fetch one agent",
-        "x-x402-price": { "amount": "1000", "asset": "USDC", "decimals": 6 },
+        "x-x402-price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
         "responses": { "200": { "description": "OK" }, "402": { "description": "Payment required" }, "404": { "description": "Not found" } }
       }

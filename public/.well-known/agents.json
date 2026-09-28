@@ -19,7 +19,7 @@
     "agent_listing_fee_usdc": "1",
     "business_listing_fee_usdc": "3",
     "boost_fee_usdc": "5",
-    "api_call_fee_usdc": "0.001",
+    "api_call_fee_usdc": "0.01",
     "evm_treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
     "solana_treasury": "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be",
     "sui_treasury": "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979",
