@@ -98,9 +98,23 @@ const CHAINS: Record<number, ChainCfg> = {
   },
 };
 
-// Chains where USDC supports EIP-3009 transferWithAuthorization (native x402 "exact" scheme).
-// Arc (5042) uses native USDC at 0x3600... which also supports transferWithAuthorization.
-// Other EVM chains use the alternative on-chain pay-then-submit-tx path.
+// Circle Gateway Nanopayments chains (mainnet). Uses GatewayWalletBatched format.
+// GatewayWallet mainnet address is the same on all EVM chains.
+// Arc mainnet (5042) is NOT yet on Circle's Gateway Nanopayments mainnet list —
+// it accepts payments via the alternative on-chain path only.
+const GATEWAY_WALLET_MAINNET = "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE";
+const X402_GATEWAY_CHAINS: Array<{ network: string; usdc: string }> = [
+  { network: "eip155:8453",  usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" }, // Base
+  { network: "eip155:1",     usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" }, // Ethereum
+  { network: "eip155:42161", usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" }, // Arbitrum
+  { network: "eip155:10",    usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" }, // Optimism
+  { network: "eip155:137",   usdc: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" }, // Polygon
+  { network: "eip155:43114", usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" }, // Avalanche
+  { network: "eip155:130",   usdc: "0x078D782b760474a361dDA0AF3839290b0EF57AD6" }, // Unichain
+  { network: "eip155:480",   usdc: "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1" }, // World Chain
+  { network: "eip155:146",   usdc: "0x29219dd400f2Bf60E5a23d13Be72B486D4038894" }, // Sonic
+];
+// Legacy: chain IDs still used by the on-chain verifier for EIP-3009 direct payments
 const X402_NATIVE_CHAIN_IDS = [5042, 8453, 1, 42161, 10, 137, 43114];
 
 // Non-EVM treasuries — agents pay on their native chain, then submit tx hash.
@@ -130,22 +144,21 @@ function amountLabel(amount: bigint): string {
 }
 
 function buildAccepts(amount: bigint, resource: string) {
-  const desc = `USDC Directory: ${amountLabel(amount)}. Pay via EIP-3009 transferWithAuthorization.`;
-  return X402_NATIVE_CHAIN_IDS.map((id) => {
-    const c = CHAINS[id];
-    return {
-      scheme: "exact",
-      network: c.network,
-      maxAmountRequired: amount.toString(),
-      resource,
-      description: desc,
-      mimeType: "application/json",
-      payTo: TREASURY,
-      maxTimeoutSeconds: 60,
-      asset: c.usdc,
-      extra: { name: "USD Coin", version: "2" },
-    };
-  });
+  const desc = `USDC Directory: ${amountLabel(amount)}. Settled via Circle Gateway Nanopayments.`;
+  // Use Circle Gateway Nanopayments format (GatewayWalletBatched) on all supported mainnet chains.
+  // This is the format Circle's agent scorer and CLI expect for multi-network payment discovery.
+  return X402_GATEWAY_CHAINS.map((c) => ({
+    scheme: "exact",
+    network: c.network,
+    maxAmountRequired: amount.toString(),
+    resource,
+    description: desc,
+    mimeType: "application/json",
+    payTo: TREASURY,
+    maxTimeoutSeconds: 604800,
+    asset: c.usdc,
+    extra: { name: "GatewayWalletBatched", version: "1", verifyingContract: GATEWAY_WALLET_MAINNET },
+  }));
 }
 
 // Base64 of the x402 v2 payment requirements, for the PAYMENT-REQUIRED header
