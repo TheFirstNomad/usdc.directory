@@ -15,12 +15,12 @@ const AIAgents = () => {
   const [sortBy, setSortBy] = useState<"name" | "newest" | "score" | "boost">("boost");
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPartners().then((res) => {
-      setPartners(res.data);
-      setLoading(false);
-    });
+    fetchPartners()
+      .then((res) => { setPartners(res.data); setLoading(false); })
+      .catch((err) => { setFetchError(err?.message ?? "Failed to load agents"); setLoading(false); });
   }, []);
 
   const aiAgents = useMemo(() => {
@@ -71,7 +71,7 @@ const AIAgents = () => {
           offers: [
             { "@type": "Offer", name: "List API call", price: "0.01", priceCurrency: "USDC" },
             { "@type": "Offer", name: "Self-listing", price: "1.00", priceCurrency: "USDC" },
-            { "@type": "Offer", name: "Featured boost (30d)", price: "25.00", priceCurrency: "USDC" },
+            { "@type": "Offer", name: "Featured boost (30d)", price: "5.00", priceCurrency: "USDC" },
           ],
         }}
       />
@@ -140,7 +140,16 @@ const AIAgents = () => {
         </div>
 
         {/* Grid */}
-        {loading ? (
+        {fetchError ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+              <SearchX className="h-8 w-8 text-destructive" />
+            </div>
+            <p className="text-lg font-semibold text-foreground mb-1">Directory data unavailable</p>
+            <p className="text-sm text-muted-foreground mb-5">{fetchError}</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Try again</Button>
+          </div>
+        ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <ShimmerCard key={i} />

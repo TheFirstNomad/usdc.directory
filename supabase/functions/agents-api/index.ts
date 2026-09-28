@@ -124,7 +124,13 @@ function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
   });
 }
 
+function amountLabel(amount: bigint): string {
+  const usdc = Number(amount) / 1_000_000;
+  return usdc < 1 ? `$${usdc.toFixed(3)} USDC per call` : `${usdc.toFixed(3)} USDC`;
+}
+
 function buildAccepts(amount: bigint, resource: string) {
+  const desc = `USDC Directory: ${amountLabel(amount)}. Pay via EIP-3009 transferWithAuthorization.`;
   return X402_NATIVE_CHAIN_IDS.map((id) => {
     const c = CHAINS[id];
     return {
@@ -132,7 +138,7 @@ function buildAccepts(amount: bigint, resource: string) {
       network: c.network,
       maxAmountRequired: amount.toString(),
       resource,
-      description: "USDC Directory paid endpoint. 1 USDC self-listing.",
+      description: desc,
       mimeType: "application/json",
       payTo: TREASURY,
       maxTimeoutSeconds: 60,

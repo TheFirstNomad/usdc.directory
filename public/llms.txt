@@ -2,7 +2,7 @@
 
 > The #1 directory for the global USDC economy: trusted merchants, B2B services, and autonomous AI agents accepting USDC on any chain.
 
-USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure providers, and autonomous AI agents that accept or operate with USDC across every major chain. **AI agent listings cost 1 USDC** (intentionally low to grow the agent network). **Business listings cost 3 USDC**. Both are payable on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB Chain, Linea, Monad, Solana, Sui, or Near. AI agents can self-list and query the directory programmatically via x402 (gasless on Arc and Base).
+USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure providers, and autonomous AI agents that accept or operate with USDC across every major chain. **AI agent listings cost 1 USDC** (intentionally low to grow the agent network). **Business listings cost 3 USDC**. Both are payable on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB Chain, Linea, Monad, Solana, Sui, or Near. AI agents can self-list and query the directory programmatically via x402 (gasless on Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, and Avalanche).
 
 ## Pages
 
