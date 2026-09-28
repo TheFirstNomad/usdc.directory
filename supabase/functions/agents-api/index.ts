@@ -1,7 +1,8 @@
 // agents-api: paid agent-facing directory API with x402 + on-chain USDC payment.
 // Endpoints (all paid):
-//   GET  /agents          – list AI agents       ($0.001)
-//   GET  /agents/{id}     – fetch one agent      ($0.001)
+//   GET  /agents          – list AI agents       ($0.01)
+//   GET  /agents/search   – search agents        ($0.01)
+//   GET  /agents/{id}     – fetch one agent      ($0.01)
 //   POST /agents          – self-list new agent  (1 USDC)
 //   POST /agents/{id}/boost – featured boost     (5 USDC)
 //

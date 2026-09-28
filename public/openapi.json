@@ -54,7 +54,7 @@
     "/agents/search": {
       "get": {
         "summary": "Search AI agents by name or description",
-        "x-x402-price": { "amount": "1000", "asset": "USDC", "decimals": 6 },
+        "x-x402-price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
         "parameters": [
           { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Search query (matches name and description)" }
         ],
