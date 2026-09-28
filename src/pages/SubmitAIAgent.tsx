@@ -11,14 +11,15 @@ import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { useSendTransaction, useChainId, useSwitchChain, usePublicClient } from "wagmi";
 import { buildBaseUsdcTransferCalldata, BASE_CHAIN_ID } from "@/lib/basePayment";
 import { PAYMENT_CHAINS, getChain, LISTING_FEE_USDC } from "@/lib/multichainPayments";
-import { createViemAdapterFromWallet, payListingFee, ARC_CHAIN_ID } from "@/lib/arcAppKit";
-import type { Eip1193Provider } from "@reown/appkit/react";
+import { createViemAdapterFromWallet, payListingFee } from "@/lib/arcAppKit";
+
+const ARC_CHAIN_ID = 5042 as const;
 
 const CAPABILITIES = ["payments", "search", "trading", "content", "data", "automation", "defi", "nft", "gaming", "social"];
 
 const SubmitAIAgent = () => {
   const { address, isConnected } = useAppKitAccount();
-  const { walletProvider } = useAppKitProvider<Eip1193Provider>("eip155");
+  const { walletProvider } = useAppKitProvider("eip155") as { walletProvider?: unknown };
   const [agentName, setAgentName] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [website, setWebsite] = useState("");
@@ -121,10 +122,10 @@ const SubmitAIAgent = () => {
     if (!isConnected || !address || !walletProvider) { toast.error("Connect your wallet first"); return; }
     setPayingArc(true);
     try {
-      const adapter = await createViemAdapterFromWallet(walletProvider, ARC_CHAIN_ID);
-      const hash = await payListingFee(adapter, LISTING_FEE_USDC, "arc");
-      await submitToBackend("arc", hash, address);
-      setSuccess({ txHash: hash, chain: "arc" });
+      const adapter = await createViemAdapterFromWallet(walletProvider);
+      const { txHash } = await payListingFee(adapter, ARC_CHAIN_ID, LISTING_FEE_USDC);
+      await submitToBackend("arc", txHash, address);
+      setSuccess({ txHash, chain: "arc" });
       toast.success("AI Agent listed on Arc!");
     } catch (err: unknown) {
       toast.error((err as Error).message || "Payment failed on Arc");

@@ -34,7 +34,7 @@ const scoreTier = (s: number) => {
 export default function Leaderboard() {
   const { data: partners = [], isLoading } = useQuery<Partner[]>({
     queryKey: ["partners"],
-    queryFn: fetchPartners,
+    queryFn: async () => (await fetchPartners()).data,
     staleTime: 5 * 60 * 1000,
   });
 
