@@ -88,6 +88,17 @@ export const REGIONS = [
   "Other",
 ];
 
+export const REGION_FLAGS: Record<string, string> = {
+  "Global": "🌍",
+  "North America": "🌎",
+  "South America": "🌎",
+  "Europe": "🇪🇺",
+  "Africa": "🌍",
+  "Asia": "🌏",
+  "Other": "📍",
+};
+
+
 export const NETWORKS = [
   "Arc",
   "Base",
