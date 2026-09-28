@@ -1,4 +1,5 @@
 // Admin Manage Listings page — full CRUD table for partners
+const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useEffect, useState, useCallback } from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
