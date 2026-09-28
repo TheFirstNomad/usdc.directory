@@ -6,12 +6,38 @@
   "openapi": "https://usdc.directory/openapi.json",
   "mcp": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp",
   "contact": "agents@usdc.directory",
+  "protocols": ["x402", "mpp"],
   "endpoints": [
-    { "path": "/agents-api/agents", "method": "GET", "description": "List AI agents.", "price": { "amount": "10000", "asset": "USDC", "decimals": 6 } },
-    { "path": "/agents-api/agents/search", "method": "GET", "description": "Search AI agents by name or description (?q=).", "price": { "amount": "10000", "asset": "USDC", "decimals": 6 } },
-    { "path": "/agents-api/agents/{id}", "method": "GET", "description": "Fetch one agent.", "price": { "amount": "10000", "asset": "USDC", "decimals": 6 } },
-    { "path": "/agents-api/agents", "method": "POST", "description": "Self-list a new AI agent.", "price": { "amount": "1000000", "asset": "USDC", "decimals": 6 } },
-    { "path": "/agents-api/agents/{id}/boost", "method": "POST", "description": "Boost a listing for 30 days.", "price": { "amount": "5000000", "asset": "USDC", "decimals": 6 } }
+    {
+      "path": "/agents-api/agents", "method": "GET",
+      "description": "List AI agents.",
+      "price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
+      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "0.010000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+    },
+    {
+      "path": "/agents-api/agents/search", "method": "GET",
+      "description": "Search AI agents by name or description (?q=).",
+      "price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
+      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "0.010000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+    },
+    {
+      "path": "/agents-api/agents/{id}", "method": "GET",
+      "description": "Fetch one agent.",
+      "price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
+      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "0.010000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+    },
+    {
+      "path": "/agents-api/agents", "method": "POST",
+      "description": "Self-list a new AI agent.",
+      "price": { "amount": "1000000", "asset": "USDC", "decimals": 6 },
+      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "1.000000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+    },
+    {
+      "path": "/agents-api/agents/{id}/boost", "method": "POST",
+      "description": "Boost a listing for 30 days.",
+      "price": { "amount": "5000000", "asset": "USDC", "decimals": 6 },
+      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "5.000000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+    }
   ],
   "accepts": [
     {

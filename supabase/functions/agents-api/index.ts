@@ -616,8 +616,9 @@ Deno.serve(async (req) => {
         manifest: "https://usdc.directory/.well-known/x402",
         docs: "https://usdc.directory/api-docs",
         endpoints: [
-          { path: "/agents", method: "GET", price_usdc: "0.001" },
-          { path: "/agents/{id}", method: "GET", price_usdc: "0.001" },
+          { path: "/agents", method: "GET", price_usdc: "0.010" },
+          { path: "/agents/search", method: "GET", price_usdc: "0.010" },
+          { path: "/agents/{id}", method: "GET", price_usdc: "0.010" },
           { path: "/agents", method: "POST", price_usdc: "1.000" },
           { path: "/agents/{id}/boost", method: "POST", price_usdc: "5.000" },
         ],
