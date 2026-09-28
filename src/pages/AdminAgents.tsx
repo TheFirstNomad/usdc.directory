@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
