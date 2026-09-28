@@ -69,9 +69,9 @@ const AIAgents = () => {
           operatingSystem: "Any",
           description: "Pay-per-call directory API for AI agents. Self-list for 1 USDC on Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad, Solana, Sui, or Near.",
           offers: [
-            { "@type": "Offer", name: "List API call", price: "0.001", priceCurrency: "USDC" },
+            { "@type": "Offer", name: "List API call", price: "0.01", priceCurrency: "USDC" },
             { "@type": "Offer", name: "Self-listing", price: "1.00", priceCurrency: "USDC" },
-            { "@type": "Offer", name: "Featured boost (30d)", price: "5.00", priceCurrency: "USDC" },
+            { "@type": "Offer", name: "Featured boost (30d)", price: "25.00", priceCurrency: "USDC" },
           ],
         }}
       />
@@ -95,8 +95,8 @@ const AIAgents = () => {
             </Button>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-1.5 pt-3 max-w-2xl mx-auto">
-            {["Base","Ethereum","Arbitrum","Optimism","Polygon","Avalanche","BNB","Linea","Monad","Solana","Sui","Near"].map((c) => (
-              <span key={c} className="text-[11px] px-2 py-0.5 rounded-full bg-card border border-border text-muted-foreground">{c}</span>
+            {["Arc","Base","Ethereum","Arbitrum","Optimism","Polygon","Avalanche","BNB","Linea","Monad","Solana","Sui","Near"].map((c) => (
+              <span key={c} className={`text-[11px] px-2 py-0.5 rounded-full border ${c === "Arc" ? "bg-primary/10 border-primary/40 text-primary font-semibold" : "bg-card border-border text-muted-foreground"}`}>{c}</span>
             ))}
           </div>
           <p className="text-xs text-muted-foreground pt-2">

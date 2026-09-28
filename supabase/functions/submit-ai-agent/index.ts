@@ -31,15 +31,17 @@ const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const SUI_USDC_TYPE = "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC";
 const NEAR_USDC_CONTRACT = "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1";
 
-const EVM_CHAINS: Record<string, { rpc: string; usdc: string }> = {
-  base:      { rpc: "https://mainnet.base.org",                 usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
-  ethereum:  { rpc: "https://eth.llamarpc.com",                  usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+const EVM_CHAINS: Record<string, { rpc: string; usdc: string; rpcFallback?: string; usdcDecimals?: number }> = {
+  arc:       { rpc: "https://rpc.mainnet.arc.io",               usdc: "0x3600000000000000000000000000000000000000" },
+  base:      { rpc: "https://mainnet.base.org",                  usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
+  ethereum:  { rpc: "https://eth.llamarpc.com",                  usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", rpcFallback: "https://cloudflare-eth.com" },
   arbitrum:  { rpc: "https://arb1.arbitrum.io/rpc",              usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },
   optimism:  { rpc: "https://mainnet.optimism.io",               usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" },
   polygon:   { rpc: "https://polygon-rpc.com",                   usdc: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" },
   avalanche: { rpc: "https://api.avax.network/ext/bc/C/rpc",     usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" },
-  bnb:       { rpc: "https://bsc-dataseed.binance.org",          usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
+  bnb:       { rpc: "https://bsc-dataseed.binance.org",          usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", usdcDecimals: 18 },
   linea:     { rpc: "https://rpc.linea.build",                   usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff" },
+  monad:     { rpc: "https://monad-mainnet.drpc.org",            usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3" },
 };
 
 const ERC20_TRANSFER_ABI = parseAbi([
@@ -50,8 +52,10 @@ async function verifyEvm(chain: string, txHash: string) {
   const cfg = EVM_CHAINS[chain];
   if (!cfg) return { ok: false as const, error: `No verifier configured for ${chain}` };
   if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return { ok: false as const, error: "Invalid EVM tx hash" };
-  try {
-    const client = createPublicClient({ transport: http(cfg.rpc) });
+  const decimals = cfg.usdcDecimals ?? 6;
+  const scaledFee = decimals === 18 ? FEE_BASE_UNITS * 1_000_000_000_000n : FEE_BASE_UNITS;
+  const tryVerify = async (rpcUrl: string) => {
+    const client = createPublicClient({ transport: http(rpcUrl) });
     const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
     if (!receipt || receipt.status !== "success") return { ok: false as const, error: "tx not successful" };
     const usdcAddr = getAddress(cfg.usdc).toLowerCase();
@@ -66,9 +70,19 @@ async function verifyEvm(chain: string, txHash: string) {
         }
       } catch { /* skip */ }
     }
-    if (total < FEE_BASE_UNITS) return { ok: false as const, error: `paid ${total} < ${FEE_BASE_UNITS}` };
+    if (total < scaledFee) return { ok: false as const, error: `paid ${total} < ${scaledFee}` };
     return { ok: true as const, payer: payer ?? "unknown" };
-  } catch (e) { return { ok: false as const, error: (e as Error).message }; }
+  };
+  try {
+    const result = await tryVerify(cfg.rpc);
+    if (!result.ok && cfg.rpcFallback) return await tryVerify(cfg.rpcFallback);
+    return result;
+  } catch (e) {
+    if (cfg.rpcFallback) {
+      try { return await tryVerify(cfg.rpcFallback); } catch (e2) { return { ok: false as const, error: (e2 as Error).message }; }
+    }
+    return { ok: false as const, error: (e as Error).message };
+  }
 }
 
 async function verifySolana(txHash: string) {
@@ -167,7 +181,7 @@ serve(async (req) => {
   }
   try {
     const body = await req.json();
-    const { agent_name, wallet_address, description, logo_url, payment_tx } = body;
+    const { agent_name, wallet_address, description, logo_url, payment_tx, website, capabilities, networks } = body;
     const chain = String(body?.chain ?? "base").toLowerCase();
 
     if (!agent_name || typeof agent_name !== "string" || agent_name.trim().length === 0 || agent_name.trim().length > 100)
@@ -192,15 +206,31 @@ serve(async (req) => {
     const v = await verify(chain, payment_tx, wallet_address);
     if (!v.ok) return j({ error: `Payment verification failed: ${v.error}` }, 402);
 
+    // Normalise website URL
+    let websiteUrl: string | null = null;
+    if (website && typeof website === "string" && website.trim()) {
+      let w = website.trim();
+      if (!w.startsWith("http://") && !w.startsWith("https://")) w = "https://" + w;
+      try { new URL(w); websiteUrl = w; } catch { /* invalid url, skip */ }
+    }
+    // Capabilities stored as subcategory tags e.g. "AI: payments"
+    const capTags = Array.isArray(capabilities)
+      ? capabilities.filter((c: unknown) => typeof c === "string").map((c: string) => `AI: ${c.trim()}`)
+      : [];
+    const agentNetworks = Array.isArray(networks) && networks.length > 0
+      ? networks.filter((n: unknown) => typeof n === "string")
+      : [chain];
+
     const { data: partner, error: partnerError } = await supabase
       .from("partners")
       .insert({
         name: agent_name.trim(),
         description: description.trim(),
-        categories: ["AI Agents"],
+        website: websiteUrl,
+        categories: ["AI Agents", ...capTags],
         region: "Global",
-        networks: [chain],
-        wallet_address: wallet_address.trim().toLowerCase(),
+        networks: agentNetworks,
+        wallet_address: v.payer !== "unknown" ? v.payer : wallet_address.trim().toLowerCase(),
         logo_url: logo_url || null,
         payment_status: "confirmed",
         payment_id: dedupKey,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bot, Upload, CheckCircle2, Copy, ExternalLink, Globe2 } from "lucide-react";
+import { Bot, Upload, CheckCircle2, Copy, ExternalLink, Globe2, Zap } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -11,16 +11,23 @@ import { useAppKitAccount, useAppKitProvider } from "@reown/appkit/react";
 import { useSendTransaction, useChainId, useSwitchChain, usePublicClient } from "wagmi";
 import { buildBaseUsdcTransferCalldata, BASE_CHAIN_ID } from "@/lib/basePayment";
 import { PAYMENT_CHAINS, getChain, LISTING_FEE_USDC } from "@/lib/multichainPayments";
+import { createViemAdapterFromWallet, payListingFee, ARC_CHAIN_ID } from "@/lib/arcAppKit";
+import type { Eip1193Provider } from "@reown/appkit/react";
+
+const CAPABILITIES = ["payments", "search", "trading", "content", "data", "automation", "defi", "nft", "gaming", "social"];
 
 const SubmitAIAgent = () => {
   const { address, isConnected } = useAppKitAccount();
+  const { walletProvider } = useAppKitProvider<Eip1193Provider>("eip155");
   const [agentName, setAgentName] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedCaps, setSelectedCaps] = useState<string[]>([]);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [paying, setPaying] = useState(false);
+  const [payingArc, setPayingArc] = useState(false);
   const [success, setSuccess] = useState<{ txHash: string; chain: string } | null>(null);
 
   // External multichain path
@@ -42,42 +49,58 @@ const SubmitAIAgent = () => {
     setLogoPreview(URL.createObjectURL(file));
   };
 
-  const uploadLogo = async (): Promise<string | null> => {
-    if (!logoFile || !walletAddress) return null;
+  const handleWebsiteBlur = () => {
+    if (website && !website.startsWith("http://") && !website.startsWith("https://")) {
+      setWebsite("https://" + website);
+    }
+  };
+
+  const toggleCap = (cap: string) => {
+    setSelectedCaps((prev) => prev.includes(cap) ? prev.filter((c) => c !== cap) : [...prev, cap]);
+  };
+
+  const uploadLogo = async (addr: string): Promise<string | null> => {
+    if (!logoFile || !addr) return null;
     const formData = new FormData();
     formData.append("file", logoFile);
-    formData.append("wallet_address", walletAddress.trim());
+    formData.append("wallet_address", addr.trim());
     const { data, error } = await supabase.functions.invoke("upload-logo", { body: formData });
     if (error) return null;
     return data?.url || null;
   };
 
+  const validateFields = () => {
+    if (!agentName.trim()) { toast.error("Agent name is required"); return false; }
+    if (!walletAddress.trim()) { toast.error("Agent wallet address is required"); return false; }
+    if (!description.trim()) { toast.error("Description is required"); return false; }
+    return true;
+  };
+
   const submitToBackend = async (chain: string, txHash: string, payerWallet: string) => {
-    const logoUrl = await uploadLogo();
+    const logoUrl = await uploadLogo(payerWallet);
     const { data, error } = await supabase.functions.invoke("submit-ai-agent", {
       body: {
         agent_name: agentName.trim(),
         wallet_address: payerWallet.trim(),
         description: description.trim(),
+        website: website.trim() || undefined,
+        capabilities: selectedCaps.length > 0 ? selectedCaps : undefined,
+        networks: [chain],
         logo_url: logoUrl,
         payment_tx: txHash,
         chain,
       },
     });
-    if (error) throw new Error((data as any)?.error ?? error.message);
-    if ((data as any)?.error) throw new Error((data as any).error);
+    if (error) throw new Error((data as Record<string, string>)?.error ?? error.message);
+    if ((data as Record<string, string>)?.error) throw new Error((data as Record<string, string>).error);
   };
 
   const handlePayOnBase = async () => {
-    if (!agentName.trim() || !walletAddress.trim() || !description.trim()) {
-      toast.error("Fill in all required fields"); return;
-    }
+    if (!validateFields()) return;
     if (!isConnected || !address) { toast.error("Connect your wallet first"); return; }
     setPaying(true);
     try {
-      if (walletChainId !== BASE_CHAIN_ID) {
-        await switchChainAsync({ chainId: BASE_CHAIN_ID });
-      }
+      if (walletChainId !== BASE_CHAIN_ID) await switchChainAsync({ chainId: BASE_CHAIN_ID });
       const debug = buildBaseUsdcTransferCalldata(LISTING_FEE_USDC);
       const hash = await sendTransactionAsync({
         to: debug.to, data: debug.attributed,
@@ -87,24 +110,37 @@ const SubmitAIAgent = () => {
       if (basePublicClient) await basePublicClient.waitForTransactionReceipt({ hash });
       await submitToBackend("base", hash, address);
       setSuccess({ txHash: hash, chain: "base" });
-      toast.success("AI Agent listed!");
-    } catch (err: any) {
-      toast.error(err.message || "Payment failed on Base");
+      toast.success("AI Agent listed on Base!");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Payment failed on Base");
     } finally { setPaying(false); }
   };
 
+  const handlePayOnArc = async () => {
+    if (!validateFields()) return;
+    if (!isConnected || !address || !walletProvider) { toast.error("Connect your wallet first"); return; }
+    setPayingArc(true);
+    try {
+      const adapter = await createViemAdapterFromWallet(walletProvider, ARC_CHAIN_ID);
+      const hash = await payListingFee(adapter, LISTING_FEE_USDC, "arc");
+      await submitToBackend("arc", hash, address);
+      setSuccess({ txHash: hash, chain: "arc" });
+      toast.success("AI Agent listed on Arc!");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Payment failed on Arc");
+    } finally { setPayingArc(false); }
+  };
+
   const handleExternalSubmit = async () => {
-    if (!agentName.trim() || !walletAddress.trim() || !description.trim()) {
-      toast.error("Fill in all required fields"); return;
-    }
+    if (!validateFields()) return;
     if (!externalTx.trim()) { toast.error("Paste your tx hash"); return; }
     setSubmittingExternal(true);
     try {
       await submitToBackend(externalChainKey, externalTx.trim(), walletAddress);
       setSuccess({ txHash: externalTx.trim(), chain: externalChainKey });
       toast.success(`Verified on ${externalChainKey}!`);
-    } catch (err: any) {
-      toast.error(err.message || "Verification failed");
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Verification failed");
     } finally { setSubmittingExternal(false); }
   };
 
@@ -114,7 +150,7 @@ const SubmitAIAgent = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="List Your AI Agent: 1 USDC, Any Chain"
-        description="Autonomous AI agents self-list in 30 seconds for 1 USDC. Pay on Base, Ethereum, Arbitrum, BNB, Solana, Sui, Near, and more."
+        description="Autonomous AI agents self-list in 30 seconds for 1 USDC. Pay on Arc, Base, Ethereum, Arbitrum, BNB, Solana, Sui, Near, and more."
         path="/submit/ai-agent"
       />
       <Header />
@@ -127,7 +163,9 @@ const SubmitAIAgent = () => {
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
               <h1 className="text-2xl font-bold text-foreground">Listed Successfully!</h1>
-              <p className="text-muted-foreground">Verified on {success.chain}.</p>
+              <p className="text-muted-foreground">
+                {agentName} is now live on USDC Directory. Verified on {success.chain}.
+              </p>
               <div className="flex items-center justify-center gap-2">
                 <code className="text-xs bg-muted px-2 py-1 rounded font-mono truncate max-w-[220px]">{success.txHash}</code>
                 <Button variant="ghost" size="icon" className="h-7 w-7"
@@ -149,31 +187,64 @@ const SubmitAIAgent = () => {
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
                   <Bot className="h-8 w-8 text-primary" />
                 </div>
-                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">🤖 List Your AI Agent for 1 USDC</h1>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-foreground">List Your AI Agent</h1>
                 <p className="text-muted-foreground text-base max-w-md mx-auto">
-                  Any chain: Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, BNB, Linea, Solana, Sui, Near.
+                  1 USDC on any chain. Arc is recommended: USDC is the gas token, sub-second finality.
                 </p>
               </div>
 
               <div className="bg-card border border-border rounded-3xl p-6 md:p-8 space-y-5">
+                {/* Agent Name */}
                 <div className="space-y-2">
                   <label htmlFor="agent-name" className="text-sm font-semibold text-foreground">Agent Name *</label>
-                  <Input id="agent-name" placeholder="e.g. PayBot3000" value={agentName} onChange={(e) => setAgentName(e.target.value)} maxLength={100} className="rounded-xl h-12" />
+                  <Input id="agent-name" placeholder="e.g. PayBot3000" value={agentName}
+                    onChange={(e) => setAgentName(e.target.value)} maxLength={100} className="rounded-xl h-12" />
                 </div>
+
+                {/* Wallet */}
                 <div className="space-y-2">
                   <label htmlFor="agent-wallet" className="text-sm font-semibold text-foreground">Agent Wallet (payer) *</label>
-                  <Input id="agent-wallet" placeholder="0x… / Solana pubkey / Sui addr / near.account" value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)} maxLength={256} className="rounded-xl h-12 font-mono text-sm" />
-                  <p className="text-xs text-muted-foreground">This wallet address will be displayed on your agent card as your on-chain identity.</p>
+                  <Input id="agent-wallet" placeholder="0x… / Solana pubkey / Sui addr / near.account"
+                    value={walletAddress} onChange={(e) => setWalletAddress(e.target.value)}
+                    maxLength={256} className="rounded-xl h-12 font-mono text-sm" />
+                  <p className="text-xs text-muted-foreground">Displayed on your agent card as on-chain identity.</p>
                 </div>
+
+                {/* Website */}
                 <div className="space-y-2">
-                  <label htmlFor="agent-website" className="text-sm font-semibold text-foreground">Website / Docs</label>
-                  <Input id="agent-website" type="url" placeholder="https://yourbot.ai" value={website} onChange={(e) => setWebsite(e.target.value)} maxLength={255} className="rounded-xl h-12" />
+                  <label htmlFor="agent-website" className="text-sm font-semibold text-foreground">Website / Docs / API</label>
+                  <Input id="agent-website" type="url" placeholder="yourbot.ai or https://yourbot.ai"
+                    value={website} onChange={(e) => setWebsite(e.target.value)}
+                    onBlur={handleWebsiteBlur} maxLength={255} className="rounded-xl h-12" />
                 </div>
+
+                {/* Description */}
                 <div className="space-y-2">
                   <label htmlFor="agent-description" className="text-sm font-semibold text-foreground">Description *</label>
-                  <Input id="agent-description" placeholder="What does your agent do?" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} className="rounded-xl h-12" />
+                  <Input id="agent-description" placeholder="What does your agent do?"
+                    value={description} onChange={(e) => setDescription(e.target.value)}
+                    maxLength={300} className="rounded-xl h-12" />
                   <p className="text-xs text-muted-foreground text-right">{description.length}/300</p>
                 </div>
+
+                {/* Capabilities */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-foreground">Capabilities (optional)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CAPABILITIES.map((cap) => (
+                      <button key={cap} type="button" onClick={() => toggleCap(cap)}
+                        className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                          selectedCaps.includes(cap)
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-muted/50 text-muted-foreground border-border hover:border-primary/50"
+                        }`}>
+                        {cap}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Logo */}
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-foreground">Logo (optional)</label>
                   <div className="flex items-center gap-4">
@@ -185,22 +256,34 @@ const SubmitAIAgent = () => {
                       </div>
                     )}
                     <label className="cursor-pointer text-sm text-primary hover:underline font-medium">
-                      {logoPreview ? "Change logo" : "Upload logo"}
-                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                      {logoPreview ? "Change logo" : "Upload logo (JPG, PNG, SVG, max 2MB)"}
+                      <input type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                        className="hidden" onChange={handleLogoChange} />
                     </label>
                   </div>
                 </div>
 
+                {/* Pay buttons */}
                 {isConnected ? (
-                  <Button onClick={handlePayOnBase} disabled={paying}
-                    className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground">
-                    {paying ? "Processing…" : "Pay 1 USDC on Base and List"}
-                  </Button>
+                  <div className="space-y-3">
+                    <Button onClick={handlePayOnArc} disabled={payingArc || paying}
+                      className="w-full h-14 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground">
+                      <Zap className="h-5 w-5 mr-2" />
+                      {payingArc ? "Processing on Arc…" : "Pay 1 USDC on Arc (Recommended)"}
+                    </Button>
+                    <Button onClick={handlePayOnBase} disabled={paying || payingArc}
+                      variant="outline" className="w-full h-12 rounded-xl font-semibold">
+                      {paying ? "Processing on Base…" : "Pay 1 USDC on Base"}
+                    </Button>
+                  </div>
                 ) : (
-                  <p className="text-sm text-center text-muted-foreground">Connect your wallet for the Base path, or use any chain below.</p>
+                  <p className="text-sm text-center text-muted-foreground py-2">
+                    Connect your wallet to pay on Arc or Base, or use any chain below.
+                  </p>
                 )}
 
-                <div className="pt-2">
+                {/* External multichain path */}
+                <div className="pt-1">
                   <button onClick={() => setShowExternal((v) => !v)}
                     className="text-xs text-primary hover:underline inline-flex items-center gap-1.5 w-full justify-center">
                     <Globe2 className="h-3.5 w-3.5" />
@@ -211,7 +294,7 @@ const SubmitAIAgent = () => {
                 {showExternal && (
                   <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
                     <p className="text-xs text-muted-foreground">
-                      Send <strong>1 USDC</strong> to our treasury on your chain, paste the tx hash. We verify on-chain and publish your listing automatically.
+                      Send <strong>1 USDC</strong> to our treasury on your chain, paste the tx hash. We verify on-chain and publish instantly.
                     </p>
                     <select value={externalChainKey} onChange={(e) => setExternalChainKey(e.target.value)}
                       className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
@@ -224,7 +307,8 @@ const SubmitAIAgent = () => {
                         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Treasury ({ch.label})</p>
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-xs font-mono text-foreground break-all">{ch.treasury}</p>
-                          <button onClick={() => { navigator.clipboard.writeText(ch.treasury); toast.success("Copied"); }} className="text-primary shrink-0">
+                          <button onClick={() => { navigator.clipboard.writeText(ch.treasury); toast.success("Copied"); }}
+                            className="text-primary shrink-0">
                             <Copy className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -235,7 +319,7 @@ const SubmitAIAgent = () => {
                       placeholder="Paste tx hash / signature" className="font-mono text-xs" />
                     <Button onClick={handleExternalSubmit} disabled={submittingExternal}
                       className="w-full bg-primary text-primary-foreground rounded-lg">
-                      {submittingExternal ? "Verifying on-chain…" : "Verify 1 USDC & list agent"}
+                      {submittingExternal ? "Verifying on-chain…" : "Verify 1 USDC and list agent"}
                     </Button>
                   </div>
                 )}
