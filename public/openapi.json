@@ -40,13 +40,15 @@
       "near"
     ],
     "x402_gasless_chains": [
-      "arc",
       "base",
       "ethereum",
       "arbitrum",
       "optimism",
       "polygon",
-      "avalanche"
+      "avalanche",
+      "unichain",
+      "worldchain",
+      "sonic"
     ]
   },
   "paths": {
