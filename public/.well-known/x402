@@ -6,37 +6,135 @@
   "openapi": "https://usdc.directory/openapi.json",
   "mcp": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp",
   "contact": "hello@usdc.directory",
-  "protocols": ["x402", "mpp"],
+  "protocols": [
+    "x402",
+    "mpp"
+  ],
   "endpoints": [
     {
-      "path": "/agents-api/agents", "method": "GET",
+      "path": "/agents-api/agents",
+      "method": "GET",
       "description": "List AI agents registered in the USDC Directory.",
-      "price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
-      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "0.010000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+      "price": {
+        "amount": "10000",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "x-payment-info": {
+        "price": {
+          "mode": "fixed",
+          "currency": "USDC",
+          "amount": "0.010000"
+        },
+        "protocols": [
+          {
+            "x402": {}
+          },
+          {
+            "mpp": {}
+          }
+        ]
+      }
     },
     {
-      "path": "/agents-api/agents/search", "method": "GET",
+      "path": "/agents-api/agents/search",
+      "method": "GET",
       "description": "Search AI agents by name or description (?q=).",
-      "price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
-      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "0.010000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+      "price": {
+        "amount": "10000",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "x-payment-info": {
+        "price": {
+          "mode": "fixed",
+          "currency": "USDC",
+          "amount": "0.010000"
+        },
+        "protocols": [
+          {
+            "x402": {}
+          },
+          {
+            "mpp": {}
+          }
+        ]
+      }
     },
     {
-      "path": "/agents-api/agents/{id}", "method": "GET",
+      "path": "/agents-api/agents/{id}",
+      "method": "GET",
       "description": "Fetch a single AI agent by ID.",
-      "price": { "amount": "10000", "asset": "USDC", "decimals": 6 },
-      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "0.010000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+      "price": {
+        "amount": "10000",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "x-payment-info": {
+        "price": {
+          "mode": "fixed",
+          "currency": "USDC",
+          "amount": "0.010000"
+        },
+        "protocols": [
+          {
+            "x402": {}
+          },
+          {
+            "mpp": {}
+          }
+        ]
+      }
     },
     {
-      "path": "/agents-api/agents", "method": "POST",
+      "path": "/agents-api/agents",
+      "method": "POST",
       "description": "Self-list a new AI agent in the directory.",
-      "price": { "amount": "1000000", "asset": "USDC", "decimals": 6 },
-      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "1.000000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+      "price": {
+        "amount": "1000000",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "x-payment-info": {
+        "price": {
+          "mode": "fixed",
+          "currency": "USDC",
+          "amount": "1.000000"
+        },
+        "protocols": [
+          {
+            "x402": {}
+          },
+          {
+            "mpp": {}
+          }
+        ]
+      }
     },
     {
-      "path": "/agents-api/agents/{id}/boost", "method": "POST",
+      "path": "/agents-api/agents/{id}/boost",
+      "method": "POST",
       "description": "Boost a listing to featured placement for 30 days.",
-      "price": { "amount": "5000000", "asset": "USDC", "decimals": 6 },
-      "x-payment-info": { "price": { "mode": "fixed", "currency": "USDC", "amount": "5.000000" }, "protocols": [{ "x402": {} }, { "mpp": {} }] }
+      "price": {
+        "amount": "5000000",
+        "asset": "USDC",
+        "decimals": 6
+      },
+      "x-payment-info": {
+        "price": {
+          "mode": "fixed",
+          "currency": "USDC",
+          "amount": "5.000000"
+        },
+        "protocols": [
+          {
+            "x402": {}
+          },
+          {
+            "mpp": {}
+          }
+        ]
+      }
     }
   ],
   "accepts": [
@@ -46,7 +144,11 @@
       "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -54,7 +156,11 @@
       "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -62,7 +168,11 @@
       "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -70,7 +180,11 @@
       "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -78,7 +192,11 @@
       "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -86,7 +204,11 @@
       "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -94,7 +216,11 @@
       "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -102,7 +228,11 @@
       "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     },
     {
       "scheme": "exact",
@@ -110,25 +240,106 @@
       "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
       "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
       "maxTimeoutSeconds": 604800,
-      "extra": { "name": "GatewayWalletBatched", "version": "1", "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE" }
+      "extra": {
+        "name": "GatewayWalletBatched",
+        "version": "1",
+        "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+      }
     }
   ],
   "alternative_payment": {
     "description": "Pay USDC on any of 13 supported chains to the treasury, then resend with X-Payment-TxHash and X-Payment-Chain headers. Backend verifies on-chain.",
     "chains": [
-      { "key": "arc",       "network": "eip155:5042",  "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x3600000000000000000000000000000000000000" },
-      { "key": "base",      "network": "eip155:8453",  "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
-      { "key": "ethereum",  "network": "eip155:1",     "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
-      { "key": "arbitrum",  "network": "eip155:42161", "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },
-      { "key": "optimism",  "network": "eip155:10",    "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" },
-      { "key": "polygon",   "network": "eip155:137",   "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" },
-      { "key": "avalanche", "network": "eip155:43114", "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" },
-      { "key": "bnb",       "network": "eip155:56",    "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d" },
-      { "key": "linea",     "network": "eip155:59144", "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0x176211869cA2b568f2A7D4EE941E073a821EE1ff" },
-      { "key": "monad",     "network": "eip155:10143", "family": "evm",    "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c", "usdc": "0xf817257fed379853cDe0fa4F97AB987181B1E5f3" },
-      { "key": "solana",    "family": "solana", "treasury": "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be", "usdc": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
-      { "key": "sui",       "family": "sui",    "treasury": "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979", "usdc": "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC" },
-      { "key": "near",      "family": "near",   "treasury": "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171", "usdc": "17208628f84f5d6ad33f0da3bbbeb27ffed420bc" }
+      {
+        "key": "arc",
+        "network": "eip155:5042",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0x3600000000000000000000000000000000000000"
+      },
+      {
+        "key": "base",
+        "network": "eip155:8453",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      },
+      {
+        "key": "ethereum",
+        "network": "eip155:1",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      },
+      {
+        "key": "arbitrum",
+        "network": "eip155:42161",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+      },
+      {
+        "key": "optimism",
+        "network": "eip155:10",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85"
+      },
+      {
+        "key": "polygon",
+        "network": "eip155:137",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+      },
+      {
+        "key": "avalanche",
+        "network": "eip155:43114",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E"
+      },
+      {
+        "key": "bnb",
+        "network": "eip155:56",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d"
+      },
+      {
+        "key": "linea",
+        "network": "eip155:59144",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0x176211869cA2b568f2A7D4EE941E073a821EE1ff"
+      },
+      {
+        "key": "monad",
+        "network": "eip155:10143",
+        "family": "evm",
+        "treasury": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+        "usdc": "0xf817257fed379853cDe0fa4F97AB987181B1E5f3"
+      },
+      {
+        "key": "solana",
+        "family": "solana",
+        "treasury": "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be",
+        "usdc": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      },
+      {
+        "key": "sui",
+        "family": "sui",
+        "treasury": "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979",
+        "usdc": "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC"
+      },
+      {
+        "key": "near",
+        "family": "near",
+        "treasury": "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171",
+        "usdc": "17208628f84f5d6ad33f0da3bbbeb27ffed420bc"
+      }
     ]
-  }
+  },
+  "icon": "https://usdc.directory/icon.png",
+  "logo": "https://usdc.directory/icon.png"
 }

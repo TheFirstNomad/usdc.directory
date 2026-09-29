@@ -171,10 +171,14 @@ function encodePaymentRequired(payload: unknown): string {
 }
 
 function require402(amount: bigint, resource: string, error?: string) {
-  const accepts = buildAccepts(amount, resource);
+  // x402 v2 shape (what Circle's Gateway middleware emits): `amount` per accept +
+  // top-level `resource` object. `maxAmountRequired` kept for v1 clients.
+  const accepts = buildAccepts(amount, resource).map((a) => ({ ...a, amount: a.maxAmountRequired }));
+  const resourceInfo = { url: resource, description: accepts[0]?.description, mimeType: "application/json" };
   const body = {
     error: error ?? "X-PAYMENT required",
-    x402Version: 1,
+    x402Version: 2,
+    resource: resourceInfo,
     accepts,
     alternative: {
       description:
@@ -191,7 +195,7 @@ function require402(amount: bigint, resource: string, error?: string) {
   };
 
   return json(body, 402, {
-    "PAYMENT-REQUIRED": encodePaymentRequired({ x402Version: 1, accepts }),
+    "PAYMENT-REQUIRED": encodePaymentRequired({ x402Version: 2, resource: resourceInfo, accepts }),
   });
 }
 
