@@ -507,8 +507,12 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const path = basePath(url);
-  // Always advertise the canonical https resource URL (the edge runtime sees http internally).
-  const resource = `https://${url.host}${url.pathname}`;
+  // Always advertise the canonical https resource URL (the edge runtime sees http internally
+  // and strips the /functions/v1 prefix from the pathname).
+  const pathname = url.pathname.startsWith("/functions/v1")
+    ? url.pathname
+    : `/functions/v1${url.pathname}`;
+  const resource = `https://${url.host}${pathname}`;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
