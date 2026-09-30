@@ -21,6 +21,7 @@ import {
   recoverTypedDataAddress,
 } from "https://esm.sh/viem@2.21.55";
 import { privateKeyToAccount } from "https://esm.sh/viem@2.21.55/accounts";
+import { verifyUsdcPayment } from "../_shared/payment-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -279,7 +280,11 @@ async function verifyOnChainPayment(
       }
     } catch (_e) { /* ignore non-Transfer logs */ }
   }
-  if (total < amount) return { ok: false, reason: `paid ${total} < required ${amount}` };
+  // Some chains (BNB) use an 18-decimal bridged USDC; scale the 6-decimal price up.
+  const required = cfg.usdcDecimals && cfg.usdcDecimals > 6
+    ? amount * 10n ** BigInt(cfg.usdcDecimals - 6)
+    : amount;
+  if (total < required) return { ok: false, reason: `paid ${total} < required ${required}` };
   return { ok: true, from: from ?? "unknown" };
 }
 
@@ -459,9 +464,18 @@ async function gatePayment(
 
   // Path 1: on-chain pre-paid
   if (txHash) {
-    const chainId = Number(chainHeader || 8453);
-    if (!CHAINS[chainId]) {
-      return { ok: false, response: json({ error: "unsupported X-Payment-Chain" }, 400) };
+    const resolved = resolveChain(chainHeader);
+    if (!resolved) {
+      return {
+        ok: false,
+        response: json({
+          error: "unsupported X-Payment-Chain",
+          supported: [
+            ...Object.values(CHAINS).map((c) => c.network),
+            ...NON_EVM_CHAINS.map((c) => c.key),
+          ],
+        }, 400),
+      };
     }
     const { data: existing } = await supabase
       .from("agent_api_payments")
@@ -472,16 +486,31 @@ async function gatePayment(
     if (existing) {
       return { ok: false, response: json({ error: "tx hash already used for this endpoint" }, 409) };
     }
-    const v = await verifyOnChainPayment(txHash, chainId, amount);
-    if (!v.ok) {
-      return { ok: false, response: json({ error: `payment invalid: ${v.reason}` }, 402) };
+
+    let network: string;
+    let payer: string;
+    if (resolved.kind === "evm") {
+      const v = await verifyOnChainPayment(txHash, resolved.cfg.id, amount);
+      if (!v.ok) {
+        return { ok: false, response: json({ error: `payment invalid: ${v.reason}` }, 402) };
+      }
+      network = resolved.cfg.network;
+      payer = v.from;
+    } else {
+      const v = await verifyUsdcPayment(resolved.key, txHash, amount);
+      if (!v.ok) {
+        return { ok: false, response: json({ error: `payment invalid: ${v.error}` }, 402) };
+      }
+      network = resolved.key;
+      payer = v.payer;
     }
+
     await supabase.from("agent_api_payments").insert({
       payment_id: txHash, endpoint, method,
       amount_usdc: amount.toString(),
-      chain: CHAINS[chainId].network, agent_wallet: v.from, scheme: "onchain",
+      chain: network, agent_wallet: payer, scheme: "onchain",
     });
-    return { ok: true, paymentId: txHash, payer: v.from, chain: CHAINS[chainId].network, scheme: "onchain" };
+    return { ok: true, paymentId: txHash, payer, chain: network, scheme: "onchain" };
   }
 
   // Path 2: x402 — verify, settle on chain, then record
