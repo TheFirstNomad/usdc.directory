@@ -94,20 +94,21 @@ res = session.post(
 )
 print(res.json())`;
 
-  const onchainExample = `# Alternative: pay on-chain, send tx hash
+  const onchainExample = `# Alternative: pay USDC to the treasury first, then send the tx hash as headers
+# Treasury (EVM): 0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c
 curl -X POST ${API_BASE}/agents \\
   -H "Content-Type: application/json" \\
+  -H "X-Payment-TxHash: 0xYourUsdcTransferTxHash" \\
+  -H "X-Payment-Chain: arc" \\
   -d '{
     "name": "PayBot3000",
     "description": "Autonomous DeFi router",
     "wallet_address": "0xYourAgentWallet",
-    "categories": ["AI Agents"],
-    "payment": {
-      "scheme": "onchain",
-      "chain": "base",
-      "tx_hash": "0x..."
-    }
-  }'`;
+    "categories": ["AI Agents"]
+  }'
+
+# X-Payment-Chain accepts: arc, base, ethereum, arbitrum, optimism, polygon,
+# avalanche, bnb, linea, monad, solana, sui, near (or an eip155:<id> value)`;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -21,6 +21,7 @@ import {
   recoverTypedDataAddress,
 } from "https://esm.sh/viem@2.21.55";
 import { privateKeyToAccount } from "https://esm.sh/viem@2.21.55/accounts";
+import { verifyUsdcPayment } from "../_shared/payment-verify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,7 @@ type ChainCfg = {
   rpc: string;
   usdc: string;
   explorer: string;
+  usdcDecimals?: number; // defaults to 6
 };
 
 const CHAINS: Record<number, ChainCfg> = {
@@ -83,12 +85,19 @@ const CHAINS: Record<number, ChainCfg> = {
     rpc: "https://bsc-dataseed.binance.org",
     usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
     explorer: "https://bscscan.com",
+    usdcDecimals: 18,
   },
   59144: {
     id: 59144, name: "Linea", network: "linea",
     rpc: "https://rpc.linea.build",
     usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
     explorer: "https://lineascan.build",
+  },
+  143: {
+    id: 143, name: "Monad", network: "monad",
+    rpc: "https://monad-mainnet.drpc.org",
+    usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3",
+    explorer: "https://monadexplorer.com",
   },
   5042: {
     id: 5042, name: "Arc Mainnet", network: "arc",
@@ -97,6 +106,38 @@ const CHAINS: Record<number, ChainCfg> = {
     explorer: "https://explorer.arc.io",
   },
 };
+
+/**
+ * Resolves the X-Payment-Chain header into a known chain.
+ * Accepts a numeric chain id ("8453"), a CAIP-2 id ("eip155:8453"),
+ * or a chain name ("arc", "base", "bsc", "eth", "solana", "sui", "near").
+ */
+function resolveChain(
+  header: string | null,
+): { kind: "evm"; cfg: ChainCfg } | { kind: "non_evm"; key: string } | null {
+  const raw = String(header ?? "8453").trim().toLowerCase();
+  if (!raw) return null;
+
+  const caip = raw.startsWith("eip155:") ? raw.slice(7) : raw;
+  if (/^\d+$/.test(caip)) {
+    const cfg = CHAINS[Number(caip)];
+    return cfg ? { kind: "evm", cfg } : null;
+  }
+
+  const aliases: Record<string, string> = {
+    bsc: "bnb", binance: "bnb", bnb_chain: "bnb", "bnb chain": "bnb",
+    eth: "ethereum", mainnet: "ethereum",
+    arc_mainnet: "arc", arcmainnet: "arc", "arc mainnet": "arc",
+    matic: "polygon", avax: "avalanche", op: "optimism", arb: "arbitrum",
+    sol: "solana",
+  };
+  const key = aliases[raw] ?? raw.replace(/[\s-]+/g, "_");
+
+  const cfg = Object.values(CHAINS).find((c) => c.network === key);
+  if (cfg) return { kind: "evm", cfg };
+  if (NON_EVM_CHAINS.some((c) => c.key === key)) return { kind: "non_evm", key };
+  return null;
+}
 
 // Circle Gateway Nanopayments chains (mainnet). Uses GatewayWalletBatched format.
 // GatewayWallet mainnet address is the same on all EVM chains.
@@ -239,7 +280,11 @@ async function verifyOnChainPayment(
       }
     } catch (_e) { /* ignore non-Transfer logs */ }
   }
-  if (total < amount) return { ok: false, reason: `paid ${total} < required ${amount}` };
+  // Some chains (BNB) use an 18-decimal bridged USDC; scale the 6-decimal price up.
+  const required = cfg.usdcDecimals && cfg.usdcDecimals > 6
+    ? amount * 10n ** BigInt(cfg.usdcDecimals - 6)
+    : amount;
+  if (total < required) return { ok: false, reason: `paid ${total} < required ${required}` };
   return { ok: true, from: from ?? "unknown" };
 }
 
@@ -419,9 +464,18 @@ async function gatePayment(
 
   // Path 1: on-chain pre-paid
   if (txHash) {
-    const chainId = Number(chainHeader || 8453);
-    if (!CHAINS[chainId]) {
-      return { ok: false, response: json({ error: "unsupported X-Payment-Chain" }, 400) };
+    const resolved = resolveChain(chainHeader);
+    if (!resolved) {
+      return {
+        ok: false,
+        response: json({
+          error: "unsupported X-Payment-Chain",
+          supported: [
+            ...Object.values(CHAINS).map((c) => c.network),
+            ...NON_EVM_CHAINS.map((c) => c.key),
+          ],
+        }, 400),
+      };
     }
     const { data: existing } = await supabase
       .from("agent_api_payments")
@@ -432,16 +486,31 @@ async function gatePayment(
     if (existing) {
       return { ok: false, response: json({ error: "tx hash already used for this endpoint" }, 409) };
     }
-    const v = await verifyOnChainPayment(txHash, chainId, amount);
-    if (!v.ok) {
-      return { ok: false, response: json({ error: `payment invalid: ${v.reason}` }, 402) };
+
+    let network: string;
+    let payer: string;
+    if (resolved.kind === "evm") {
+      const v = await verifyOnChainPayment(txHash, resolved.cfg.id, amount);
+      if (!v.ok) {
+        return { ok: false, response: json({ error: `payment invalid: ${v.reason}` }, 402) };
+      }
+      network = resolved.cfg.network;
+      payer = v.from;
+    } else {
+      const v = await verifyUsdcPayment(resolved.key, txHash, amount);
+      if (!v.ok) {
+        return { ok: false, response: json({ error: `payment invalid: ${v.error}` }, 402) };
+      }
+      network = resolved.key;
+      payer = v.payer;
     }
+
     await supabase.from("agent_api_payments").insert({
       payment_id: txHash, endpoint, method,
       amount_usdc: amount.toString(),
-      chain: CHAINS[chainId].network, agent_wallet: v.from, scheme: "onchain",
+      chain: network, agent_wallet: payer, scheme: "onchain",
     });
-    return { ok: true, paymentId: txHash, payer: v.from, chain: CHAINS[chainId].network, scheme: "onchain" };
+    return { ok: true, paymentId: txHash, payer, chain: network, scheme: "onchain" };
   }
 
   // Path 2: x402 — verify, settle on chain, then record
