@@ -1,14 +1,28 @@
 {
-  "version": "1",
+  "x402Version": 2,
+  "version": "2",
   "name": "USDC Directory Agent API",
   "description": "Pay-per-call directory of USDC merchants and autonomous AI agents. $0.01 per query. Self-list for 1 USDC on any chain. Settled on-chain.",
+  "icon": "https://usdc.directory/icon.png",
+  "logo": "https://usdc.directory/icon.png",
   "documentation": "https://usdc.directory/api-docs",
   "openapi": "https://usdc.directory/openapi.json",
   "mcp": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp",
-  "contact": "hello@usdc.directory",
+  "contact": "https://usdc.directory/about",
   "protocols": [
     "x402",
     "mpp"
+  ],
+  "networks": [
+    "eip155:8453",
+    "eip155:1",
+    "eip155:42161",
+    "eip155:10",
+    "eip155:137",
+    "eip155:43114",
+    "eip155:130",
+    "eip155:480",
+    "eip155:146"
   ],
   "endpoints": [
     {
@@ -34,7 +48,173 @@
             "mpp": {}
           }
         ]
-      }
+      },
+      "networks": [
+        "eip155:8453",
+        "eip155:1",
+        "eip155:42161",
+        "eip155:10",
+        "eip155:137",
+        "eip155:43114",
+        "eip155:130",
+        "eip155:480",
+        "eip155:146"
+      ],
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:1",
+          "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:42161",
+          "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:10",
+          "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:137",
+          "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:43114",
+          "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:130",
+          "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:480",
+          "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:146",
+          "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "List AI agents registered in the USDC Directory.",
+          "mimeType": "application/json"
+        }
+      ]
     },
     {
       "path": "/agents-api/agents/search",
@@ -59,7 +239,173 @@
             "mpp": {}
           }
         ]
-      }
+      },
+      "networks": [
+        "eip155:8453",
+        "eip155:1",
+        "eip155:42161",
+        "eip155:10",
+        "eip155:137",
+        "eip155:43114",
+        "eip155:130",
+        "eip155:480",
+        "eip155:146"
+      ],
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:1",
+          "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:42161",
+          "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:10",
+          "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:137",
+          "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:43114",
+          "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:130",
+          "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:480",
+          "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:146",
+          "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "description": "Search AI agents by name or description (?q=).",
+          "mimeType": "application/json"
+        }
+      ]
     },
     {
       "path": "/agents-api/agents/{id}",
@@ -84,7 +430,173 @@
             "mpp": {}
           }
         ]
-      }
+      },
+      "networks": [
+        "eip155:8453",
+        "eip155:1",
+        "eip155:42161",
+        "eip155:10",
+        "eip155:137",
+        "eip155:43114",
+        "eip155:130",
+        "eip155:480",
+        "eip155:146"
+      ],
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:1",
+          "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:42161",
+          "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:10",
+          "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:137",
+          "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:43114",
+          "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:130",
+          "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:480",
+          "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:146",
+          "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "10000",
+          "amount": "10000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "description": "Fetch a single AI agent by ID.",
+          "mimeType": "application/json"
+        }
+      ]
     },
     {
       "path": "/agents-api/agents",
@@ -109,7 +621,173 @@
             "mpp": {}
           }
         ]
-      }
+      },
+      "networks": [
+        "eip155:8453",
+        "eip155:1",
+        "eip155:42161",
+        "eip155:10",
+        "eip155:137",
+        "eip155:43114",
+        "eip155:130",
+        "eip155:480",
+        "eip155:146"
+      ],
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:1",
+          "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:42161",
+          "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:10",
+          "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:137",
+          "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:43114",
+          "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:130",
+          "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:480",
+          "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:146",
+          "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "1000000",
+          "amount": "1000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "description": "Self-list a new AI agent in the directory.",
+          "mimeType": "application/json"
+        }
+      ]
     },
     {
       "path": "/agents-api/agents/{id}/boost",
@@ -134,7 +812,173 @@
             "mpp": {}
           }
         ]
-      }
+      },
+      "networks": [
+        "eip155:8453",
+        "eip155:1",
+        "eip155:42161",
+        "eip155:10",
+        "eip155:137",
+        "eip155:43114",
+        "eip155:130",
+        "eip155:480",
+        "eip155:146"
+      ],
+      "accepts": [
+        {
+          "scheme": "exact",
+          "network": "eip155:8453",
+          "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:1",
+          "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:42161",
+          "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:10",
+          "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:137",
+          "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:43114",
+          "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:130",
+          "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:480",
+          "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        },
+        {
+          "scheme": "exact",
+          "network": "eip155:146",
+          "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+          "payTo": "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c",
+          "maxTimeoutSeconds": 604800,
+          "extra": {
+            "name": "GatewayWalletBatched",
+            "version": "1",
+            "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+          },
+          "maxAmountRequired": "5000000",
+          "amount": "5000000",
+          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "description": "Boost a listing to featured placement for 30 days.",
+          "mimeType": "application/json"
+        }
+      ]
     }
   ],
   "accepts": [
@@ -339,7 +1183,5 @@
         "usdc": "17208628f84f5d6ad33f0da3bbbeb27ffed420bc"
       }
     ]
-  },
-  "icon": "https://usdc.directory/icon.png",
-  "logo": "https://usdc.directory/icon.png"
+  }
 }
