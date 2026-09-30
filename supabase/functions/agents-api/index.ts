@@ -39,6 +39,7 @@ type ChainCfg = {
   rpc: string;
   usdc: string;
   explorer: string;
+  usdcDecimals?: number; // defaults to 6
 };
 
 const CHAINS: Record<number, ChainCfg> = {
@@ -83,12 +84,19 @@ const CHAINS: Record<number, ChainCfg> = {
     rpc: "https://bsc-dataseed.binance.org",
     usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
     explorer: "https://bscscan.com",
+    usdcDecimals: 18,
   },
   59144: {
     id: 59144, name: "Linea", network: "linea",
     rpc: "https://rpc.linea.build",
     usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
     explorer: "https://lineascan.build",
+  },
+  143: {
+    id: 143, name: "Monad", network: "monad",
+    rpc: "https://monad-mainnet.drpc.org",
+    usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3",
+    explorer: "https://monadexplorer.com",
   },
   5042: {
     id: 5042, name: "Arc Mainnet", network: "arc",
@@ -97,6 +105,38 @@ const CHAINS: Record<number, ChainCfg> = {
     explorer: "https://explorer.arc.io",
   },
 };
+
+/**
+ * Resolves the X-Payment-Chain header into a known chain.
+ * Accepts a numeric chain id ("8453"), a CAIP-2 id ("eip155:8453"),
+ * or a chain name ("arc", "base", "bsc", "eth", "solana", "sui", "near").
+ */
+function resolveChain(
+  header: string | null,
+): { kind: "evm"; cfg: ChainCfg } | { kind: "non_evm"; key: string } | null {
+  const raw = String(header ?? "8453").trim().toLowerCase();
+  if (!raw) return null;
+
+  const caip = raw.startsWith("eip155:") ? raw.slice(7) : raw;
+  if (/^\d+$/.test(caip)) {
+    const cfg = CHAINS[Number(caip)];
+    return cfg ? { kind: "evm", cfg } : null;
+  }
+
+  const aliases: Record<string, string> = {
+    bsc: "bnb", binance: "bnb", bnb_chain: "bnb", "bnb chain": "bnb",
+    eth: "ethereum", mainnet: "ethereum",
+    arc_mainnet: "arc", arcmainnet: "arc", "arc mainnet": "arc",
+    matic: "polygon", avax: "avalanche", op: "optimism", arb: "arbitrum",
+    sol: "solana",
+  };
+  const key = aliases[raw] ?? raw.replace(/[\s-]+/g, "_");
+
+  const cfg = Object.values(CHAINS).find((c) => c.network === key);
+  if (cfg) return { kind: "evm", cfg };
+  if (NON_EVM_CHAINS.some((c) => c.key === key)) return { kind: "non_evm", key };
+  return null;
+}
 
 // Circle Gateway Nanopayments chains (mainnet). Uses GatewayWalletBatched format.
 // GatewayWallet mainnet address is the same on all EVM chains.
