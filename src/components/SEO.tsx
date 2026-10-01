@@ -27,7 +27,7 @@ const SEO = ({
   const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
   const url = `${SITE_URL}${path}`;
   const isHome = path === "/";
-  const ogImage = image || `${SITE_URL}/og-default.png`;
+  const ogImage = image || `${SITE_URL}/usdc-logo.png`;
 
 
   // Sitewide schema only on the homepage to avoid duplicate JSON-LD on every route.
@@ -55,6 +55,7 @@ const SEO = ({
           url: SITE_URL,
           description:
             "The #1 directory for the global USDC economy, connecting merchants, B2B services, and AI-driven platforms.",
+          logo: `${SITE_URL}/usdc-logo.png`,
         },
       ]
     : [];

@@ -1,3 +1,5 @@
+import BrandLogo from "@/components/BrandLogo";
+
 const XIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" className="h-3.5 w-3.5">
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -18,12 +20,7 @@ const Footer = () => (
 
         {/* Brand */}
         <div className="max-w-[220px] flex-shrink-0">
-          <div className="flex items-baseline gap-1 mb-3">
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] bg-clip-text text-transparent">
-              USDC
-            </span>
-            <span className="font-semibold text-xl tracking-tight text-foreground">Directory</span>
-          </div>
+          <BrandLogo className="mb-3" />
           <p className="text-xs text-muted-foreground leading-relaxed mb-5">
             The global directory for merchants, B2B services, and AI agents accepting USDC.
           </p>

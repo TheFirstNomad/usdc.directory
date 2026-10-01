@@ -5,9 +5,11 @@ interface StartupRecoveryProps {
 const StartupRecovery = ({ onRetry = () => window.location.reload() }: StartupRecoveryProps) => (
   <main className="min-h-screen bg-background text-foreground flex items-center justify-center px-6 py-12">
     <section className="w-full max-w-md text-center" role="alert" aria-live="assertive">
-      <div className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-card text-xl font-bold text-primary">
-        U
-      </div>
+      <img
+        src="/Circle_USDC_Logo.svg"
+        alt="USDC"
+        className="mx-auto mb-6 h-14 w-14"
+      />
       <h1 className="text-2xl font-bold">USDC Directory couldn’t load</h1>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
         The connection was interrupted before the directory opened. Your information and payments

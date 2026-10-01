@@ -6,6 +6,7 @@ import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import { useTheme } from "@/components/ThemeProvider";
 import { TREASURY_ADDRESS } from "@/lib/web3";
 import CommandPalette from "@/components/CommandPalette";
+import BrandLogo from "@/components/BrandLogo";
 import type { Partner } from "@/lib/partners";
 
 interface HeaderProps {
@@ -61,16 +62,7 @@ const Header = ({ partners = [] }: HeaderProps) => {
     <>
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border/40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="flex items-baseline gap-1">
-            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] bg-clip-text text-transparent">
-              USDC
-            </span>
-            <span className="font-semibold text-lg tracking-tight text-foreground">
-              Directory
-            </span>
-          </div>
-        </Link>
+        <BrandLogo compact />
 
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
