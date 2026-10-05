@@ -12,6 +12,8 @@ interface SEOProps {
 
 const SITE_URL = "https://usdc.directory";
 const SITE_NAME = "USDC Directory";
+const BRAND_ASSET_VERSION = "20261005";
+const DEFAULT_BRAND_IMAGE = `${SITE_URL}/usdc-logo.png?v=${BRAND_ASSET_VERSION}`;
 const DEFAULT_TITLE = "USDC Directory: Merchants & Services Accepting USDC";
 const DEFAULT_DESCRIPTION =
   "Discover trusted merchants, B2B services, and AI-driven platforms accepting USDC worldwide. List your entity for just 10 USDC.";
@@ -27,7 +29,7 @@ const SEO = ({
   const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
   const url = `${SITE_URL}${path}`;
   const isHome = path === "/";
-  const ogImage = image || `${SITE_URL}/usdc-logo.png`;
+  const ogImage = image || DEFAULT_BRAND_IMAGE;
 
 
   // Sitewide schema only on the homepage to avoid duplicate JSON-LD on every route.
@@ -55,7 +57,7 @@ const SEO = ({
           url: SITE_URL,
           description:
             "The #1 directory for the global USDC economy, connecting merchants, B2B services, and AI-driven platforms.",
-          logo: `${SITE_URL}/usdc-logo.png`,
+          logo: DEFAULT_BRAND_IMAGE,
         },
       ]
     : [];

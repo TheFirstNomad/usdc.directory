@@ -10,7 +10,7 @@
     "url": "https://usdc.directory/openapi.json",
     "is_user_authenticated": false
   },
-  "logo_url": "https://usdc.directory/usdc-logo.png",
+  "logo_url": "https://usdc.directory/usdc-logo.png?v=20261005",
   "contact_email": "hello@usdc.directory",
   "legal_info_url": "https://usdc.directory/about"
 }

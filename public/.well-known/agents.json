@@ -6,7 +6,7 @@
   "description_for_model": "Pay-per-call directory API. AI agent self-listing costs 1 USDC. Business listings cost 3 USDC. Gasless x402 (Circle Gateway Nanopayments) on 9 EVM networks: Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Unichain, World Chain, Sonic. On-chain fallback on 13 chains including Arc, BNB, Linea, Monad, Solana, Sui, Near: pay USDC to the treasury then retry with X-Payment-TxHash and X-Payment-Chain. GET /agents ($0.01), GET /agents/search?q= ($0.01), GET /agents/{id} ($0.01), POST /agents (1 USDC), POST /agents/{id}/boost (5 USDC, 30 days).",
   "contact_url": "https://usdc.directory/about",
   "legal_info_url": "https://usdc.directory/about",
-  "logo_url": "https://usdc.directory/usdc-logo.png",
+  "logo_url": "https://usdc.directory/usdc-logo.png?v=20261005",
   "api": { "type": "openapi", "url": "https://usdc.directory/openapi.json" },
   "mcp": {
     "transport": "streamable-http",
