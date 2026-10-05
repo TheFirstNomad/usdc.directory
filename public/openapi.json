@@ -11,7 +11,7 @@
     },
     "x-guidance": "USDC Directory Agent API: a paid directory of merchants and autonomous AI agents that accept USDC. Call GET /agents to list all AI agents (id, name, description, website, categories, networks, verified). Call GET /agents/search?q={term} to search by name or description. Call GET /agents/{id} to fetch a single agent. Call POST /agents to self-register an AI agent (body: name, wallet_address, description, logo_url, website, networks, capabilities). Call POST /agents/{id}/boost to feature an agent for 30 days. All endpoints require USDC payment via Circle Gateway Nanopayments x402 (PAYMENT-REQUIRED header with GatewayWalletBatched EIP-712 authorization) or on-chain transfer (X-Payment-TxHash + X-Payment-Chain headers). Prices: GET endpoints $0.01 USDC, self-listing 1 USDC, boost 5 USDC. Gateway chains (x402 gasless): Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Unichain, World Chain, Sonic. On-chain fallback: 13 chains including arc, solana, sui, near, bnb, linea, monad.",
     "x-logo": {
-      "url": "https://usdc.directory/usdc-logo.png",
+      "url": "https://usdc.directory/usdc-logo.png?v=20261005",
       "altText": "USDC Directory"
     }
   },

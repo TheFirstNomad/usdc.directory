@@ -3,7 +3,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(__dirname, "../..");
-const pub = (p: string) => resolve(root, "public", p.replace(/^\//, ""));
+const withoutQuery = (p: string) => p.split("?")[0];
+const pub = (p: string) => resolve(root, "public", withoutQuery(p).replace(/^\//, ""));
 
 // Reads width/height from a PNG header.
 function pngSize(path: string) {
@@ -14,6 +15,7 @@ function pngSize(path: string) {
 
 const manifest = JSON.parse(readFileSync(pub("manifest.webmanifest"), "utf8"));
 const html = readFileSync(resolve(root, "index.html"), "utf8");
+const officialLogoUrl = "https://usdc.directory/usdc-logo.png?v=20261005";
 
 describe("web app manifest", () => {
   it("has required install fields", () => {
@@ -57,14 +59,23 @@ describe("USDC brand icons", () => {
       readFileSync(pub("Circle_USDC_Logo.svg"), "utf8"),
     );
   });
+
+  it("includes a multi-image Windows favicon for marketplace crawlers", () => {
+    const ico = readFileSync(pub("favicon.ico"));
+    expect(ico.readUInt16LE(0)).toBe(0);
+    expect(ico.readUInt16LE(2)).toBe(1);
+    expect(ico.readUInt16LE(4)).toBeGreaterThanOrEqual(3);
+  });
 });
 
 describe("home-screen metadata in index.html", () => {
   it.each([
-    'rel="manifest" href="/manifest.webmanifest"',
+    'rel="manifest" href="/manifest.webmanifest?v=20261005"',
     'rel="apple-touch-icon"',
-    'href="/apple-touch-icon.png"',
-    'rel="icon" type="image/svg+xml" href="/favicon.svg"',
+    'href="/apple-touch-icon.png?v=20261005"',
+    'rel="icon" type="image/x-icon" href="/favicon.ico?v=20261005"',
+    'rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20261005"',
+    'rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261005"',
     'name="theme-color"',
     'name="apple-mobile-web-app-title"',
   ])("contains %s", (snippet) => {
@@ -73,5 +84,26 @@ describe("home-screen metadata in index.html", () => {
 
   it("theme-color matches the manifest", () => {
     expect(html).toContain(`name="theme-color" content="${manifest.theme_color}"`);
+  });
+
+  it("uses the cache-refreshed official logo in social metadata", () => {
+    expect(html).toContain(`property="og:image" content="${officialLogoUrl}"`);
+    expect(html).toContain(`name="twitter:image" content="${officialLogoUrl}"`);
+  });
+});
+
+describe("machine-readable brand discovery", () => {
+  it.each([
+    [".well-known/agents.json", ["logo_url"]],
+    [".well-known/ai-plugin.json", ["logo_url"]],
+    [".well-known/x402", ["icon", "logo"]],
+  ])("uses the official versioned logo in %s", (file, fields) => {
+    const document = JSON.parse(readFileSync(pub(file), "utf8"));
+    for (const field of fields) expect(document[field]).toBe(officialLogoUrl);
+  });
+
+  it("uses the official versioned logo in OpenAPI metadata", () => {
+    const openapi = JSON.parse(readFileSync(pub("openapi.json"), "utf8"));
+    expect(openapi.info["x-logo"].url).toBe(officialLogoUrl);
   });
 });
