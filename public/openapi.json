@@ -94,13 +94,40 @@
         },
         "responses": {
           "200": {
-            "description": "Array of AI agents with id, name, description, website, categories, networks, verified, boosted_until"
+            "description": "Agent list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentList"
+                }
+              }
+            }
           },
           "402": {
-            "description": "Payment required. Returns x402 accepts[] body with PAYMENT-REQUIRED header."
+            "$ref": "#/components/responses/PaymentRequired"
           },
           "429": {
             "description": "Rate limited"
+          },
+          "409": {
+            "description": "Payment reference already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       },
@@ -144,68 +171,64 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "wallet_address",
-                  "description"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "description": "Agent display name"
-                  },
-                  "wallet_address": {
-                    "type": "string",
-                    "description": "EVM/Solana/Sui/Near wallet address of the agent"
-                  },
-                  "description": {
-                    "type": "string",
-                    "maxLength": 300,
-                    "description": "What this agent does"
-                  },
-                  "logo_url": {
-                    "type": "string",
-                    "format": "uri",
-                    "description": "Public URL of agent logo"
-                  },
-                  "website": {
-                    "type": "string",
-                    "format": "uri",
-                    "maxLength": 255,
-                    "description": "Agent homepage or docs URL"
-                  },
-                  "networks": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 10,
-                    "description": "Chains the agent operates on, e.g. [\"arc\",\"base\"]"
-                  },
-                  "capabilities": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "maxItems": 20,
-                    "description": "Capability tags, e.g. [\"payments\",\"search\",\"trading\"]"
-                  }
-                }
+                "$ref": "#/components/schemas/SelfListRequest"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Agent created. Returns id, name, paid (payment reference)."
+            "description": "Agent created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelfListResponse"
+                }
+              }
+            }
           },
           "402": {
-            "description": "Payment required"
+            "$ref": "#/components/responses/PaymentRequired"
           },
           "400": {
-            "description": "Validation error"
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment reference already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -259,13 +282,57 @@
         ],
         "responses": {
           "200": {
-            "description": "Array of matching agents with q, count, agents[]"
+            "description": "Matching agents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentSearchResponse"
+                }
+              }
+            }
           },
           "400": {
-            "description": "q param required"
+            "description": "q param required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "402": {
-            "description": "Payment required"
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment reference already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -320,13 +387,57 @@
         ],
         "responses": {
           "200": {
-            "description": "Single agent object"
+            "description": "Single agent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            }
           },
           "402": {
-            "description": "Payment required"
+            "$ref": "#/components/responses/PaymentRequired"
           },
           "404": {
-            "description": "Agent not found"
+            "description": "Agent not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment reference already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
@@ -335,7 +446,7 @@
       "post": {
         "operationId": "boostAgent",
         "summary": "Feature an agent listing for 30 days",
-        "description": "Promotes the agent to the top of all listings for 30 days. Costs 5 USDC.",
+        "description": "Promotes the agent to the top of all listings for 30 days. Costs 5 USDC. No request body is required; the agent is identified by the path id.",
         "x-x402-price": {
           "amount": "5000000",
           "asset": "USDC",
@@ -381,13 +492,355 @@
         ],
         "responses": {
           "200": {
-            "description": "Boost applied. Returns id, boosted_until timestamp, paid reference."
+            "description": "Boost applied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoostResponse"
+                }
+              }
+            }
           },
           "402": {
-            "description": "Payment required"
+            "$ref": "#/components/responses/PaymentRequired"
           },
           "404": {
-            "description": "Agent not found"
+            "description": "Agent not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment reference already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Agent": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "logo_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categories": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "networks": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "verified": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "boosted_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AgentSearchResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Agent"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "wallet_address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "AgentList": {
+        "type": "object",
+        "required": [
+          "count",
+          "agents"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Agent"
+            }
+          },
+          "paid": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Payment reference (tx hash or x402 settlement id)"
+          }
+        }
+      },
+      "AgentSearchResponse": {
+        "type": "object",
+        "required": [
+          "q",
+          "count",
+          "agents"
+        ],
+        "properties": {
+          "q": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentSearchResult"
+            }
+          },
+          "paid": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Payment reference (tx hash or x402 settlement id)"
+          }
+        }
+      },
+      "AgentResponse": {
+        "type": "object",
+        "required": [
+          "agent"
+        ],
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/Agent"
+          },
+          "paid": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Payment reference (tx hash or x402 settlement id)"
+          }
+        }
+      },
+      "SelfListRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "wallet_address",
+          "description"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Agent display name"
+          },
+          "wallet_address": {
+            "type": "string",
+            "description": "EVM/Solana/Sui/Near wallet address of the agent",
+            "maxLength": 256
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 300,
+            "description": "What this agent does"
+          },
+          "logo_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public URL of agent logo"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 255,
+            "description": "Agent homepage or docs URL"
+          },
+          "networks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "description": "Chains the agent operates on, e.g. [\"arc\",\"base\"]"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "description": "Capability tags, e.g. [\"payments\",\"search\",\"trading\"]"
+          }
+        }
+      },
+      "SelfListResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "paid": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Payment reference (tx hash or x402 settlement id)"
+          }
+        }
+      },
+      "BoostResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "boosted_until"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "boosted_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "paid": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Payment reference (tx hash or x402 settlement id)"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {
+      "PaymentRequired": {
+        "description": "Payment required. x402 accepts[] body; PAYMENT-REQUIRED header carries the base64 x402 v2 challenge.",
+        "headers": {
+          "PAYMENT-REQUIRED": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
           }
         }
       }
