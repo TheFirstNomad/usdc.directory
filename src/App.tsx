@@ -24,6 +24,7 @@ const AdminAgents = lazy(() => import("./pages/AdminAgents.tsx"));
 const SubmitAIAgent = lazy(() => import("./pages/SubmitAIAgent.tsx"));
 const AIAgents = lazy(() => import("./pages/AIAgents.tsx"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs.tsx"));
+const Status = lazy(() => import("./pages/Status.tsx"));
 const AdminFeatured = lazy(() => import("./pages/AdminFeatured.tsx"));
 const AdminListings = lazy(() => import("./pages/AdminListings.tsx"));
 const DeploymentStatus = lazy(() => import("./pages/DeploymentStatus.tsx"));
