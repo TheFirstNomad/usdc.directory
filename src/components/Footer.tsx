@@ -63,6 +63,7 @@ const Footer = () => (
             <ul className="space-y-2.5 text-xs text-muted-foreground">
               <li><a href="/about" className="hover:text-foreground transition-colors">About USDC</a></li>
               <li><a href="/ai-agents" className="hover:text-foreground transition-colors">AI Agents</a></li>
+              <li><a href="/status" className="hover:text-foreground transition-colors">Network Status</a></li>
               <li>
                 <a href="https://developers.circle.com" target="_blank" rel="noopener noreferrer"
                   className="hover:text-foreground transition-colors inline-flex items-center gap-1">
