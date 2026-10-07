@@ -55,6 +55,7 @@ const App = () => (
               <Route path="/submit/ai-agent" element={<SubmitAIAgent />} />
               <Route path="/ai-agents" element={<AIAgents />} />
               <Route path="/api-docs" element={<ApiDocs />} />
+              <Route path="/status" element={<Status />} />
               {/* Swap temporarily disabled — will return powered by Circle App Kit */}
               <Route path="/swap" element={<Navigate to="/" replace />} />
               <Route path="/insights" element={<Insights />} />
