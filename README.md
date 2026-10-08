@@ -34,3 +34,12 @@ Offered for licensing or full acquisition. Serious inquiries only: hello@usdc.di
 ---
 
 Built with ❤️ for the USDC ecosystem.
+
+## Circle Agent Marketplace — intake values
+- **Paid API endpoint:** `https://api.usdc.directory/agents` (x402, returns HTTP 402 + `PAYMENT-REQUIRED`)
+- **OpenAPI spec:** `https://usdc.directory/openapi.json`
+- **MCP endpoint:** `https://api.usdc.directory/mcp` (streamable HTTP)
+- **x402 manifest:** `https://usdc.directory/.well-known/x402`
+- **Payout wallet (EVM):** `0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c`
+- **Category:** INFRASTRUCTURE
+- **Seller blurb:** Pay-per-call directory of USDC-accepting AI agents; 0.01 USDC to query, 1 USDC to self-list, 3 USDC for business listings, 5 USDC to boost.
