@@ -580,12 +580,13 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const path = basePath(url);
-  // Always advertise the canonical https resource URL (the edge runtime sees http internally
-  // and strips the /functions/v1 prefix from the pathname).
-  const pathname = url.pathname.startsWith("/functions/v1")
-    ? url.pathname
-    : `/functions/v1${url.pathname}`;
-  const resource = `https://${url.host}${pathname}`;
+  // Advertise the canonical https resource URL. When called through the public
+  // proxy (api.usdc.directory), the proxy forwards the original host in
+  // x-forwarded-host — prefer it with the clean public path (no /functions/v1).
+  const publicHost = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const resource = publicHost
+    ? `https://${publicHost}${path}`
+    : `https://${url.host}${url.pathname.startsWith("/functions/v1") ? url.pathname : `/functions/v1${url.pathname}`}`;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
