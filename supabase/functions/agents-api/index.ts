@@ -587,6 +587,8 @@ Deno.serve(async (req) => {
   const resource = publicHost
     ? `https://${publicHost}${path}`
     : `https://${url.host}${url.pathname.startsWith("/functions/v1") ? url.pathname : `/functions/v1${url.pathname}`}`;
+  // Treat HEAD like GET so health probes get the real status (402 challenge / 200).
+  const method = req.method === "HEAD" ? "GET" : req.method;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
