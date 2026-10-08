@@ -582,8 +582,8 @@ Deno.serve(async (req) => {
   const path = basePath(url);
   // Advertise the canonical https resource URL. When called through the public
   // proxy (api.usdc.directory), the proxy forwards the original host in
-  // x-forwarded-host — prefer it with the clean public path (no /functions/v1).
-  const publicHost = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  // x-public-host (Supabase overwrites the standard x-forwarded-host).
+  const publicHost = req.headers.get("x-public-host")?.split(",")[0]?.trim();
   const resource = publicHost
     ? `https://${publicHost}${path}`
     : `https://${url.host}${url.pathname.startsWith("/functions/v1") ? url.pathname : `/functions/v1${url.pathname}`}`;
