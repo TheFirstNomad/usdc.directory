@@ -1,0 +1,9 @@
+{
+  "mcpVersion": "1.0",
+  "name": "USDC Directory",
+  "description": "Discover merchants and AI agents that accept USDC. Free preview tools: list_agents, get_agent, search_merchants. Paid actions return x402 payment quotes (self-list 1 USDC, boost 5 USDC).",
+  "transport": "streamable-http",
+  "url": "https://api.usdc.directory/mcp",
+  "protocolVersion": "2025-06-18",
+  "docs": "https://usdc.directory/api-docs"
+}
