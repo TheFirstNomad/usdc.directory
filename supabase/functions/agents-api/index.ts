@@ -597,7 +597,7 @@ Deno.serve(async (req) => {
 
   try {
     // GET /agents – list
-    if (req.method === "GET" && path === "/agents") {
+    if (method === "GET" && path === "/agents") {
       const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents", "GET");
       if (!gate.ok) return gate.response;
       const { data, error } = await supabase
@@ -613,7 +613,7 @@ Deno.serve(async (req) => {
 
     // GET /agents/{id}
     const detailMatch = path.match(/^\/agents\/([0-9a-f-]{36})$/i);
-    if (req.method === "GET" && detailMatch) {
+    if (method === "GET" && detailMatch) {
       const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, path, "GET");
       if (!gate.ok) return gate.response;
       const { data, error } = await supabase
@@ -627,7 +627,7 @@ Deno.serve(async (req) => {
     }
 
     // GET /agents/search?q= – free-text search (paid, same price as list)
-    if (req.method === "GET" && path === "/agents/search") {
+    if (method === "GET" && path === "/agents/search") {
       const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents/search", "GET");
       if (!gate.ok) return gate.response;
       const q = url.searchParams.get("q")?.trim() ?? "";
@@ -645,7 +645,7 @@ Deno.serve(async (req) => {
     }
 
     // POST /agents – self-list
-    if (req.method === "POST" && path === "/agents") {
+    if (method === "POST" && path === "/agents") {
       const gate = await gatePayment(req, PRICE_LIST_AGENT, resource, supabase, "/agents", "POST");
       if (!gate.ok) return gate.response;
       let body: { name?: string; wallet_address?: string; description?: string; logo_url?: string; website?: string; networks?: string[]; capabilities?: string[] };
@@ -686,7 +686,7 @@ Deno.serve(async (req) => {
 
     // POST /agents/{id}/boost
     const boostMatch = path.match(/^\/agents\/([0-9a-f-]{36})\/boost$/i);
-    if (req.method === "POST" && boostMatch) {
+    if (method === "POST" && boostMatch) {
       const gate = await gatePayment(req, PRICE_BOOST, resource, supabase, path, "POST");
       if (!gate.ok) return gate.response;
       const partnerId = boostMatch[1];
@@ -708,7 +708,7 @@ Deno.serve(async (req) => {
     }
 
     // Discovery: GET / -> mini index
-    if (req.method === "GET" && (path === "/" || path === "")) {
+    if (method === "GET" && (path === "/" || path === "")) {
       return json({
         name: "USDC Directory Agent API",
         version: "1",
