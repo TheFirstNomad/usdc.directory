@@ -580,12 +580,15 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const path = basePath(url);
-  // Always advertise the canonical https resource URL (the edge runtime sees http internally
-  // and strips the /functions/v1 prefix from the pathname).
-  const pathname = url.pathname.startsWith("/functions/v1")
-    ? url.pathname
-    : `/functions/v1${url.pathname}`;
-  const resource = `https://${url.host}${pathname}`;
+  // Advertise the canonical https resource URL. When called through the public
+  // proxy (api.usdc.directory), the proxy forwards the original host in
+  // x-public-host (Supabase overwrites the standard x-forwarded-host).
+  const publicHost = req.headers.get("x-public-host")?.split(",")[0]?.trim();
+  const resource = publicHost
+    ? `https://${publicHost}${path}`
+    : `https://${url.host}${url.pathname.startsWith("/functions/v1") ? url.pathname : `/functions/v1${url.pathname}`}`;
+  // Treat HEAD like GET so health probes get the real status (402 challenge / 200).
+  const method = req.method === "HEAD" ? "GET" : req.method;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -594,7 +597,7 @@ Deno.serve(async (req) => {
 
   try {
     // GET /agents – list
-    if (req.method === "GET" && path === "/agents") {
+    if (method === "GET" && path === "/agents") {
       const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents", "GET");
       if (!gate.ok) return gate.response;
       const { data, error } = await supabase
@@ -610,7 +613,7 @@ Deno.serve(async (req) => {
 
     // GET /agents/{id}
     const detailMatch = path.match(/^\/agents\/([0-9a-f-]{36})$/i);
-    if (req.method === "GET" && detailMatch) {
+    if (method === "GET" && detailMatch) {
       const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, path, "GET");
       if (!gate.ok) return gate.response;
       const { data, error } = await supabase
@@ -624,7 +627,7 @@ Deno.serve(async (req) => {
     }
 
     // GET /agents/search?q= – free-text search (paid, same price as list)
-    if (req.method === "GET" && path === "/agents/search") {
+    if (method === "GET" && path === "/agents/search") {
       const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents/search", "GET");
       if (!gate.ok) return gate.response;
       const q = url.searchParams.get("q")?.trim() ?? "";
@@ -642,7 +645,7 @@ Deno.serve(async (req) => {
     }
 
     // POST /agents – self-list
-    if (req.method === "POST" && path === "/agents") {
+    if (method === "POST" && path === "/agents") {
       const gate = await gatePayment(req, PRICE_LIST_AGENT, resource, supabase, "/agents", "POST");
       if (!gate.ok) return gate.response;
       let body: { name?: string; wallet_address?: string; description?: string; logo_url?: string; website?: string; networks?: string[]; capabilities?: string[] };
@@ -683,7 +686,7 @@ Deno.serve(async (req) => {
 
     // POST /agents/{id}/boost
     const boostMatch = path.match(/^\/agents\/([0-9a-f-]{36})\/boost$/i);
-    if (req.method === "POST" && boostMatch) {
+    if (method === "POST" && boostMatch) {
       const gate = await gatePayment(req, PRICE_BOOST, resource, supabase, path, "POST");
       if (!gate.ok) return gate.response;
       const partnerId = boostMatch[1];
@@ -705,7 +708,7 @@ Deno.serve(async (req) => {
     }
 
     // Discovery: GET / -> mini index
-    if (req.method === "GET" && (path === "/" || path === "")) {
+    if (method === "GET" && (path === "/" || path === "")) {
       return json({
         name: "USDC Directory Agent API",
         version: "1",

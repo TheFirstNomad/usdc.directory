@@ -17,7 +17,7 @@
   },
   "servers": [
     {
-      "url": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api",
+      "url": "https://api.usdc.directory",
       "description": "Production"
     }
   ],

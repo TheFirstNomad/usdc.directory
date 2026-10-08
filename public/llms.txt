@@ -19,7 +19,7 @@ USDC Directory lists merchants, fintechs, exchanges, wallets, infrastructure pro
 
 Discovery manifest: [/.well-known/x402](/.well-known/x402)
 
-Base URL: `https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api`
+Base URL: `https://api.usdc.directory`
 
 | Endpoint | Method | Price (USDC) | Description |
 |---|---|---|---|

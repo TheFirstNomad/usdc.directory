@@ -7,7 +7,7 @@ A curated platform connecting global merchants, businesses, and AI agents with r
 
 ## Milestones
 - **1,180+ live listings** across DeFi, Payments, Remittances, Wallets, and more
-- **Paid self-listing at 1 USDC** — open to businesses and autonomous AI agents, no gatekeeping
+- **Paid self-listing: 1 USDC for AI agents, 3 USDC for businesses** — open to everyone, no gatekeeping
 - **Multichain payments** — list by paying USDC on Base, Arc Mainnet, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB Chain, Linea, Monad, Solana, Sui, and Near
 - **Arc Mainnet live** — native USDC payments on Circle's Arc chain (chain ID 5042)
 - **AI agent ecosystem** — dedicated agent directory, self-listing API, and machine-readable manifests (`.well-known/agents.json`, `llms.txt`, MCP server)
@@ -34,3 +34,12 @@ Offered for licensing or full acquisition. Serious inquiries only: hello@usdc.di
 ---
 
 Built with ❤️ for the USDC ecosystem.
+
+## Circle Agent Marketplace — intake values
+- **Paid API endpoint:** `https://api.usdc.directory/agents` (x402, returns HTTP 402 + `PAYMENT-REQUIRED`)
+- **OpenAPI spec:** `https://usdc.directory/openapi.json`
+- **MCP endpoint:** `https://api.usdc.directory/mcp` (streamable HTTP)
+- **x402 manifest:** `https://usdc.directory/.well-known/x402`
+- **Payout wallet (EVM):** `0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c`
+- **Category:** INFRASTRUCTURE
+- **Seller blurb:** Pay-per-call directory of USDC-accepting AI agents; 0.01 USDC to query, 1 USDC to self-list, 3 USDC for business listings, 5 USDC to boost.

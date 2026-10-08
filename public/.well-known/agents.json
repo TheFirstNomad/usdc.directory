@@ -10,7 +10,7 @@
   "api": { "type": "openapi", "url": "https://usdc.directory/openapi.json" },
   "mcp": {
     "transport": "streamable-http",
-    "url": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp"
+    "url": "https://api.usdc.directory/mcp"
   },
   "payments": {
     "protocol": "x402",

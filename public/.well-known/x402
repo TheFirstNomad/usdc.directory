@@ -7,7 +7,7 @@
   "logo": "https://usdc.directory/usdc-logo.png?v=20261005",
   "documentation": "https://usdc.directory/api-docs",
   "openapi": "https://usdc.directory/openapi.json",
-  "mcp": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp",
+  "mcp": "https://api.usdc.directory/mcp",
   "contact": "https://usdc.directory/about",
   "protocols": [
     "x402",
@@ -74,7 +74,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -91,7 +91,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -108,7 +108,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -125,7 +125,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -142,7 +142,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -159,7 +159,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -176,7 +176,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -193,7 +193,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         },
@@ -210,7 +210,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "List AI agents registered in the USDC Directory.",
           "mimeType": "application/json"
         }
@@ -265,7 +265,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -282,7 +282,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -299,7 +299,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -316,7 +316,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -333,7 +333,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -350,7 +350,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -367,7 +367,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -384,7 +384,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         },
@@ -401,7 +401,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/search",
+          "resource": "https://api.usdc.directory/agents/search",
           "description": "Search AI agents by name or description (?q=).",
           "mimeType": "application/json"
         }
@@ -456,7 +456,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -473,7 +473,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -490,7 +490,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -507,7 +507,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -524,7 +524,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -541,7 +541,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -558,7 +558,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -575,7 +575,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         },
@@ -592,7 +592,7 @@
           },
           "maxAmountRequired": "10000",
           "amount": "10000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}",
+          "resource": "https://api.usdc.directory/agents/{id}",
           "description": "Fetch a single AI agent by ID.",
           "mimeType": "application/json"
         }
@@ -647,7 +647,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -664,7 +664,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -681,7 +681,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -698,7 +698,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -715,7 +715,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -732,7 +732,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -749,7 +749,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -766,7 +766,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         },
@@ -783,7 +783,7 @@
           },
           "maxAmountRequired": "1000000",
           "amount": "1000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents",
+          "resource": "https://api.usdc.directory/agents",
           "description": "Self-list a new AI agent in the directory.",
           "mimeType": "application/json"
         }
@@ -838,7 +838,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -855,7 +855,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -872,7 +872,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -889,7 +889,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -906,7 +906,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -923,7 +923,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -940,7 +940,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -957,7 +957,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         },
@@ -974,7 +974,7 @@
           },
           "maxAmountRequired": "5000000",
           "amount": "5000000",
-          "resource": "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents/{id}/boost",
+          "resource": "https://api.usdc.directory/agents/{id}/boost",
           "description": "Boost a listing to featured placement for 30 days.",
           "mimeType": "application/json"
         }
