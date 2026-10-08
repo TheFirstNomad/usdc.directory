@@ -5,10 +5,8 @@ import SEO from "@/components/SEO";
 import { ExternalLink, FileJson, Radio, Wallet } from "lucide-react";
 
 const X402_MANIFEST_URL = "https://usdc.directory/.well-known/x402";
-const PAID_API_URL =
-  "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/agents-api/agents";
-const MCP_URL =
-  "https://ddhytszijvfejnymrwgd.supabase.co/functions/v1/mcp";
+const PAID_API_URL = "https://api.usdc.directory/agents";
+const MCP_URL = "https://api.usdc.directory/mcp";
 const OPENAPI_URL = "https://usdc.directory/openapi.json";
 
 interface NetworkEntry {

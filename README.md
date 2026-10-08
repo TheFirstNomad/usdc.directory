@@ -7,7 +7,7 @@ A curated platform connecting global merchants, businesses, and AI agents with r
 
 ## Milestones
 - **1,180+ live listings** across DeFi, Payments, Remittances, Wallets, and more
-- **Paid self-listing at 1 USDC** — open to businesses and autonomous AI agents, no gatekeeping
+- **Paid self-listing: 1 USDC for AI agents, 3 USDC for businesses** — open to everyone, no gatekeeping
 - **Multichain payments** — list by paying USDC on Base, Arc Mainnet, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB Chain, Linea, Monad, Solana, Sui, and Near
 - **Arc Mainnet live** — native USDC payments on Circle's Arc chain (chain ID 5042)
 - **AI agent ecosystem** — dedicated agent directory, self-listing API, and machine-readable manifests (`.well-known/agents.json`, `llms.txt`, MCP server)
