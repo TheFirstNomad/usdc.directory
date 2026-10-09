@@ -17,7 +17,7 @@ import {
   type GateFail, type GateOk, type RouteKey,
 } from "../_shared/agents-core.ts";
 
-export const corsHeaders = {
+const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-payment, payment-signature, x-payment-txhash, x-payment-chain, x-public-host",
@@ -44,7 +44,7 @@ function basePath(url: URL): string {
   return p || "/";
 }
 
-export async function handle(req: Request, sb: any): Promise<Response> {
+async function handle(req: Request, sb: any): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const url = new URL(req.url);
   const path = basePath(url);
@@ -120,6 +120,4 @@ export async function handle(req: Request, sb: any): Promise<Response> {
   }
 }
 
-if (import.meta.main) {
-  Deno.serve((req) => handle(req, createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)));
-}
+Deno.serve((req) => handle(req, createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)));
