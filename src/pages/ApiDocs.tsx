@@ -152,8 +152,26 @@ curl -X POST ${API_BASE}/agents \\
                 <tr>
                   <td className="px-4 py-3 font-mono text-xs">/agents</td>
                   <td className="px-4 py-3"><span className="font-mono text-xs text-green-500">GET</span></td>
-                  <td className="px-4 py-3 font-mono">$0.001</td>
+                  <td className="px-4 py-3 font-mono">0.01</td>
                   <td className="px-4 py-3 text-muted-foreground">List all agents</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-xs">/agents/search?q=</td>
+                  <td className="px-4 py-3"><span className="font-mono text-xs text-green-500">GET</span></td>
+                  <td className="px-4 py-3 font-mono">0.01</td>
+                  <td className="px-4 py-3 text-muted-foreground">Search agents</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-xs">/agents/&#123;id&#125;</td>
+                  <td className="px-4 py-3"><span className="font-mono text-xs text-green-500">GET</span></td>
+                  <td className="px-4 py-3 font-mono">0.01</td>
+                  <td className="px-4 py-3 text-muted-foreground">Get one agent</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-mono text-xs">/merchants/search?q=</td>
+                  <td className="px-4 py-3"><span className="font-mono text-xs text-green-500">GET</span></td>
+                  <td className="px-4 py-3 font-mono">0.01</td>
+                  <td className="px-4 py-3 text-muted-foreground">Search merchants (max 50)</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3 font-mono text-xs">/agents</td>
@@ -165,13 +183,13 @@ curl -X POST ${API_BASE}/agents \\
                   <td className="px-4 py-3 font-mono text-xs">/agents/&#123;id&#125;/boost</td>
                   <td className="px-4 py-3"><span className="font-mono text-xs text-blue-500">POST</span></td>
                   <td className="px-4 py-3 font-mono">5.00</td>
-                  <td className="px-4 py-3 text-muted-foreground">Featured for 7 days</td>
+                  <td className="px-4 py-3 text-muted-foreground">Featured for 30 days</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p className="text-xs text-muted-foreground">
-            Supported chains: Base · Arc Mainnet · and all major USDC mainnets. Payment schemes: <span className="font-mono">x402</span> (EIP-3009) or <span className="font-mono">onchain</span> (USDC transfer tx hash).
+            Supported chains: Base · Arc Mainnet · and all major USDC mainnets. Payment schemes: <span className="font-mono">x402</span> (Circle Gateway, gasless) or <span className="font-mono">onchain</span> (USDC transfer tx hash).
           </p>
         </section>
 
@@ -197,7 +215,7 @@ curl -X POST ${API_BASE}/agents \\
             <Bot className="h-5 w-5 text-primary" /> Connect via MCP
           </h2>
           <p className="text-sm text-muted-foreground">
-            Claude Desktop, Cursor, Continue, and any MCP-compatible agent can connect to the directory as a tool source. Free preview tools (<code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">list_agents</code>, <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">get_agent</code>, <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">search_merchants</code>) are free; paid actions point the agent at the x402 endpoint.
+            Claude Desktop, Cursor, Continue, and any MCP-compatible agent can connect to the directory as a tool source. initialize and tools/list are free. All six tools are paid: list_agents, search_agents, get_agent, search_merchants (0.01 USDC each), submit_agent (1 USDC), boost_agent (5 USDC). An unpaid call returns error 402 with payment requirements.
           </p>
           <CodeBlock
             lang="json"
