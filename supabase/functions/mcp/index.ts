@@ -1,237 +1,105 @@
-// MCP server (Model Context Protocol) — Streamable HTTP transport.
-// Exposes USDC Directory tools to Claude Desktop, Cursor, Continue, GPT, etc.
-//
-// Implemented as a dependency-free JSON-RPC 2.0 handler so the function can
-// never fail to boot on a third-party SDK signature change.
-//
-// Tools:
-//   list_agents      – list AI agents in the directory (free preview, 20 max)
-//   get_agent        – fetch one agent by id (free preview)
-//   search_merchants – search USDC-accepting merchants (free preview)
-//   submit_agent     – returns instructions + payment quote (1 USDC via x402)
-//   boost_agent      – returns instructions + payment quote (5 USDC via x402)
+// MCP server (Streamable HTTP, JSON-RPC 2.0) for USDC Directory.
+// initialize and tools/list are free; every tool call is paid via x402.
+// Unpaid tools/call -> JSON-RPC error 402 with the same payment requirements
+// as the HTTP API. Pay on retry via params._meta["x402/payment"] or an
+// X-PAYMENT header (or X-Payment-TxHash + X-Payment-Chain for on-chain).
+// All payment + data logic is shared with agents-api via ../_shared/agents-core.ts.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-);
-
-const API_BASE = `${Deno.env.get("SUPABASE_URL")}/functions/v1/agents-api`;
-const SITE = "https://usdc.directory";
-const TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
+import {
+  MCP_TOOLS, PUBLIC_HOST, SITE, ROUTES, UUID_RE,
+  gatePayment, paymentResponseHeader, resourceFor, validateSelfList,
+  listAgents, getAgent, searchAgents, searchMerchants, selfListAgent, boostAgent,
+} from "../_shared/agents-core.ts";
 
 const PROTOCOL_VERSION = "2025-06-18";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "content-type, authorization, apikey, x-client-info, mcp-session-id, mcp-protocol-version",
+    "content-type, authorization, apikey, x-client-info, mcp-session-id, mcp-protocol-version, x-payment, x-payment-txhash, x-payment-chain, x-public-host",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
-  "Access-Control-Expose-Headers": "mcp-session-id",
+  "Access-Control-Expose-Headers": "mcp-session-id, PAYMENT-RESPONSE",
 };
 
-type Tool = {
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-  handler: (args: Record<string, any>) => Promise<unknown> | unknown;
-};
+const text = (value: unknown) => [{ type: "text", text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }];
+const rpcResult = (id: unknown, result: unknown) => ({ jsonrpc: "2.0", id, result });
+const rpcError = (id: unknown, code: number, message: string, data?: unknown) =>
+  ({ jsonrpc: "2.0", id, error: data === undefined ? { code, message } : { code, message, data } });
 
-const text = (value: unknown) => ({
-  content: [{
-    type: "text",
-    text: typeof value === "string" ? value : JSON.stringify(value, null, 2),
-  }],
-});
+type Hdr = { xPayment: string | null; txHash: string | null; chain: string | null; ip: string };
 
-const TOOLS: Tool[] = [
-  {
-    name: "list_agents",
-    description:
-      "List AI agents in the USDC Directory (free preview, max 20). For full paid programmatic access use GET /agents-api/agents with x402.",
-    inputSchema: {
-      type: "object",
-      properties: { limit: { type: "number", description: "1-20", default: 10 } },
-      additionalProperties: false,
-    },
-    handler: async (args) => {
-      const limit = Math.min(Math.max(Number(args.limit ?? 10) || 10, 1), 20);
-      const { data, error } = await supabase
-        .from("partners_public")
-        .select("id, name, description, website, categories, boosted_until, verified")
-        .contains("categories", ["AI Agents"])
-        .order("boosted_until", { ascending: false, nullsFirst: false })
-        .limit(limit);
-      if (error) return text({ error: error.message });
-      return text({ count: data?.length ?? 0, agents: data ?? [] });
-    },
-  },
-  {
-    name: "get_agent",
-    description: "Fetch one agent or merchant listing by UUID (free preview).",
-    inputSchema: {
-      type: "object",
-      properties: { id: { type: "string", description: "listing UUID" } },
-      required: ["id"],
-      additionalProperties: false,
-    },
-    handler: async (args) => {
-      const id = String(args.id ?? "").trim();
-      if (!id) return text({ error: "id is required" });
-      const { data, error } = await supabase
-        .from("partners_public")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      if (error) return text({ error: error.message });
-      return text(data ?? { error: "not found" });
-    },
-  },
-  {
-    name: "search_merchants",
-    description:
-      "Search USDC-accepting merchants and services by free-text query and/or category (free preview, max 50).",
-    inputSchema: {
-      type: "object",
-      properties: {
-        query: { type: "string", description: "free-text match against name/description" },
-        category: { type: "string" },
-        limit: { type: "number", default: 20 },
-      },
-      additionalProperties: false,
-    },
-    handler: async (args) => {
-      const limit = Math.min(Math.max(Number(args.limit ?? 20) || 20, 1), 50);
-      let q = supabase
-        .from("partners_public")
-        .select("id, name, description, website, categories, region");
-      if (typeof args.category === "string" && args.category.trim()) {
-        q = q.contains("categories", [args.category.trim().slice(0, 64)]);
-      }
-      if (typeof args.query === "string" && args.query.trim()) {
-        // Strip PostgREST filter metacharacters so raw input can't inject extra clauses.
-        const safe = args.query
-          .trim()
-          .slice(0, 100)
-          .replace(/[,()."'\\*%:]/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
-        if (safe) q = q.or(`name.ilike.%${safe}%,description.ilike.%${safe}%`);
-      }
-      const { data, error } = await q.limit(limit);
-      if (error) return text({ error: error.message });
-      return text({ count: data?.length ?? 0, results: data ?? [] });
-    },
-  },
-  {
-    name: "submit_agent",
-    description:
-      "Get instructions to self-list an AI agent. Costs 1 USDC via x402. Returns the POST endpoint and payment quote.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
-    handler: () =>
-      text({
-        action: "POST",
-        endpoint: `${API_BASE}/agents`,
-        price: { amount_usdc: "1.000", asset: "USDC" },
-        x402_networks: [
-          "eip155:8453", "eip155:1", "eip155:42161", "eip155:10", "eip155:137",
-          "eip155:43114", "eip155:130", "eip155:480", "eip155:146",
-        ],
-        onchain_networks: [
-          "arc", "base", "ethereum", "arbitrum", "optimism", "polygon",
-          "avalanche", "bnb", "linea", "monad", "solana", "sui", "near",
-        ],
-        treasury: TREASURY,
-        body_schema: {
-          name: "string",
-          wallet_address: "0x... (or chain-native address)",
-          description: "string<=300",
-          website: "https://... (optional)",
-          logo_url: "https://... (optional)",
-        },
-        payment_methods: [
-          "x402: retry with X-PAYMENT header (Circle Gateway Nanopayments, gasless)",
-          "On-chain prepaid: send USDC to treasury, retry with X-Payment-TxHash + X-Payment-Chain",
-        ],
-        docs: `${SITE}/api-docs`,
-      }),
-  },
-  {
-    name: "boost_agent",
-    description:
-      "Get instructions to boost a listing to featured placement for 30 days. Costs 5 USDC via x402.",
-    inputSchema: {
-      type: "object",
-      properties: { id: { type: "string", description: "listing UUID" } },
-      required: ["id"],
-      additionalProperties: false,
-    },
-    handler: (args) =>
-      text({
-        action: "POST",
-        endpoint: `${API_BASE}/agents/${String(args.id ?? "").trim()}/boost`,
-        price: { amount_usdc: "5.000", asset: "USDC" },
-        duration_days: 30,
-        treasury: TREASURY,
-        docs: `${SITE}/api-docs`,
-      }),
-  },
-];
+async function callTool(sb: any, id: unknown, params: any, hdr: Hdr) {
+  const tool = MCP_TOOLS.find((t) => t.name === params?.name);
+  if (!tool) return rpcError(id, -32602, `Unknown tool: ${params?.name}`);
+  const args = params?.arguments ?? {};
+  const meta = params?._meta ?? {};
 
-function rpcResult(id: unknown, result: unknown) {
-  return { jsonrpc: "2.0", id, result };
-}
-function rpcError(id: unknown, code: number, message: string) {
-  return { jsonrpc: "2.0", id, error: { code, message } };
+  // Pre-payment validation so bad input never costs the caller.
+  let selfList: ReturnType<typeof validateSelfList> | null = null;
+  if (tool.route === "self_list") {
+    selfList = validateSelfList(args);
+    if (!selfList.ok) return rpcError(id, -32602, selfList.error);
+  }
+  let path = ROUTES[tool.route].path;
+  if (tool.route === "get_agent" || tool.route === "boost") {
+    const aid = String(args.id ?? "").trim();
+    if (!UUID_RE.test(aid)) return rpcError(id, -32602, "id must be a UUID");
+    path = path.replace("{id}", aid);
+  }
+  if ((tool.route === "search_agents" || tool.route === "search_merchants") && !String(args.q ?? "").trim()) {
+    return rpcError(id, -32602, "q is required");
+  }
+
+  const g = await gatePayment(sb, {
+    xPayment: meta["x402/payment"] ?? hdr.xPayment,
+    txHash: meta["x402/txHash"] ?? hdr.txHash,
+    chain: meta["x402/chain"] ?? hdr.chain,
+    ip: hdr.ip,
+  }, tool.route, resourceFor(path), path);
+  if (!g.ok) {
+    if (g.status === 402) return rpcError(id, 402, g.body?.error ?? "Payment required", g.body);
+    return rpcError(id, g.status, g.body?.error ?? "error", g.body);
+  }
+
+  let r: { status: number; body: any };
+  switch (tool.route) {
+    case "list_agents": r = await listAgents(sb, g.paymentId); break;
+    case "search_agents": r = await searchAgents(sb, String(args.q), g.paymentId); break;
+    case "get_agent": r = await getAgent(sb, String(args.id).trim(), g.paymentId); break;
+    case "search_merchants": r = await searchMerchants(sb, String(args.q), g.paymentId, { category: args.category, limit: args.limit }); break;
+    case "self_list": r = await selfListAgent(sb, (selfList as any).value, g); break;
+    case "boost": r = await boostAgent(sb, String(args.id).trim(), g); break;
+  }
+  return rpcResult(id, {
+    content: text(r!.body),
+    structuredContent: r!.body,
+    isError: r!.status >= 400,
+    _meta: { "x402/payment-response": paymentResponseHeader(g) },
+  });
 }
 
-async function handleRpc(msg: any): Promise<unknown | null> {
+async function handleRpc(sb: any, msg: any, hdr: Hdr): Promise<unknown | null> {
   const { id, method, params } = msg ?? {};
   switch (method) {
     case "initialize":
       return rpcResult(id, {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
-        serverInfo: {
-          name: "usdc-directory",
-          version: "1.1.0",
-          description:
-            "USDC Directory — discover merchants and AI agents that accept USDC. Pay-per-call agent API via x402.",
-        },
+        serverInfo: { name: "usdc-directory", title: "USDC Directory", version: "2.0.0" },
         instructions:
-          "Free preview tools: list_agents, get_agent, search_merchants. Paid actions (submit_agent, boost_agent) return an x402 payment quote for the HTTP API.",
+          "Paid USDC Directory tools (x402). Reads 0.01 USDC; submit_agent 1 USDC; boost_agent 5 USDC. An unpaid call returns error 402 with payment requirements; retry with params._meta[\"x402/payment\"] or an X-PAYMENT header.",
       });
     case "ping":
       return rpcResult(id, {});
     case "tools/list":
-      return rpcResult(id, {
-        tools: TOOLS.map((t) => ({
-          name: t.name,
-          description: t.description,
-          inputSchema: t.inputSchema,
-        })),
-      });
-    case "tools/call": {
-      const tool = TOOLS.find((t) => t.name === params?.name);
-      if (!tool) return rpcError(id, -32602, `Unknown tool: ${params?.name}`);
-      try {
-        const out = await tool.handler(params?.arguments ?? {});
-        return rpcResult(id, out);
-      } catch (e) {
-        return rpcResult(id, {
-          content: [{ type: "text", text: `Error: ${(e as Error).message}` }],
-          isError: true,
-        });
-      }
-    }
-    case "resources/list":
-      return rpcResult(id, { resources: [] });
-    case "prompts/list":
-      return rpcResult(id, { prompts: [] });
+      return rpcResult(id, { tools: MCP_TOOLS.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) });
+    case "tools/call":
+      try { return await callTool(sb, id, params, hdr); }
+      catch (e) { return rpcResult(id, { content: text(`Error: ${(e as Error).message}`), isError: true }); }
+    case "resources/list": return rpcResult(id, { resources: [] });
+    case "prompts/list": return rpcResult(id, { prompts: [] });
     default:
-      // Notifications (no id) require no response.
       if (id === undefined || id === null) return null;
       return rpcError(id, -32601, `Method not found: ${method}`);
   }
@@ -239,51 +107,31 @@ async function handleRpc(msg: any): Promise<unknown | null> {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-
-  // Some clients probe with GET; advertise the server instead of erroring.
+  const jsonHeaders = { ...cors, "content-type": "application/json" };
   if (req.method === "GET") {
-    return new Response(
-      JSON.stringify({
-        name: "usdc-directory",
-        transport: "streamable-http",
-        protocolVersion: PROTOCOL_VERSION,
-        tools: TOOLS.map((t) => t.name),
-        docs: `${SITE}/api-docs`,
-      }, null, 2),
-      { headers: { ...cors, "content-type": "application/json" } },
-    );
+    return new Response(JSON.stringify({
+      name: "usdc-directory", transport: "streamable-http", protocolVersion: PROTOCOL_VERSION,
+      url: `${PUBLIC_HOST}/mcp`, tools: MCP_TOOLS.map((t) => t.name), docs: `${SITE}/api-docs`,
+    }, null, 2), { headers: jsonHeaders });
   }
-
   if (req.method === "DELETE") return new Response(null, { status: 204, headers: cors });
-
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify(rpcError(null, -32600, "Method not allowed")), {
-      status: 405,
-      headers: { ...cors, "content-type": "application/json" },
-    });
-  }
+  if (req.method !== "POST") return new Response(JSON.stringify(rpcError(null, -32600, "Method not allowed")), { status: 405, headers: jsonHeaders });
 
   let body: any;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response(JSON.stringify(rpcError(null, -32700, "Parse error")), {
-      status: 400,
-      headers: { ...cors, "content-type": "application/json" },
-    });
-  }
+  try { body = await req.json(); }
+  catch { return new Response(JSON.stringify(rpcError(null, -32700, "Parse error")), { status: 400, headers: jsonHeaders }); }
 
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const hdr: Hdr = {
+    xPayment: req.headers.get("x-payment"),
+    txHash: req.headers.get("x-payment-txhash"),
+    chain: req.headers.get("x-payment-chain"),
+    ip: req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown",
+  };
   const messages = Array.isArray(body) ? body : [body];
-  const responses = (await Promise.all(messages.map(handleRpc))).filter((r) => r !== null);
-
+  const responses = (await Promise.all(messages.map((m) => handleRpc(sb, m, hdr)))).filter((r) => r !== null);
   if (responses.length === 0) return new Response(null, { status: 202, headers: cors });
-
-  const payload = Array.isArray(body) ? responses : responses[0];
-  return new Response(JSON.stringify(payload), {
-    headers: {
-      ...cors,
-      "content-type": "application/json",
-      "mcp-session-id": crypto.randomUUID(),
-    },
+  return new Response(JSON.stringify(Array.isArray(body) ? responses : responses[0]), {
+    headers: { ...jsonHeaders, "mcp-session-id": crypto.randomUUID() },
   });
 });
