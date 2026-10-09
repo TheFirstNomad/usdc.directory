@@ -1,9 +1,17 @@
 {
   "mcpVersion": "1.0",
   "name": "USDC Directory",
-  "description": "Discover merchants and AI agents that accept USDC. Free preview tools: list_agents, get_agent, search_merchants. Paid actions return x402 payment quotes (self-list 1 USDC, boost 5 USDC).",
+  "description": "Pay-per-call MCP server for the USDC Directory. initialize and tools/list are free; every tool call is paid via x402. Unpaid calls return JSON-RPC error 402 with payment requirements; retry with params._meta[\"x402/payment\"] or an X-PAYMENT header.",
   "transport": "streamable-http",
   "url": "https://api.usdc.directory/mcp",
   "protocolVersion": "2025-06-18",
+  "tools": [
+    { "name": "list_agents", "description": "List AI agents", "price_usdc": "0.01" },
+    { "name": "search_agents", "description": "Search AI agents by name or description", "price_usdc": "0.01" },
+    { "name": "get_agent", "description": "Get one AI agent by UUID", "price_usdc": "0.01" },
+    { "name": "search_merchants", "description": "Search USDC-accepting merchants (max 50)", "price_usdc": "0.01" },
+    { "name": "submit_agent", "description": "Self-list an AI agent", "price_usdc": "1" },
+    { "name": "boost_agent", "description": "Featured boost for 30 days", "price_usdc": "5" }
+  ],
   "docs": "https://usdc.directory/api-docs"
 }

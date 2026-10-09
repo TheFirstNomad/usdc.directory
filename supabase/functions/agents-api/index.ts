@@ -1,732 +1,123 @@
-// agents-api: paid agent-facing directory API with x402 + on-chain USDC payment.
-// Endpoints (all paid):
-//   GET  /agents          – list AI agents       ($0.01)
-//   GET  /agents/search   – search agents        ($0.01)
-//   GET  /agents/{id}     – fetch one agent      ($0.01)
-//   POST /agents          – self-list new agent  (1 USDC)
-//   POST /agents/{id}/boost – featured boost     (5 USDC)
-//
-// Payment options:
-//   1. x402     : caller sends X-PAYMENT (base64 JSON of EIP-3009 auth)
-//   2. On-chain : caller sends X-Payment-TxHash + X-Payment-Chain (we verify on-chain)
+// agents-api: paid agent-facing directory API (x402 + on-chain USDC).
+//   GET  /agents              – list AI agents        (0.01 USDC)
+//   GET  /agents/search?q=    – search agents         (0.01 USDC)
+//   GET  /agents/{id}         – fetch one agent       (0.01 USDC)
+//   GET  /merchants/search?q= – search merchants      (0.01 USDC, max 50)
+//   POST /agents              – self-list new agent   (1 USDC)
+//   POST /agents/{id}/boost   – featured boost        (5 USDC, 30 days)
+// Payment: X-PAYMENT (Circle Gateway GatewayWalletBatched) or
+// X-Payment-TxHash + X-Payment-Chain (on-chain fallback). Logic lives in
+// ../_shared/agents-core.ts, shared with the MCP server.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  decodeEventLog,
-  getAddress,
-  parseAbi,
-  recoverTypedDataAddress,
-} from "https://esm.sh/viem@2.21.55";
-import { privateKeyToAccount } from "https://esm.sh/viem@2.21.55/accounts";
-import { verifyUsdcPayment } from "../_shared/payment-verify.ts";
+  PUBLIC_HOST, SITE, UUID_RE, BOOST_DAYS,
+  gatePayment, paymentRequiredHeader, paymentResponseHeader, resourceFor, validateSelfList,
+  listAgents, getAgent, searchAgents, searchMerchants, selfListAgent, boostAgent,
+  type GateFail, type GateOk, type RouteKey,
+} from "../_shared/agents-core.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-payment, x-payment-txhash, x-payment-chain",
-  "Access-Control-Expose-Headers": "x-payment-response, payment-required",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "authorization, x-client-info, apikey, content-type, x-payment, payment-signature, x-payment-txhash, x-payment-chain, x-public-host",
+  "Access-Control-Expose-Headers": "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE",
+  "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
 };
-
-const TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
-
-type ChainCfg = {
-  id: number;
-  name: string;
-  network: string; // x402 network id
-  rpc: string;
-  usdc: string;
-  explorer: string;
-  usdcDecimals?: number; // defaults to 6
-};
-
-const CHAINS: Record<number, ChainCfg> = {
-  8453: {
-    id: 8453, name: "Base Mainnet", network: "base",
-    rpc: "https://mainnet.base.org",
-    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    explorer: "https://basescan.org",
-  },
-  1: {
-    id: 1, name: "Ethereum", network: "ethereum",
-    rpc: "https://ethereum-rpc.publicnode.com",
-    usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    explorer: "https://etherscan.io",
-  },
-  42161: {
-    id: 42161, name: "Arbitrum One", network: "arbitrum",
-    rpc: "https://arb1.arbitrum.io/rpc",
-    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-    explorer: "https://arbiscan.io",
-  },
-  10: {
-    id: 10, name: "Optimism", network: "optimism",
-    rpc: "https://mainnet.optimism.io",
-    usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
-    explorer: "https://optimistic.etherscan.io",
-  },
-  137: {
-    id: 137, name: "Polygon", network: "polygon",
-    rpc: "https://polygon-rpc.com",
-    usdc: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-    explorer: "https://polygonscan.com",
-  },
-  43114: {
-    id: 43114, name: "Avalanche", network: "avalanche",
-    rpc: "https://api.avax.network/ext/bc/C/rpc",
-    usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
-    explorer: "https://snowtrace.io",
-  },
-  56: {
-    id: 56, name: "BNB Chain", network: "bnb",
-    rpc: "https://bsc-dataseed.binance.org",
-    usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d",
-    explorer: "https://bscscan.com",
-    usdcDecimals: 18,
-  },
-  59144: {
-    id: 59144, name: "Linea", network: "linea",
-    rpc: "https://rpc.linea.build",
-    usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff",
-    explorer: "https://lineascan.build",
-  },
-  143: {
-    id: 143, name: "Monad", network: "monad",
-    rpc: "https://monad-mainnet.drpc.org",
-    usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3",
-    explorer: "https://monadexplorer.com",
-  },
-  5042: {
-    id: 5042, name: "Arc Mainnet", network: "arc",
-    rpc: "https://rpc.mainnet.arc.io",
-    usdc: "0x3600000000000000000000000000000000000000",
-    explorer: "https://explorer.arc.io",
-  },
-};
-
-/**
- * Resolves the X-Payment-Chain header into a known chain.
- * Accepts a numeric chain id ("8453"), a CAIP-2 id ("eip155:8453"),
- * or a chain name ("arc", "base", "bsc", "eth", "solana", "sui", "near").
- */
-function resolveChain(
-  header: string | null,
-): { kind: "evm"; cfg: ChainCfg } | { kind: "non_evm"; key: string } | null {
-  const raw = String(header ?? "8453").trim().toLowerCase();
-  if (!raw) return null;
-
-  const caip = raw.startsWith("eip155:") ? raw.slice(7) : raw;
-  if (/^\d+$/.test(caip)) {
-    const cfg = CHAINS[Number(caip)];
-    return cfg ? { kind: "evm", cfg } : null;
-  }
-
-  const aliases: Record<string, string> = {
-    bsc: "bnb", binance: "bnb", bnb_chain: "bnb", "bnb chain": "bnb",
-    eth: "ethereum", mainnet: "ethereum",
-    arc_mainnet: "arc", arcmainnet: "arc", "arc mainnet": "arc",
-    matic: "polygon", avax: "avalanche", op: "optimism", arb: "arbitrum",
-    sol: "solana",
-  };
-  const key = aliases[raw] ?? raw.replace(/[\s-]+/g, "_");
-
-  const cfg = Object.values(CHAINS).find((c) => c.network === key);
-  if (cfg) return { kind: "evm", cfg };
-  if (NON_EVM_CHAINS.some((c) => c.key === key)) return { kind: "non_evm", key };
-  return null;
-}
-
-// Circle Gateway Nanopayments chains (mainnet). Uses GatewayWalletBatched format.
-// GatewayWallet mainnet address is the same on all EVM chains.
-// Arc mainnet (5042) is NOT yet on Circle's Gateway Nanopayments mainnet list —
-// it accepts payments via the alternative on-chain path only.
-const GATEWAY_WALLET_MAINNET = "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE";
-const X402_GATEWAY_CHAINS: Array<{ network: string; usdc: string }> = [
-  { network: "eip155:8453",  usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" }, // Base
-  { network: "eip155:1",     usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" }, // Ethereum
-  { network: "eip155:42161", usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" }, // Arbitrum
-  { network: "eip155:10",    usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" }, // Optimism
-  { network: "eip155:137",   usdc: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" }, // Polygon
-  { network: "eip155:43114", usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" }, // Avalanche
-  { network: "eip155:130",   usdc: "0x078D782b760474a361dDA0AF3839290b0EF57AD6" }, // Unichain
-  { network: "eip155:480",   usdc: "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1" }, // World Chain
-  { network: "eip155:146",   usdc: "0x29219dd400f2Bf60E5a23d13Be72B486D4038894" }, // Sonic
-];
-// Legacy: chain IDs still used by the on-chain verifier for EIP-3009 direct payments
-const X402_NATIVE_CHAIN_IDS = [5042, 8453, 1, 42161, 10, 137, 43114];
-
-// Non-EVM treasuries — agents pay on their native chain, then submit tx hash.
-const NON_EVM_CHAINS = [
-  { key: "solana", family: "solana", treasury: "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be",
-    usdc: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" },
-  { key: "sui", family: "sui", treasury: "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979",
-    usdc: "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC" },
-  { key: "near", family: "near", treasury: "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171",
-    usdc: "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1" },
-];
-
-const ERC20_TRANSFER_ABI = parseAbi([
-  "event Transfer(address indexed from, address indexed to, uint256 value)",
-]);
 
 function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json", ...extra },
-  });
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json", ...extra } });
 }
 
-function amountLabel(amount: bigint): string {
-  const usdc = Number(amount) / 1_000_000;
-  return usdc < 1 ? `$${usdc.toFixed(3)} USDC per call` : `${usdc.toFixed(3)} USDC`;
+function failResponse(f: GateFail) {
+  if (f.status === 402 && f.body?.accepts) return json(f.body, 402, { "PAYMENT-REQUIRED": paymentRequiredHeader(f.body) });
+  return json(f.body, f.status);
 }
 
-function buildAccepts(amount: bigint, resource: string) {
-  const desc = `USDC Directory: ${amountLabel(amount)}. Settled via Circle Gateway Nanopayments.`;
-  // Use Circle Gateway Nanopayments format (GatewayWalletBatched) on all supported mainnet chains.
-  // This is the format Circle's agent scorer and CLI expect for multi-network payment discovery.
-  return X402_GATEWAY_CHAINS.map((c) => ({
-    scheme: "exact",
-    network: c.network,
-    maxAmountRequired: amount.toString(),
-    resource,
-    description: desc,
-    mimeType: "application/json",
-    payTo: TREASURY,
-    maxTimeoutSeconds: 604800,
-    asset: c.usdc,
-    extra: { name: "GatewayWalletBatched", version: "1", verifyingContract: GATEWAY_WALLET_MAINNET },
-  }));
+function okHeaders(g: GateOk) {
+  const v = paymentResponseHeader(g);
+  return { "PAYMENT-RESPONSE": v, "X-PAYMENT-RESPONSE": v };
 }
 
-// Base64 of the x402 v2 payment requirements, for the PAYMENT-REQUIRED header
-// that the Circle Agent Marketplace / Gateway CLI validator expects.
-function encodePaymentRequired(payload: unknown): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(payload));
-  let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary);
-}
-
-function require402(amount: bigint, resource: string, error?: string) {
-  // x402 v2 shape (what Circle's Gateway middleware emits): `amount` per accept +
-  // top-level `resource` object. `maxAmountRequired` kept for v1 clients.
-  const accepts = buildAccepts(amount, resource).map((a) => ({ ...a, amount: a.maxAmountRequired }));
-  const resourceInfo = { url: resource, description: accepts[0]?.description, mimeType: "application/json" };
-  const body = {
-    error: error ?? "X-PAYMENT required",
-    x402Version: 2,
-    resource: resourceInfo,
-    accepts,
-    alternative: {
-      description:
-        "Pay USDC to the listed treasury on any supported chain (EVM, Solana, Sui, or Near), then resend with X-Payment-TxHash + X-Payment-Chain headers.",
-      treasury: TREASURY,
-      chains: [
-        ...Object.values(CHAINS).map((c) => ({
-          chainId: c.id, key: c.network, family: "evm",
-          name: c.name, treasury: TREASURY, usdc: c.usdc,
-        })),
-        ...NON_EVM_CHAINS,
-      ],
-    },
-  };
-
-  return json(body, 402, {
-    "PAYMENT-REQUIRED": encodePaymentRequired({ x402Version: 2, resource: resourceInfo, accepts }),
-  });
-}
-
-// ── On-chain verification: confirm a USDC Transfer to TREASURY of >= amount ──
-async function verifyOnChainPayment(
-  txHash: string,
-  chainId: number,
-  amount: bigint,
-): Promise<{ ok: true; from: string } | { ok: false; reason: string }> {
-  const cfg = CHAINS[chainId];
-  if (!cfg) return { ok: false, reason: "unsupported chain" };
-  if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return { ok: false, reason: "bad tx hash" };
-
-  const client = createPublicClient({ transport: http(cfg.rpc) });
-  let receipt;
-  try {
-    receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
-  } catch (e) {
-    return { ok: false, reason: `receipt fetch failed: ${(e as Error).message}` };
-  }
-  if (!receipt || receipt.status !== "success") return { ok: false, reason: "tx not successful" };
-
-  const usdcAddr = getAddress(cfg.usdc).toLowerCase();
-  const treasury = TREASURY.toLowerCase();
-  let from: string | null = null;
-  let total = 0n;
-  for (const log of receipt.logs) {
-    if (log.address.toLowerCase() !== usdcAddr) continue;
-    try {
-      const decoded = decodeEventLog({
-        abi: ERC20_TRANSFER_ABI,
-        data: log.data,
-        topics: log.topics,
-      });
-      if (decoded.eventName === "Transfer") {
-        const args = decoded.args as { from: string; to: string; value: bigint };
-        if (args.to.toLowerCase() === treasury) {
-          total += args.value;
-          if (!from) from = args.from.toLowerCase();
-        }
-      }
-    } catch (_e) { /* ignore non-Transfer logs */ }
-  }
-  // Some chains (BNB) use an 18-decimal bridged USDC; scale the 6-decimal price up.
-  const required = cfg.usdcDecimals && cfg.usdcDecimals > 6
-    ? amount * 10n ** BigInt(cfg.usdcDecimals - 6)
-    : amount;
-  if (total < required) return { ok: false, reason: `paid ${total} < required ${required}` };
-  return { ok: true, from: from ?? "unknown" };
-}
-
-// ── x402 verification: EIP-3009 transferWithAuthorization signature only ─────
-// We accept the signed authorization as proof-of-intent (gasless).
-// For full settlement, a facilitator would submit the tx; here we record the
-// payment and rely on the agent's signed authorization for replay-safe accounting.
-type X402Payload = {
-  x402Version: number;
-  scheme: string;
-  network: string;
-  payload: {
-    signature: `0x${string}`;
-    authorization: {
-      from: `0x${string}`;
-      to: `0x${string}`;
-      value: string;
-      validAfter: string;
-      validBefore: string;
-      nonce: `0x${string}`;
-    };
-  };
-};
-
-async function verifyX402Header(
-  headerB64: string,
-  amount: bigint,
-): Promise<
-  | { ok: true; payer: string; nonce: string; network: string; chainId: number; auth: X402Payload["payload"]["authorization"]; signature: `0x${string}` }
-  | { ok: false; reason: string }
-> {
-  let parsed: X402Payload;
-  try {
-    const decoded = atob(headerB64);
-    parsed = JSON.parse(decoded);
-  } catch {
-    return { ok: false, reason: "invalid base64/json X-PAYMENT" };
-  }
-
-  const cfg = Object.values(CHAINS).find((c) => c.network === parsed.network);
-  if (!cfg) return { ok: false, reason: `unknown network ${parsed.network}` };
-  if (parsed.scheme !== "exact") return { ok: false, reason: "scheme must be 'exact'" };
-
-  const a = parsed.payload?.authorization;
-  if (!a) return { ok: false, reason: "missing authorization" };
-  if (a.to.toLowerCase() !== TREASURY) return { ok: false, reason: "wrong recipient" };
-  if (BigInt(a.value) < amount) return { ok: false, reason: "insufficient value" };
-  const now = Math.floor(Date.now() / 1000);
-  if (Number(a.validAfter) > now) return { ok: false, reason: "auth not yet valid" };
-  if (Number(a.validBefore) < now) return { ok: false, reason: "auth expired" };
-
-  try {
-    const recovered = await recoverTypedDataAddress({
-      domain: { name: "USD Coin", version: "2", chainId: cfg.id, verifyingContract: getAddress(cfg.usdc) },
-      types: {
-        TransferWithAuthorization: [
-          { name: "from", type: "address" },
-          { name: "to", type: "address" },
-          { name: "value", type: "uint256" },
-          { name: "validAfter", type: "uint256" },
-          { name: "validBefore", type: "uint256" },
-          { name: "nonce", type: "bytes32" },
-        ],
-      },
-      primaryType: "TransferWithAuthorization",
-      message: {
-        from: getAddress(a.from), to: getAddress(a.to),
-        value: BigInt(a.value), validAfter: BigInt(a.validAfter),
-        validBefore: BigInt(a.validBefore), nonce: a.nonce,
-      },
-      signature: parsed.payload.signature,
-    });
-    if (recovered.toLowerCase() !== a.from.toLowerCase()) {
-      return { ok: false, reason: "signature does not match 'from'" };
-    }
-  } catch (e) {
-    return { ok: false, reason: `sig verify failed: ${(e as Error).message}` };
-  }
-
-  return {
-    ok: true,
-    payer: a.from.toLowerCase(),
-    nonce: a.nonce,
-    network: parsed.network,
-    chainId: cfg.id,
-    auth: a,
-    signature: parsed.payload.signature,
-  };
-}
-
-// ── x402 on-chain settlement (broadcast transferWithAuthorization) ──────────
-const TRANSFER_WITH_AUTH_ABI = parseAbi([
-  "function transferWithAuthorization(address from, address to, uint256 value, uint256 validAfter, uint256 validBefore, bytes32 nonce, uint8 v, bytes32 r, bytes32 s)",
-]);
-
-function splitSig(sig: `0x${string}`): { v: number; r: `0x${string}`; s: `0x${string}` } {
-  const r = ("0x" + sig.slice(2, 66)) as `0x${string}`;
-  const s = ("0x" + sig.slice(66, 130)) as `0x${string}`;
-  let v = parseInt(sig.slice(130, 132), 16);
-  if (v < 27) v += 27;
-  return { v, r, s };
-}
-
-async function settleX402(
-  chainId: number,
-  auth: X402Payload["payload"]["authorization"],
-  signature: `0x${string}`,
-): Promise<{ ok: true; txHash: string } | { ok: false; reason: string }> {
-  const cfg = CHAINS[chainId];
-  if (!cfg) return { ok: false, reason: "unsupported chain" };
-  const pk = Deno.env.get("X402_SETTLEMENT_PRIVATE_KEY");
-  if (!pk) return { ok: false, reason: "settlement signer not configured" };
-  const normalizedPk = (pk.startsWith("0x") ? pk : `0x${pk}`) as `0x${string}`;
-  try {
-    const account = privateKeyToAccount(normalizedPk);
-    const wallet = createWalletClient({ account, transport: http(cfg.rpc) });
-    const { v, r, s } = splitSig(signature);
-    const txHash = await wallet.writeContract({
-      address: getAddress(cfg.usdc),
-      abi: TRANSFER_WITH_AUTH_ABI,
-      functionName: "transferWithAuthorization",
-      args: [
-        getAddress(auth.from), getAddress(auth.to), BigInt(auth.value),
-        BigInt(auth.validAfter), BigInt(auth.validBefore), auth.nonce, v, r, s,
-      ],
-      chain: null,
-    } as Parameters<typeof wallet.writeContract>[0]);
-    return { ok: true, txHash };
-  } catch (e) {
-    return { ok: false, reason: (e as Error).message };
-  }
-}
-
-// ── Rate limiter (sliding window) ───────────────────────────────────────────
-async function rateLimitOk(
-  supabase: ReturnType<typeof createClient>,
-  bucketKey: string,
-  endpoint: string,
-  limit: number,
-  windowSec: number,
-): Promise<boolean> {
-  const since = new Date(Date.now() - windowSec * 1000).toISOString();
-  const { count } = await supabase
-    .from("agent_rate_limits")
-    .select("id", { count: "exact", head: true })
-    .eq("bucket_key", bucketKey)
-    .eq("endpoint", endpoint)
-    .gte("created_at", since);
-  if ((count ?? 0) >= limit) return false;
-  await supabase.from("agent_rate_limits").insert({ bucket_key: bucketKey, endpoint });
-  return true;
-}
-
-// ── Payment gate ────────────────────────────────────────────────────────────
-async function gatePayment(
-  req: Request,
-  amount: bigint,
-  resource: string,
-  supabase: ReturnType<typeof createClient>,
-  endpoint: string,
-  method: string,
-): Promise<
-  | { ok: true; paymentId: string; payer: string; chain: string; scheme: string }
-  | { ok: false; response: Response }
-> {
-  const xPayment = req.headers.get("x-payment");
-  const txHash = req.headers.get("x-payment-txhash");
-  const chainHeader = req.headers.get("x-payment-chain");
-
-  // Rate limit the 402 challenge surface (pre-payment) per IP
-  if (!xPayment && !txHash) {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
-    const ok = await rateLimitOk(supabase, `ip:${ip}`, endpoint, 30, 60);
-    if (!ok) return { ok: false, response: json({ error: "rate limited" }, 429) };
-    return { ok: false, response: require402(amount, resource) };
-  }
-
-  // Path 1: on-chain pre-paid
-  if (txHash) {
-    const resolved = resolveChain(chainHeader);
-    if (!resolved) {
-      return {
-        ok: false,
-        response: json({
-          error: "unsupported X-Payment-Chain",
-          supported: [
-            ...Object.values(CHAINS).map((c) => c.network),
-            ...NON_EVM_CHAINS.map((c) => c.key),
-          ],
-        }, 400),
-      };
-    }
-    const { data: existing } = await supabase
-      .from("agent_api_payments")
-      .select("id")
-      .eq("payment_id", txHash)
-      .eq("endpoint", endpoint)
-      .maybeSingle();
-    if (existing) {
-      return { ok: false, response: json({ error: "tx hash already used for this endpoint" }, 409) };
-    }
-
-    let network: string;
-    let payer: string;
-    if (resolved.kind === "evm") {
-      const v = await verifyOnChainPayment(txHash, resolved.cfg.id, amount);
-      if (!v.ok) {
-        return { ok: false, response: json({ error: `payment invalid: ${v.reason}` }, 402) };
-      }
-      network = resolved.cfg.network;
-      payer = v.from;
-    } else {
-      const v = await verifyUsdcPayment(resolved.key, txHash, amount);
-      if (!v.ok) {
-        return { ok: false, response: json({ error: `payment invalid: ${v.error}` }, 402) };
-      }
-      network = resolved.key;
-      payer = v.payer;
-    }
-
-    await supabase.from("agent_api_payments").insert({
-      payment_id: txHash, endpoint, method,
-      amount_usdc: amount.toString(),
-      chain: network, agent_wallet: payer, scheme: "onchain",
-    });
-    return { ok: true, paymentId: txHash, payer, chain: network, scheme: "onchain" };
-  }
-
-  // Path 2: x402 — verify, settle on chain, then record
-  if (xPayment) {
-    const v = await verifyX402Header(xPayment, amount);
-    if (!v.ok) {
-      return { ok: false, response: require402(amount, resource, v.reason) };
-    }
-    // Replay protection via dedicated nonce table (unique chain+nonce)
-    const { error: nonceErr } = await supabase.from("x402_nonces").insert({
-      chain: v.network, nonce: v.nonce, payer: v.payer,
-      endpoint, amount_usdc: amount.toString(),
-    });
-    if (nonceErr) {
-      return { ok: false, response: json({ error: "x402 nonce already used" }, 409) };
-    }
-    // Broadcast transferWithAuthorization on chain
-    const settled = await settleX402(v.chainId, v.auth, v.signature);
-    if (!settled.ok) {
-      // Free the nonce so the caller can retry (and don't bill them)
-      await supabase.from("x402_nonces").delete().eq("chain", v.network).eq("nonce", v.nonce);
-      return { ok: false, response: json({ error: `settlement failed: ${settled.reason}` }, 402) };
-    }
-    await supabase
-      .from("x402_nonces")
-      .update({ tx_hash: settled.txHash, settled: true, settled_at: new Date().toISOString() })
-      .eq("chain", v.network)
-      .eq("nonce", v.nonce);
-    const paymentId = `x402:${v.network}:${v.nonce}`;
-    await supabase.from("agent_api_payments").insert({
-      payment_id: paymentId, endpoint, method,
-      amount_usdc: amount.toString(),
-      chain: v.network, agent_wallet: v.payer, scheme: "x402",
-    });
-    return { ok: true, paymentId, payer: v.payer, chain: v.network, scheme: "x402", txHash: settled.txHash } as any;
-  }
-
-  return { ok: false, response: require402(amount, resource) };
-}
-
-// Build the X-PAYMENT-RESPONSE header value per x402 spec (base64 JSON).
-function paymentResponseHeader(gate: { paymentId: string; chain: string; scheme: string; txHash?: string }): Record<string, string> {
-  const body = {
-    success: true,
-    paymentId: gate.paymentId,
-    network: gate.chain,
-    scheme: gate.scheme,
-    transaction: gate.txHash ?? null,
-  };
-  return { "X-PAYMENT-RESPONSE": btoa(JSON.stringify(body)) };
-}
-
-// ── Pricing ──────────────────────────────────────────────────────────────────
-const PRICE_API_CALL = 10_000n;      // $0.01 per query
-const PRICE_LIST_AGENT = 1_000_000n; // 1 USDC self-listing
-const PRICE_BOOST = 5_000_000n;      // 5 USDC featured boost
-
-// ── Handlers ─────────────────────────────────────────────────────────────────
 function basePath(url: URL): string {
-  // Strip "/agents-api" prefix if present (Supabase routes /functions/v1/agents-api/...)
   const p = url.pathname.replace(/^.*\/agents-api/, "");
   return p || "/";
 }
 
-Deno.serve(async (req) => {
+async function handle(req: Request, sb: any): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
   const url = new URL(req.url);
   const path = basePath(url);
-  // Advertise the canonical https resource URL. When called through the public
-  // proxy (api.usdc.directory), the proxy forwards the original host in
-  // x-public-host (Supabase overwrites the standard x-forwarded-host).
-  const publicHost = req.headers.get("x-public-host")?.split(",")[0]?.trim();
-  const resource = publicHost
-    ? `https://${publicHost}${path}`
-    : `https://${url.host}${url.pathname.startsWith("/functions/v1") ? url.pathname : `/functions/v1${url.pathname}`}`;
-  // Treat HEAD like GET so health probes get the real status (402 challenge / 200).
   const method = req.method === "HEAD" ? "GET" : req.method;
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const resource = resourceFor(path); // always PUBLIC_HOST
+  const payment = {
+    xPayment: req.headers.get("x-payment") ?? req.headers.get("payment-signature"),
+    txHash: req.headers.get("x-payment-txhash"),
+    chain: req.headers.get("x-payment-chain"),
+    ip: req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown",
+  };
+  const gate = (route: RouteKey, endpoint: string) => gatePayment(sb, payment, route, resource, endpoint);
+  const send = (r: { status: number; body: any }, g: GateOk) => json(r.body, r.status, r.status < 300 ? okHeaders(g) : {});
 
   try {
-    // GET /agents – list
     if (method === "GET" && path === "/agents") {
-      const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents", "GET");
-      if (!gate.ok) return gate.response;
-      const { data, error } = await supabase
-        .from("partners")
-        .select("id, name, description, website, logo_url, categories, region, networks, verified, boosted_until, created_at")
-        .contains("categories", ["AI Agents"])
-        .order("boosted_until", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (error) return json({ error: error.message }, 500);
-      return json({ count: data?.length ?? 0, agents: data, paid: gate.paymentId }, 200, paymentResponseHeader(gate));
+      const g = await gate("list_agents", "/agents"); if (!g.ok) return failResponse(g);
+      return send(await listAgents(sb, g.paymentId), g);
     }
-
-    // GET /agents/{id}
-    const detailMatch = path.match(/^\/agents\/([0-9a-f-]{36})$/i);
-    if (method === "GET" && detailMatch) {
-      const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, path, "GET");
-      if (!gate.ok) return gate.response;
-      const { data, error } = await supabase
-        .from("partners")
-        .select("id, name, description, website, logo_url, categories, region, networks, verified, boosted_until, created_at")
-        .eq("id", detailMatch[1])
-        .maybeSingle();
-      if (error) return json({ error: error.message }, 500);
-      if (!data) return json({ error: "not found" }, 404);
-      return json({ agent: data, paid: gate.paymentId }, 200, paymentResponseHeader(gate));
-    }
-
-    // GET /agents/search?q= – free-text search (paid, same price as list)
     if (method === "GET" && path === "/agents/search") {
-      const gate = await gatePayment(req, PRICE_API_CALL, resource, supabase, "/agents/search", "GET");
-      if (!gate.ok) return gate.response;
-      const q = url.searchParams.get("q")?.trim() ?? "";
-      if (!q) return json({ error: "q param required" }, 400);
-      const { data, error } = await supabase
-        .from("partners")
-        .select("id, name, description, website, logo_url, categories, region, networks, verified, boosted_until, wallet_address, created_at")
-        .contains("categories", ["AI Agents"])
-        .or(`name.ilike.%${q}%,description.ilike.%${q}%`)
-        .order("boosted_until", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) return json({ error: error.message }, 500);
-      return json({ q, count: data?.length ?? 0, agents: data, paid: gate.paymentId }, 200, paymentResponseHeader(gate));
+      const g = await gate("search_agents", "/agents/search"); if (!g.ok) return failResponse(g);
+      return send(await searchAgents(sb, url.searchParams.get("q") ?? "", g.paymentId), g);
     }
-
-    // POST /agents – self-list
+    if (method === "GET" && path === "/merchants/search") {
+      const g = await gate("search_merchants", "/merchants/search"); if (!g.ok) return failResponse(g);
+      return send(await searchMerchants(sb, url.searchParams.get("q") ?? "", g.paymentId, {
+        category: url.searchParams.get("category") ?? undefined,
+        limit: Number(url.searchParams.get("limit") ?? 50),
+      }), g);
+    }
+    const detail = path.match(/^\/agents\/([0-9a-f-]{36})$/i);
+    if (method === "GET" && detail) {
+      const g = await gate("get_agent", path); if (!g.ok) return failResponse(g);
+      return send(await getAgent(sb, detail[1], g.paymentId), g);
+    }
     if (method === "POST" && path === "/agents") {
-      const gate = await gatePayment(req, PRICE_LIST_AGENT, resource, supabase, "/agents", "POST");
-      if (!gate.ok) return gate.response;
-      let body: { name?: string; wallet_address?: string; description?: string; logo_url?: string; website?: string; networks?: string[]; capabilities?: string[] };
-      try { body = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
-      const name = (body.name || "").trim();
-      const wallet = (body.wallet_address || "").trim().toLowerCase();
-      const description = (body.description || "").trim();
-      const logo_url = body.logo_url ? String(body.logo_url).trim() : null;
-      const website = body.website ? String(body.website).trim().slice(0, 255) : null;
-      const networks = Array.isArray(body.networks) ? body.networks.slice(0, 10).map(String) : [];
-      const capabilities = Array.isArray(body.capabilities) ? body.capabilities.slice(0, 20).map(String) : [];
-      if (!name || name.length > 100) return json({ error: "name required (<=100)" }, 400);
-      if (!wallet || wallet.length > 256) return json({ error: "wallet_address required (<=256)" }, 400);
-      if (!description || description.length > 300) return json({ error: "description required (<=300)" }, 400);
-
-      // Build categories: always include "AI Agents", add capability tags as subcategories
-      const categories = ["AI Agents", ...capabilities.map((c) => `AI: ${c}`).slice(0, 5)];
-
-      const { data: partner, error } = await supabase
-        .from("partners")
-        .insert({
-          name,
-          description,
-          website,
-          categories,
-          region: "Global",
-          networks: networks.length > 0 ? networks : [gate.chain],
-          wallet_address: wallet,
-          logo_url,
-          payment_status: "confirmed",
-          payment_id: gate.paymentId,
-        })
-        .select()
-        .single();
-      if (error) return json({ error: error.message }, 500);
-      return json({ id: partner.id, name: partner.name, paid: gate.paymentId }, 201, paymentResponseHeader(gate));
+      // Validate before charging so bad input never costs the caller.
+      const hasPayment = payment.xPayment || payment.txHash;
+      let parsed: any = null;
+      if (hasPayment) {
+        try { parsed = await req.json(); } catch { return json({ error: "invalid json" }, 400); }
+        const v = validateSelfList(parsed);
+        if (!v.ok) return json({ error: v.error }, 400);
+      }
+      const g = await gate("self_list", "/agents"); if (!g.ok) return failResponse(g);
+      const v = validateSelfList(parsed);
+      if (!v.ok) return json({ error: v.error }, 400);
+      return send(await selfListAgent(sb, v.value, g), g);
     }
-
-    // POST /agents/{id}/boost
-    const boostMatch = path.match(/^\/agents\/([0-9a-f-]{36})\/boost$/i);
-    if (method === "POST" && boostMatch) {
-      const gate = await gatePayment(req, PRICE_BOOST, resource, supabase, path, "POST");
-      if (!gate.ok) return gate.response;
-      const partnerId = boostMatch[1];
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      const { error: upErr } = await supabase
-        .from("partners")
-        .update({ boosted_until: expiresAt })
-        .eq("id", partnerId);
-      if (upErr) return json({ error: upErr.message }, 500);
-      const { error: insErr } = await supabase.from("agent_boosts").insert({
-        partner_id: partnerId,
-        payment_id: gate.paymentId,
-        amount_usdc: PRICE_BOOST.toString(),
-        chain: gate.chain,
-        expires_at: expiresAt,
-      });
-      if (insErr) return json({ error: insErr.message }, 500);
-      return json({ id: partnerId, boosted_until: expiresAt, paid: gate.paymentId }, 200, paymentResponseHeader(gate));
+    const boost = path.match(/^\/agents\/([0-9a-f-]{36})\/boost$/i);
+    if (method === "POST" && boost && UUID_RE.test(boost[1])) {
+      const g = await gate("boost", path); if (!g.ok) return failResponse(g);
+      return send(await boostAgent(sb, boost[1], g), g);
     }
-
-    // Discovery: GET / -> mini index
-    if (method === "GET" && (path === "/" || path === "")) {
+    if (method === "GET" && path === "/") {
       return json({
-        name: "USDC Directory Agent API",
-        version: "1",
-        manifest: "https://usdc.directory/.well-known/x402",
-        docs: "https://usdc.directory/api-docs",
+        name: "USDC Directory Agent API", version: "2", base_url: PUBLIC_HOST,
+        manifest: `${SITE}/.well-known/x402`, openapi: `${SITE}/openapi.json`, mcp: `${PUBLIC_HOST}/mcp`,
         endpoints: [
-          { path: "/agents", method: "GET", price_usdc: "0.010" },
-          { path: "/agents/search", method: "GET", price_usdc: "0.010" },
-          { path: "/agents/{id}", method: "GET", price_usdc: "0.010" },
-          { path: "/agents", method: "POST", price_usdc: "1.000" },
-          { path: "/agents/{id}/boost", method: "POST", price_usdc: "5.000" },
+          { path: "/agents", method: "GET", price_usdc: "0.01" },
+          { path: "/agents/search", method: "GET", price_usdc: "0.01" },
+          { path: "/agents/{id}", method: "GET", price_usdc: "0.01" },
+          { path: "/merchants/search", method: "GET", price_usdc: "0.01" },
+          { path: "/agents", method: "POST", price_usdc: "1" },
+          { path: "/agents/{id}/boost", method: "POST", price_usdc: "5", duration_days: BOOST_DAYS },
         ],
       });
     }
-
     return json({ error: "not found", path }, 404);
   } catch (e) {
     console.error("agents-api error:", e);
     return json({ error: (e as Error).message }, 500);
   }
-});
+}
+
+Deno.serve((req) => handle(req, createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)));

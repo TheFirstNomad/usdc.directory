@@ -3,11 +3,14 @@
   "name_for_human": "USDC Directory",
   "name_for_model": "usdc_directory",
   "description_for_human": "Self-list on any chain (EVM, Solana, Sui, or Near) for 1 USDC. Discover merchants and AI agents that accept USDC.",
-  "description_for_model": "Pay-per-call directory API. AI agent self-listing costs 1 USDC. Business listings cost 3 USDC. Gasless x402 (Circle Gateway Nanopayments) on 9 EVM networks: Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Unichain, World Chain, Sonic. On-chain fallback on 13 chains including Arc, BNB, Linea, Monad, Solana, Sui, Near: pay USDC to the treasury then retry with X-Payment-TxHash and X-Payment-Chain. GET /agents ($0.01), GET /agents/search?q= ($0.01), GET /agents/{id} ($0.01), POST /agents (1 USDC), POST /agents/{id}/boost (5 USDC, 30 days).",
+  "description_for_model": "Pay-per-call directory API at https://api.usdc.directory. Reads 0.01 USDC: GET /agents, GET /agents/search?q=, GET /agents/{id}, GET /merchants/search?q= (max 50). POST /agents self-list 1 USDC. POST /agents/{id}/boost 5 USDC (30 days). Business listings 3 USDC on the website. Gasless x402 via Circle Gateway (GatewayWalletBatched) on Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Unichain, World Chain, Sonic. On-chain fallback (pay treasury, resend with X-Payment-TxHash + X-Payment-Chain) on Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, Linea, Monad, Arc, Solana, Sui, Near. MCP tools (all paid): list_agents, search_agents, get_agent, search_merchants, submit_agent, boost_agent.",
   "contact_url": "https://usdc.directory/about",
   "legal_info_url": "https://usdc.directory/about",
   "logo_url": "https://usdc.directory/usdc-logo.png?v=20261005",
-  "api": { "type": "openapi", "url": "https://usdc.directory/openapi.json" },
+  "api": {
+    "type": "openapi",
+    "url": "https://usdc.directory/openapi.json"
+  },
   "mcp": {
     "transport": "streamable-http",
     "url": "https://api.usdc.directory/mcp"
@@ -17,7 +20,10 @@
     "version": "2",
     "x402Version": 2,
     "manifest": "https://usdc.directory/.well-known/x402",
-    "protocols": ["x402", "mpp"],
+    "protocols": [
+      "x402",
+      "mpp"
+    ],
     "agent_listing_fee_usdc": "1",
     "business_listing_fee_usdc": "3",
     "boost_fee_usdc": "5",
@@ -27,8 +33,39 @@
     "solana_treasury": "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be",
     "sui_treasury": "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979",
     "near_treasury": "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171",
-    "supported_chains": ["arc","base","ethereum","arbitrum","optimism","polygon","avalanche","bnb","linea","monad","solana","sui","near"],
-    "x402_networks": ["eip155:8453","eip155:1","eip155:42161","eip155:10","eip155:137","eip155:43114","eip155:130","eip155:480","eip155:146"]
+    "supported_chains": [
+      "arc",
+      "base",
+      "ethereum",
+      "arbitrum",
+      "optimism",
+      "polygon",
+      "avalanche",
+      "bnb",
+      "linea",
+      "monad",
+      "solana",
+      "sui",
+      "near"
+    ],
+    "x402_networks": [
+      "eip155:8453",
+      "eip155:1",
+      "eip155:42161",
+      "eip155:10",
+      "eip155:137",
+      "eip155:43114",
+      "eip155:130",
+      "eip155:480",
+      "eip155:146"
+    ],
+    "merchant_search_fee_usdc": "0.01"
   },
-  "capabilities": ["discover_agents", "search_agents", "self_list_agent", "boost_listing", "search_merchants", "multichain_payments"]
+  "capabilities": [
+    "discover_agents",
+    "search_agents",
+    "self_list_agent",
+    "boost_listing",
+    "search_merchants"
+  ]
 }

@@ -9,7 +9,7 @@
       "email": "hello@usdc.directory",
       "url": "https://usdc.directory"
     },
-    "x-guidance": "USDC Directory Agent API: a paid directory of merchants and autonomous AI agents that accept USDC. Call GET /agents to list all AI agents (id, name, description, website, categories, networks, verified). Call GET /agents/search?q={term} to search by name or description. Call GET /agents/{id} to fetch a single agent. Call POST /agents to self-register an AI agent (body: name, wallet_address, description, logo_url, website, networks, capabilities). Call POST /agents/{id}/boost to feature an agent for 30 days. All endpoints require USDC payment via Circle Gateway Nanopayments x402 (PAYMENT-REQUIRED header with GatewayWalletBatched EIP-712 authorization) or on-chain transfer (X-Payment-TxHash + X-Payment-Chain headers). Prices: GET endpoints $0.01 USDC, self-listing 1 USDC, boost 5 USDC. Gateway chains (x402 gasless): Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Unichain, World Chain, Sonic. On-chain fallback: 13 chains including arc, solana, sui, near, bnb, linea, monad.",
+    "x-guidance": "USDC Directory Agent API: a paid directory of merchants and autonomous AI agents that accept USDC. Call GET /agents to list all AI agents (id, name, description, website, categories, networks, verified). Call GET /agents/search?q={term} to search by name or description. Call GET /agents/{id} to fetch a single agent. Call GET /merchants/search?q={term} to search USDC merchants (max 50). Call POST /agents to self-register an AI agent (body: name, wallet_address, description, logo_url, website, networks, capabilities). Call POST /agents/{id}/boost to feature an agent for 30 days. All endpoints require USDC payment via Circle Gateway Nanopayments x402 (PAYMENT-REQUIRED header with GatewayWalletBatched EIP-712 authorization) or on-chain transfer (X-Payment-TxHash + X-Payment-Chain headers). Prices: GET endpoints $0.01 USDC, self-listing 1 USDC, boost 5 USDC. Gateway chains (x402 gasless): Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, Unichain, World Chain, Sonic. On-chain fallback: 13 chains including arc, solana, sui, near, bnb, linea, monad.",
     "x-logo": {
       "url": "https://usdc.directory/usdc-logo.png?v=20261005",
       "altText": "USDC Directory"
@@ -1186,6 +1186,255 @@
           }
         }
       }
+    },
+    "/merchants/search": {
+      "get": {
+        "operationId": "searchMerchants",
+        "summary": "Search USDC-accepting merchants",
+        "description": "Search merchants and services by name or description. Returns up to 50 results. Costs $0.01 USDC.",
+        "x-x402-price": {
+          "amount": "10000",
+          "asset": "USDC",
+          "decimals": 6
+        },
+        "x-payment-info": {
+          "price": {
+            "mode": "fixed",
+            "currency": "USDC",
+            "amount": "0.010000"
+          },
+          "protocols": [
+            {
+              "x402": {}
+            },
+            {
+              "mpp": {}
+            }
+          ],
+          "networks": [
+            "eip155:8453",
+            "eip155:1",
+            "eip155:42161",
+            "eip155:10",
+            "eip155:137",
+            "eip155:43114",
+            "eip155:130",
+            "eip155:480",
+            "eip155:146"
+          ],
+          "accepts": [
+            {
+              "scheme": "exact",
+              "network": "eip155:8453",
+              "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:1",
+              "asset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:42161",
+              "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:10",
+              "asset": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:137",
+              "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:43114",
+              "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:130",
+              "asset": "0x078D782b760474a361dDA0AF3839290b0EF57AD6",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:480",
+              "asset": "0x79A02482A880bCE3F13e09Da970dC34db4CD24d1",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            },
+            {
+              "scheme": "exact",
+              "network": "eip155:146",
+              "asset": "0x29219dd400f2Bf60E5a23d13Be72B486D4038894",
+              "amount": "10000",
+              "maxAmountRequired": "10000",
+              "payTo": "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c",
+              "maxTimeoutSeconds": 604800,
+              "extra": {
+                "name": "GatewayWalletBatched",
+                "version": "1",
+                "verifyingContract": "0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE"
+              }
+            }
+          ]
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search term matched against agent name and description"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching agents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "q param required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment reference already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1461,6 +1710,27 @@
         ],
         "properties": {
           "error": {
+            "type": "string"
+          }
+        }
+      },
+      "MerchantSearchResponse": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "merchants": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object"
+            }
+          },
+          "paid": {
             "type": "string"
           }
         }
