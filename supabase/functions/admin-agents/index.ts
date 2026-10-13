@@ -1,10 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { verifyAdmin } from "../_shared/admin-auth.ts";
+import { verifyAdmin, ADMIN_CORS_HEADERS } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-admin-address, x-admin-timestamp, x-admin-signature",
+    ADMIN_CORS_HEADERS,
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
