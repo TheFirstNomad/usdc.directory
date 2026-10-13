@@ -12,7 +12,7 @@ interface ChainContextValue {
 const ChainContext = createContext<ChainContextValue | null>(null);
 
 const STORAGE_KEY = "usdcdir:lastChainId";
-const DEFAULT_CHAIN: SupportedChainId = 5042;
+const DEFAULT_CHAIN: SupportedChainId = 5042; // Arc Mainnet — always the default
 
 const readStoredChain = (): SupportedChainId => {
   if (typeof window === "undefined") return DEFAULT_CHAIN;

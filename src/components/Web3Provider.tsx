@@ -2,23 +2,46 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit/react";
-import { base } from "@reown/appkit/networks";
+import {
+  base,
+  mainnet,
+  arbitrum,
+  optimism,
+  polygon,
+  avalanche,
+  bsc,
+  linea,
+} from "@reown/appkit/networks";
 import { type ReactNode } from "react";
 
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "3592c16759a9b6907bc4eb5afd455b15";
+const projectId =
+  import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID ||
+  "3592c16759a9b6907bc4eb5afd455b15";
 
-// Arc Mainnet custom chain (USDC-native gas token)
+// Arc Mainnet — custom chain (USDC is the native gas token)
 const arcMainnet = {
   id: 5042,
   name: "Arc",
-  // Arc uses USDC as native gas token — msg.value is in 18-decimal wei
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
   rpcUrls: { default: { http: ["https://rpc.mainnet.arc.io"] } },
-  blockExplorers: { default: { name: "Arc Explorer", url: "https://explorer.arc.io" } },
+  blockExplorers: {
+    default: { name: "Arc Explorer", url: "https://explorer.arc.io" },
+  },
   testnet: false,
-} as any;
+} as const;
 
-const networks = [base, arcMainnet] as const;
+// Arc is listed first — it becomes the default chain in the wallet modal
+const networks = [
+  arcMainnet,
+  base,
+  mainnet,
+  arbitrum,
+  optimism,
+  polygon,
+  avalanche,
+  bsc,
+  linea,
+] as const;
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
@@ -28,12 +51,17 @@ const wagmiAdapter = new WagmiAdapter({
 createAppKit({
   adapters: [wagmiAdapter],
   networks: networks as any,
+  defaultNetwork: arcMainnet as any,
   projectId,
   metadata: {
     name: "USDC Directory",
-    description: "Discover businesses that accept USDC payments",
-    url: typeof window !== "undefined" ? window.location.origin : "https://usdc-directory.lovable.app",
-    icons: [],
+    description:
+      "The #1 directory of merchants and AI agents accepting USDC worldwide.",
+    url:
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://usdc.directory",
+    icons: ["https://usdc.directory/usdc-directory-logo.png"],
   },
   themeMode: "dark",
   themeVariables: {
@@ -56,9 +84,7 @@ const queryClient = new QueryClient();
 export function Web3Provider({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
 }
