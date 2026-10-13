@@ -3,7 +3,7 @@ const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS, LISTING_FEE_DISPLAY } from "@/lib/web3";
-import { getAdminAuthHeaders } from "@/lib/adminAuth";
+import { getAdminAuthHeaders, handleAdminResponse } from "@/lib/adminAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -76,28 +76,45 @@ const AdminPayments = () => {
     isConnected &&
     address?.toLowerCase() === TREASURY_ADDRESS.toLowerCase();
 
-  const getHeaders = useCallback(async () => {
+  const getHeaders = useCallback(async (interactive = true) => {
     if (!address) throw new Error("No wallet connected");
-    return getAdminAuthHeaders(address, (args: any) => signMessageAsync({ ...args, account: address as `0x${string}` }));
+    return getAdminAuthHeaders(
+      address,
+      (args: any) => signMessageAsync({ ...args, account: address as `0x${string}` }),
+      { interactive },
+    );
   }, [address, signMessageAsync]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (opts: { background?: boolean } = {}) => {
     if (!isOwner || !address) return;
-    setLoading(true);
-    try {      const headers = await getHeaders();
+    const background = !!opts.background;
+    let headers: Record<string, string>;
+    try {
+      // Background refreshes never open the wallet; they skip if no admin pass exists.
+      headers = await getHeaders(!background);
+    } catch {
+      if (!background) {
+        toast({ title: "Error", description: "Admin sign-in was cancelled or failed", variant: "destructive" });
+        setLoading(false);
+      }
+      return;
+    }
+    if (!background) setLoading(true);
+    try {
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-payments`,
         { headers }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setSubmissions(data.submissions);
       setSummary(data.summary);
       setLastRefresh(new Date());
     } catch {
-      toast({ title: "Error", description: "Failed to load payment data", variant: "destructive" });
+      if (!background) toast({ title: "Error", description: "Failed to load payment data", variant: "destructive" });
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   }, [isOwner, address, toast, getHeaders]);
 
@@ -122,6 +139,7 @@ const AdminPayments = () => {
           body: JSON.stringify({ id }),
         }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to delete");
       setSubmissions((prev) => prev.filter((s) => s.id !== id));
       toast({ title: "Deleted", description: "Submission removed" });
@@ -132,9 +150,9 @@ const AdminPayments = () => {
 
   useEffect(() => {
     if (!isOwner) return;
-    const interval = setInterval(fetchData, 30_000);
+    const interval = setInterval(() => fetchRef.current({ background: true }), 30_000);
     return () => clearInterval(interval);
-  }, [isOwner, fetchData]);
+  }, [isOwner]);
 
   const filtered = submissions.filter((s) => {
     const matchesSearch =
@@ -189,7 +207,7 @@ const AdminPayments = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={fetchData}
+              onClick={() => fetchData()}
               disabled={loading}
               className="gap-2"
             >

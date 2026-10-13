@@ -3,7 +3,7 @@ const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
-import { getAdminAuthHeaders } from "@/lib/adminAuth";
+import { getAdminAuthHeaders, handleAdminResponse } from "@/lib/adminAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -63,6 +63,7 @@ const AdminAgents = () => {
         signMessageAsync({ ...args, account: address as `0x${string}` })
       );
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/admin-agents`, { headers });
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();
       setPayments(data.payments || []);

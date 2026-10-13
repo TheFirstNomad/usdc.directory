@@ -1,11 +1,11 @@
 // Admin Manage Listings edge function — full CRUD for the partners table
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { verifyAdmin, OWNER_WALLET } from "../_shared/admin-auth.ts";
+import { verifyAdmin, OWNER_WALLET, ADMIN_CORS_HEADERS } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-admin-address, x-admin-timestamp, x-admin-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    ADMIN_CORS_HEADERS,
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
 };
 
