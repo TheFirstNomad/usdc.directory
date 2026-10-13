@@ -1,6 +1,6 @@
 // Admin Manage Listings page — full CRUD table for partners
 const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
@@ -89,7 +89,16 @@ const AdminListings = () => {
     }
   }, [isOwner, address, toast, getHeaders]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const fetchRef = useRef(fetchData);
+  fetchRef.current = fetchData;
+  const loadedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isOwner || !address) { loadedFor.current = null; return; }
+    const key = address.toLowerCase();
+    if (loadedFor.current === key) return;
+    loadedFor.current = key;
+    fetchRef.current();
+  }, [isOwner, address]);
 
   const handleDelete = useCallback(async (id: string) => {
     try {      const headers = await getHeaders();

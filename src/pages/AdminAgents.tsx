@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
@@ -75,9 +75,16 @@ const AdminAgents = () => {
     }
   }, [isOwner, address, signMessageAsync, toast]);
 
+  const fetchRef = useRef(fetchData);
+  fetchRef.current = fetchData;
+  const loadedFor = useRef<string | null>(null);
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!isOwner || !address) { loadedFor.current = null; return; }
+    const key = address.toLowerCase();
+    if (loadedFor.current === key) return;
+    loadedFor.current = key;
+    fetchRef.current();
+  }, [isOwner, address]);
 
   if (!isConnected || !isOwner) {
     return (
