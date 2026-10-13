@@ -76,15 +76,31 @@ const AdminPayments = () => {
     isConnected &&
     address?.toLowerCase() === TREASURY_ADDRESS.toLowerCase();
 
-  const getHeaders = useCallback(async () => {
+  const getHeaders = useCallback(async (interactive = true) => {
     if (!address) throw new Error("No wallet connected");
-    return getAdminAuthHeaders(address, (args: any) => signMessageAsync({ ...args, account: address as `0x${string}` }));
+    return getAdminAuthHeaders(
+      address,
+      (args: any) => signMessageAsync({ ...args, account: address as `0x${string}` }),
+      { interactive },
+    );
   }, [address, signMessageAsync]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (opts: { background?: boolean } = {}) => {
     if (!isOwner || !address) return;
-    setLoading(true);
-    try {      const headers = await getHeaders();
+    const background = !!opts.background;
+    let headers: Record<string, string>;
+    try {
+      // Background refreshes never open the wallet; they skip if no admin pass exists.
+      headers = await getHeaders(!background);
+    } catch {
+      if (!background) {
+        toast({ title: "Error", description: "Admin sign-in was cancelled or failed", variant: "destructive" });
+        setLoading(false);
+      }
+      return;
+    }
+    if (!background) setLoading(true);
+    try {
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/admin-payments`,
         { headers }
@@ -96,9 +112,9 @@ const AdminPayments = () => {
       setSummary(data.summary);
       setLastRefresh(new Date());
     } catch {
-      toast({ title: "Error", description: "Failed to load payment data", variant: "destructive" });
+      if (!background) toast({ title: "Error", description: "Failed to load payment data", variant: "destructive" });
     } finally {
-      setLoading(false);
+      if (!background) setLoading(false);
     }
   }, [isOwner, address, toast, getHeaders]);
 
@@ -134,9 +150,9 @@ const AdminPayments = () => {
 
   useEffect(() => {
     if (!isOwner) return;
-    const interval = setInterval(fetchData, 30_000);
+    const interval = setInterval(() => fetchRef.current({ background: true }), 30_000);
     return () => clearInterval(interval);
-  }, [isOwner, fetchData]);
+  }, [isOwner]);
 
   const filtered = submissions.filter((s) => {
     const matchesSearch =
