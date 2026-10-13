@@ -4,3 +4,4 @@
 - Vite config hardcodes the public backend URL/publishable key as fallbacks and fails the build if the URL is not project ddhytszijvfejnymrwgd, because .env is not present in published builds.
 - Reuse `BrandLogo` and the official Circle USDC artwork for app identity so visible and discovery branding remain consistent.
 - Keep agent API prices, payment checks, self-listing and boost in `supabase/functions/_shared/agents-core.ts`, imported by both `agents-api` and `mcp`, so HTTP and MCP can never drift apart.
+- Admin requests authenticate with an 8-hour HMAC admin pass from `admin-session` (one owner-wallet signature per tab session, logic in `_shared/admin-session.ts`), so admin pages and background refreshes never trigger repeated wallet popups.
