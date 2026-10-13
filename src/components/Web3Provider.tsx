@@ -2,6 +2,7 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit/react";
+import { type AppKitNetwork } from "@reown/appkit/networks";
 import {
   base,
   mainnet,
@@ -45,13 +46,13 @@ const networks = [
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks: networks as any,
+  networks: networks as [AppKitNetwork, ...AppKitNetwork[]],
 });
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: networks as any,
-  defaultNetwork: arcMainnet as any,
+  networks: networks as [AppKitNetwork, ...AppKitNetwork[]],
+  defaultNetwork: arcMainnet as AppKitNetwork,
   projectId,
   metadata: {
     name: "USDC Directory",

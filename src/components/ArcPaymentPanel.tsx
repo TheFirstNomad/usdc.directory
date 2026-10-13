@@ -1,43 +1,66 @@
 /**
- * ArcPaymentPanel — 1 USDC listing fee, payable on ANY supported chain.
+ * ArcPaymentPanel — listing fee payable on ANY supported EVM chain.
  *
- * Two paths:
- *   1. Base Mainnet — direct USDC transfer via wagmi with ERC-8021 attribution.
- *   2. Any other chain (Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB,
- *      Linea, Solana, Sui, Near, …) — agent pays USDC to the treasury on their
- *      chain, then pastes the tx hash here. Backend verifies on-chain.
+ * Paths:
+ *   1. Any supported EVM chain — USDC ERC-20 transfer via wagmi.
+ *      No forced Base switch. Arc, Base, ETH, Arb, OP, Polygon, AVAX, BNB, Linea all work.
+ *   2. Non-EVM / other chains — paste tx hash (Solana, Sui, Near, etc.)
  */
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  CheckCircle2, Copy, ExternalLink, Loader2, Wallet, Droplets,
+  CheckCircle2, Copy, ExternalLink, Loader2, Wallet,
   AlertTriangle, ShieldCheck, RefreshCw, Globe2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppKitAccount, useAppKit } from "@reown/appkit/react";
 import { useSendTransaction, usePublicClient, useChainId, useSwitchChain } from "wagmi";
-import { encodeFunctionData, parseAbi } from "viem";
+import { encodeFunctionData, parseAbi, parseUnits } from "viem";
 import {
   getExplorerUrl, getExplorerName, getChainLabel, type PaymentChainId,
 } from "@/lib/arcAppKit";
+import { getBaseScanInputDataUrl, type BasePaymentDebug } from "@/lib/basePayment";
 import {
-  buildBaseUsdcTransferCalldata, getBaseScanInputDataUrl,
-  BASE_CHAIN_ID, BASE_USDC_ADDRESS, type BasePaymentDebug,
-} from "@/lib/basePayment";
-import { useChainContext } from "@/contexts/ChainContext";
-import {
-  PAYMENT_CHAINS, LISTING_FEE_USDC, LISTING_FEE_BASE_UNITS, EVM_TREASURY, getChain,
+  PAYMENT_CHAINS, LISTING_FEE_USDC, EVM_TREASURY, getChain,
 } from "@/lib/multichainPayments";
 
-// ── Arc Mainnet listing payment constants ──
-const ARC_CHAIN_ID = 5042 as const;
-const ARC_USDC_ADDRESS = "0x3600000000000000000000000000000000000000" as const;
-// Fee is defined in multichainPayments — import keeps it in sync across all chains
+// ── EVM chain USDC config ──
 const ERC20_TRANSFER_ABI = parseAbi([
   "function transfer(address to, uint256 amount) returns (bool)",
 ]);
+
+interface EvmUsdcConfig { address: `0x${string}`; decimals: number }
+
+const EVM_USDC: Record<number, EvmUsdcConfig> = {
+  5042:  { address: "0x3600000000000000000000000000000000000000", decimals: 6  },
+  8453:  { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6  },
+  1:     { address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", decimals: 6  },
+  42161: { address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6  },
+  10:    { address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6  },
+  137:   { address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359", decimals: 6  },
+  43114: { address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", decimals: 6  },
+  56:    { address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", decimals: 18 },
+  59144: { address: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff", decimals: 6  },
+};
+
+const CHAIN_ID_TO_KEY: Record<number, string> = {
+  5042: "arc", 8453: "base", 1: "ethereum", 42161: "arbitrum",
+  10: "optimism", 137: "polygon", 43114: "avalanche", 56: "bnb", 59144: "linea",
+};
+
+const SUPPORTED_CHAIN_IDS = new Set(Object.keys(EVM_USDC).map(Number));
+
+// Chain labels for unsupported chain warning
+const CHAIN_NAMES: Record<number, string> = {
+  5042: "Arc", 8453: "Base", 1: "Ethereum", 42161: "Arbitrum",
+  10: "Optimism", 137: "Polygon", 43114: "Avalanche", 56: "BNB Chain", 59144: "Linea",
+};
+
+function getChainName(id: number) {
+  return CHAIN_NAMES[id] ?? `Chain ${id}`;
+}
 
 interface ArcPaymentPanelProps {
   type: "listing" | "update";
@@ -54,8 +77,6 @@ async function persistListing(
 ) {
   const supabaseUrl =
     import.meta.env.VITE_SUPABASE_URL || "https://ddhytszijvfejnymrwgd.supabase.co";
-  // tier must sit at the top level of the request body — the backend reads body.tier,
-  // not body.data.tier. Extract it from submissionData before sending.
   const { tier: listingTier, ...listingData } = submissionData as Record<string, unknown> & { tier?: string };
   const res = await fetch(`${supabaseUrl}/functions/v1/submit-listing`, {
     method: "POST",
@@ -80,24 +101,31 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const { toast } = useToast();
   const { isConnected, address } = useAppKitAccount();
   const { open } = useAppKit();
-  const { chainId } = useChainContext();
 
   const { sendTransactionAsync } = useSendTransaction();
-  const basePublicClient = usePublicClient({ chainId: BASE_CHAIN_ID });
-  const arcPublicClient = usePublicClient({ chainId: ARC_CHAIN_ID });
   const walletChainId = useChainId();
   const { switchChainAsync, isPending: switching } = useSwitchChain();
 
+  // Use the wallet's actual chain — not the UI dropdown chain
+  const usdcConfig = EVM_USDC[walletChainId];
+  const isSupported = SUPPORTED_CHAIN_IDS.has(walletChainId);
+  const isArc = walletChainId === 5042;
+  const chainKey = CHAIN_ID_TO_KEY[walletChainId] ?? "base";
+  const chainName = getChainName(walletChainId);
+
+  // Public client for the active wallet chain
+  const publicClient = usePublicClient({ chainId: walletChainId });
+
   const [paying, setPaying] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [paidChain, setPaidChain] = useState<string>("base");
+  const [paidChain, setPaidChain] = useState<string>("arc");
   const [error, setError] = useState<string | null>(null);
   const [saveFailedHash, setSaveFailedHash] = useState<string | null>(null);
   const [saveFailedChain, setSaveFailedChain] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
-  const [baseDebug, setBaseDebug] = useState<BasePaymentDebug | null>(null);
+  const [baseDebug] = useState<BasePaymentDebug | null>(null);
 
-  // External "paste tx hash" multichain path
+  // External "paste tx hash" path
   const [showExternal, setShowExternal] = useState(false);
   const [externalChainKey, setExternalChainKey] = useState<string>("ethereum");
   const [externalTx, setExternalTx] = useState("");
@@ -105,55 +133,39 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const [submittingExternal, setSubmittingExternal] = useState(false);
 
   const fee = LISTING_FEE_USDC;
-  const paymentChainId = chainId as PaymentChainId;
-  const chainLabel = getChainLabel(paymentChainId);
-  const explorerName = getExplorerName(paymentChainId);
-  const isBase = paymentChainId === BASE_CHAIN_ID;
-  const isArc = paymentChainId === ARC_CHAIN_ID;
-  const activeChainId: PaymentChainId = isArc ? ARC_CHAIN_ID : BASE_CHAIN_ID;
-  const activeChainKey = isArc ? "arc" : "base";
 
-  // ── Base Mainnet pay path ──
-  const payOnBase = async (): Promise<string> => {
+  // ── Generic EVM pay path — works for all 9 chains ──
+  const payOnEvmChain = async (): Promise<string> => {
     if (!address) throw new Error("Wallet not connected");
-    const debug = buildBaseUsdcTransferCalldata(fee);
-    setBaseDebug(debug);
-    const hash = await sendTransactionAsync({
-      to: debug.to, data: debug.attributed,
-      account: address as `0x${string}`,
-      chainId: BASE_CHAIN_ID, value: 0n,
-    } as Parameters<typeof sendTransactionAsync>[0]);
-    if (basePublicClient) await basePublicClient.waitForTransactionReceipt({ hash });
-    return hash;
-  };
+    if (!usdcConfig) throw new Error(`USDC not configured for chain ${walletChainId}`);
 
-  // ── Arc Mainnet pay path (USDC ERC-20 transfer, USDC is also gas) ──
-  const payOnArc = async (): Promise<string> => {
-    if (!address) throw new Error("Wallet not connected");
+    const feeUnits = parseUnits(String(fee), usdcConfig.decimals);
     const data = encodeFunctionData({
       abi: ERC20_TRANSFER_ABI,
       functionName: "transfer",
-      args: [EVM_TREASURY as `0x${string}`, LISTING_FEE_BASE_UNITS],
+      args: [EVM_TREASURY as `0x${string}`, feeUnits],
     });
     const hash = await sendTransactionAsync({
-      to: ARC_USDC_ADDRESS, data,
+      to: usdcConfig.address,
+      data,
       account: address as `0x${string}`,
-      chainId: ARC_CHAIN_ID, value: 0n,
+      chainId: walletChainId,
+      value: 0n,
     } as Parameters<typeof sendTransactionAsync>[0]);
-    if (arcPublicClient) await arcPublicClient.waitForTransactionReceipt({ hash });
+    if (publicClient) await publicClient.waitForTransactionReceipt({ hash });
     return hash;
   };
 
   const handlePay = async () => {
-    setPaying(true); setError(null); setBaseDebug(null);
+    setPaying(true); setError(null);
     try {
-      const hash = isArc ? await payOnArc() : await payOnBase();
+      const hash = await payOnEvmChain();
       try {
-        await persistListing(type, hash, address!, submissionData, activeChainKey);
+        await persistListing(type, hash, address!, submissionData, chainKey);
       } catch (saveErr: unknown) {
         const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
         setSaveFailedHash(hash);
-        setSaveFailedChain(activeChainKey);
+        setSaveFailedChain(chainKey);
         setError(`Your payment is confirmed and safe. Saving the listing didn't go through yet: ${message}. Tap "Retry saving my listing" below — you will not be charged again.`);
         toast({
           title: "Payment safe — listing not saved yet",
@@ -162,12 +174,12 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         });
         return;
       }
-      setPaidChain(activeChainKey);
+      setPaidChain(chainKey);
       setTxHash(hash);
       toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
       onSuccess(hash);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : `Payment failed on ${chainLabel}`;
+      const msg = err instanceof Error ? err.message : `Payment failed on ${chainName}`;
       setError(msg);
       toast({ title: "Payment failed", description: msg, variant: "destructive" });
     } finally { setPaying(false); }
@@ -249,7 +261,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       <div className="space-y-4 text-center">
         <h3 className="text-xl font-bold text-foreground">{fee} USDC</h3>
         <p className="text-sm text-muted-foreground">
-          {type === "listing" ? "One-time listing fee" : "One-time update fee"}: pay on {chainLabel} or any chain
+          {type === "listing" ? "One-time listing fee" : "One-time update fee"}: pay on any chain
         </p>
         <Button onClick={() => open()}
           className="w-full bg-gradient-to-r from-primary to-[hsl(var(--accent))] text-primary-foreground font-semibold py-6 rounded-xl text-base">
@@ -264,17 +276,6 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
       </div>
     );
   }
-
-  const needsSwitch = walletChainId !== activeChainId;
-
-  const handleSwitch = async () => {
-    try {
-      await switchChainAsync({ chainId: activeChainId });
-      toast({ title: `Switched to ${chainLabel}` });
-    } catch (e: unknown) {
-      toast({ title: "Network switch failed", description: e instanceof Error ? e.message : "", variant: "destructive" });
-    }
-  };
 
   function renderExternalForm() {
     const ch = getChain(externalChainKey);
@@ -338,7 +339,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     );
   }
 
-  // ── Main UI ──
+  // ── Main UI — wallet connected ──
   return (
     <div className="space-y-4">
       <div className="text-center mb-2">
@@ -348,47 +349,43 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         </p>
       </div>
 
-      {isArc && (
+      {/* Chain info banner */}
+      {isSupported ? (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
           <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <p className="text-xs text-foreground/90">
-            <strong>Arc Mainnet</strong> is live. USDC is the gas token, so listing fees settle in seconds.
+            {isArc
+              ? <><strong>Arc Mainnet</strong> — USDC is the gas token. Listing fees settle in seconds.</>
+              : <><strong>{chainName}</strong> — Pay {fee} USDC directly. Listing publishes after on-chain verification.</>
+            }
           </p>
         </div>
-      )}
-
-      {isBase && (
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
-          <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-          <p className="text-xs text-foreground/80">
-            Native gasless x402 path runs on <strong>Base Mainnet</strong> with our <strong>ERC-8021 builder code</strong> (<code className="font-mono">bc_madq6cms</code>) attribution.
-          </p>
-        </div>
-      )}
-
-      {needsSwitch && (
+      ) : (
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-foreground/90">
-              Your wallet is on a different network. Switch to <strong>{chainLabel}</strong> to pay directly, or scroll down to pay from any other chain.
+              Chain {walletChainId} is not supported for direct payment. Switch to Arc, Base, Ethereum, Arbitrum, Optimism, Polygon, Avalanche, BNB, or Linea — or use the paste-tx-hash path below.
             </p>
           </div>
-          <Button onClick={handleSwitch} disabled={switching} variant="outline"
-            className="w-full rounded-lg border-amber-500/40 hover:bg-amber-500/10" size="sm">
-            {switching ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Switching…</>
-              : <><RefreshCw className="h-4 w-4 mr-2" /> Switch wallet to {chainLabel}</>}
+          <Button onClick={() => switchChainAsync({ chainId: 5042 })} disabled={switching}
+            variant="outline" className="w-full rounded-lg border-amber-500/40" size="sm">
+            {switching
+              ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Switching…</>
+              : <><RefreshCw className="h-4 w-4 mr-2" /> Switch to Arc Mainnet</>}
           </Button>
         </div>
       )}
 
-      <Button onClick={handlePay} disabled={paying || needsSwitch || switching}
-        className="w-full bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground font-semibold py-6 rounded-xl text-base">
-        {paying ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Processing Payment…</>
-          : needsSwitch ? <>Switch to {chainLabel} to pay with wallet</>
-          : <>💰 Pay {fee} USDC on {chainLabel}</>}
+      <Button
+        onClick={handlePay}
+        disabled={paying || !isSupported || switching}
+        className="w-full bg-gradient-to-r from-primary to-[hsl(275,80%,55%)] text-primary-foreground font-semibold py-6 rounded-xl text-base"
+      >
+        {paying
+          ? <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Processing Payment…</>
+          : <>💰 Pay {fee} USDC on {chainName}</>}
       </Button>
-
 
       <div className="pt-2">
         <button onClick={() => setShowExternal((v) => !v)}
@@ -432,14 +429,21 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         </div>
       )}
 
-      <div className="bg-muted/50 rounded-xl p-4">
-        <p className="text-xs text-muted-foreground">
-          🔵 Direct on-chain USDC transfer to treasury. {chainLabel} USDC:{" "}
-          <code className="font-mono">
-            {(isArc ? ARC_USDC_ADDRESS : BASE_USDC_ADDRESS).slice(0, 10)}…
-          </code>
-        </p>
-      </div>
+      {isSupported && usdcConfig && (
+        <div className="bg-muted/50 rounded-xl p-4">
+          <p className="text-xs text-muted-foreground">
+            🔵 Direct on-chain USDC transfer to treasury. {chainName} USDC:{" "}
+            <code className="font-mono">{usdcConfig.address.slice(0, 10)}…</code>
+          </p>
+          {isSupported && (
+            <a
+              href={getBaseScanInputDataUrl("")}
+              className="hidden"
+              aria-hidden="true"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };
