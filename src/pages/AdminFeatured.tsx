@@ -3,7 +3,7 @@ const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
-import { getAdminAuthHeaders } from "@/lib/adminAuth";
+import { getAdminAuthHeaders, handleAdminResponse } from "@/lib/adminAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -58,6 +58,7 @@ const AdminFeatured = () => {
         `https://${projectId}.supabase.co/functions/v1/admin-featured`,
         { headers }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setPartners(data.partners);
@@ -93,6 +94,7 @@ const AdminFeatured = () => {
         }
       );
       const data = await res.json();
+      handleAdminResponse(res);
       if (!res.ok) {
         toast({ title: "Error", description: data.error, variant: "destructive" });
         return;

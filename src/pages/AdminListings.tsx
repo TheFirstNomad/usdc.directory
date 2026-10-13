@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
-import { getAdminAuthHeaders } from "@/lib/adminAuth";
+import { getAdminAuthHeaders, handleAdminResponse } from "@/lib/adminAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -79,6 +79,7 @@ const AdminListings = () => {
         `https://${projectId}.supabase.co/functions/v1/admin-listings`,
         { headers }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setPartners(data.partners);
@@ -110,6 +111,7 @@ const AdminListings = () => {
           body: JSON.stringify({ id }),
         }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to delete");
       setPartners((prev) => prev.filter((p) => p.id !== id));
       toast({ title: "Deleted", description: "Listing removed" });
@@ -139,6 +141,7 @@ const AdminListings = () => {
         }
       );
       const body = await res.json();
+      handleAdminResponse(res);
       if (!res.ok) {
         throw new Error(body.error || "Failed to update");
       }
@@ -165,6 +168,7 @@ const AdminListings = () => {
           body: JSON.stringify({ id, featured }),
         }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to update");
       setPartners((prev) => prev.map((p) => (p.id === id ? { ...p, featured } : p)));
     } catch {
@@ -183,6 +187,7 @@ const AdminListings = () => {
           body: JSON.stringify({ id, action, reason }),
         }
       );
+      handleAdminResponse(res);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Failed");
@@ -211,6 +216,7 @@ const AdminListings = () => {
         }
       );
       const body = await res.json();
+      handleAdminResponse(res);
       if (!res.ok) throw new Error(body.error || "Bulk action failed");
       if (action === "delete") {
         setPartners((prev) => prev.filter((p) => !selected.has(p.id)));
@@ -235,6 +241,7 @@ const AdminListings = () => {
         { headers }
       );
       const body = await res.json();
+      handleAdminResponse(res);
       if (!res.ok) throw new Error(body.error || "Failed");
       setAuditEntries(body.entries || []);
     } catch (err) {

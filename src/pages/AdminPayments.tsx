@@ -3,7 +3,7 @@ const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS, LISTING_FEE_DISPLAY } from "@/lib/web3";
-import { getAdminAuthHeaders } from "@/lib/adminAuth";
+import { getAdminAuthHeaders, handleAdminResponse } from "@/lib/adminAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO from "@/components/SEO";
@@ -89,6 +89,7 @@ const AdminPayments = () => {
         `https://${projectId}.supabase.co/functions/v1/admin-payments`,
         { headers }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setSubmissions(data.submissions);
@@ -122,6 +123,7 @@ const AdminPayments = () => {
           body: JSON.stringify({ id }),
         }
       );
+      handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed to delete");
       setSubmissions((prev) => prev.filter((s) => s.id !== id));
       toast({ title: "Deleted", description: "Submission removed" });
