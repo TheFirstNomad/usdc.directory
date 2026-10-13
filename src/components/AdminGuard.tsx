@@ -11,7 +11,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAppKitAccount } from "@reown/appkit/react";
-import { OWNER_WALLET } from "@/lib/adminAuth";
+import { OWNER_WALLET, clearAdminAuth } from "@/lib/adminAuth";
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -27,6 +27,16 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
     return () => clearTimeout(t);
   }, []);
 
+  const isAdmin =
+    isConnected &&
+    !!address &&
+    address.toLowerCase() === OWNER_WALLET.toLowerCase();
+
+  // Forget the admin pass once the owner wallet disconnects or switches.
+  useEffect(() => {
+    if (checked && !isAdmin) clearAdminAuth();
+  }, [checked, isAdmin]);
+
   if (!checked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -34,11 +44,6 @@ const AdminGuard = ({ children }: AdminGuardProps) => {
       </div>
     );
   }
-
-  const isAdmin =
-    isConnected &&
-    !!address &&
-    address.toLowerCase() === OWNER_WALLET.toLowerCase();
 
   if (!isAdmin) {
     return <Navigate to="/" replace />;
