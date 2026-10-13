@@ -207,7 +207,7 @@ const AdminPayments = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={fetchData}
+              onClick={() => fetchData()}
               disabled={loading}
               className="gap-2"
             >
