@@ -401,6 +401,9 @@ Deno.serve(async (req) => {
 
       if (partnerErr) { console.error("Partner insert error:", partnerErr); throw partnerErr; }
 
+      // Convert bigint fee units (6-decimal) to USDC for storage
+      const paymentAmountUsdc = Number(requiredFee) / 1_000_000;
+
       await supabase.from("submissions").insert({
         company_name,
         contact_email: contact_email || "not-provided@usdc.directory",
@@ -409,6 +412,7 @@ Deno.serve(async (req) => {
         wallet_address: verifiedPayer,
         payment_id: dedupKey,
         payment_status: "confirmed",
+        payment_amount: paymentAmountUsdc,
         status: "approved",
         networks: [chain],
         partner_id: newPartner.id,
@@ -442,6 +446,7 @@ Deno.serve(async (req) => {
       wallet_address: verifiedPayer,
       payment_id: dedupKey,
       payment_status: "confirmed",
+      payment_amount: Number(requiredFee) / 1_000_000,
       status: "approved",
       networks: [chain],
       partner_id: partner_id!,

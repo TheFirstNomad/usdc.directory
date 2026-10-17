@@ -95,17 +95,17 @@ Deno.serve(async (req) => {
     const paid = submissions?.filter((s: any) => paidStatuses.includes(s.payment_status)) || [];
     const pending = submissions?.filter((s: any) => pendingStatuses.includes(s.payment_status)) || [];
 
-    const LISTING_FEE = 1;
-
-    const revenueMonth = paid
-      .filter((s: any) => s.created_at >= monthStart).length * LISTING_FEE;
-
-    const totalRevenue = paid.length * LISTING_FEE;
+    // Use actual payment_amount if stored; fall back to 3 USDC (current standard fee)
+    const toUsdc = (s: any) => Number(s.payment_amount ?? 3);
 
     const summary = {
-      revenueToday: paid.filter((s: any) => s.created_at >= todayStart).length * LISTING_FEE,
-      revenueMonth,
-      totalRevenue,
+      revenueToday: paid
+        .filter((s: any) => s.created_at >= todayStart)
+        .reduce((acc: number, s: any) => acc + toUsdc(s), 0),
+      revenueMonth: paid
+        .filter((s: any) => s.created_at >= monthStart)
+        .reduce((acc: number, s: any) => acc + toUsdc(s), 0),
+      totalRevenue: paid.reduce((acc: number, s: any) => acc + toUsdc(s), 0),
       totalPaid: paid.length,
       pendingCount: pending.length,
     };

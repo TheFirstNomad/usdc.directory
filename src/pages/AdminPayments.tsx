@@ -36,10 +36,32 @@ interface Submission {
   region: string | null;
   wallet_address: string | null;
   payment_id: string | null;
+  payment_amount: number | null;
   payment_status: string;
   status: string;
   created_at: string;
   partner_id: string | null;
+}
+
+// Build a block-explorer URL from a payment_id like "arc:0xabc..." or "base:0xdef..."
+function explorerUrl(paymentId: string): string | null {
+  const [chain, hash] = paymentId.split(/:(.+)/);
+  if (!hash) return null;
+  const explorers: Record<string, string> = {
+    arc:       "https://explorer.arc.io/tx/",
+    base:      "https://basescan.org/tx/",
+    ethereum:  "https://etherscan.io/tx/",
+    arbitrum:  "https://arbiscan.io/tx/",
+    optimism:  "https://optimistic.etherscan.io/tx/",
+    polygon:   "https://polygonscan.com/tx/",
+    avalanche: "https://snowtrace.io/tx/",
+    bnb:       "https://bscscan.com/tx/",
+    linea:     "https://lineascan.build/tx/",
+    monad:     "https://explorer.monad.xyz/tx/",
+    solana:    "https://solscan.io/tx/",
+  };
+  const base = explorers[chain];
+  return base ? base + hash : null;
 }
 
 interface Summary {
@@ -291,7 +313,7 @@ const AdminPayments = () => {
                       <TableHead>Company</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Payment ID</TableHead>
+                      <TableHead>Tx Hash</TableHead>
                       <TableHead>Wallet</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
@@ -311,7 +333,11 @@ const AdminPayments = () => {
                             <Badge variant="outline" className="ml-2 text-[10px] border-cyan-500/30 text-cyan-400">🤖 AI Agent</Badge>
                           )}
                         </TableCell>
-                        <TableCell>{LISTING_FEE_DISPLAY} USDC</TableCell>
+                        <TableCell className="font-mono text-sm font-semibold">
+                          {s.payment_amount != null
+                            ? `${s.payment_amount % 1 === 0 ? s.payment_amount.toFixed(0) : s.payment_amount.toFixed(2)} USDC`
+                            : `${LISTING_FEE_DISPLAY} USDC`}
+                        </TableCell>
                         <TableCell>
                           <Badge
                             className={`text-xs border ${statusColors[s.payment_status] ?? statusColors.pending}`}
@@ -319,8 +345,26 @@ const AdminPayments = () => {
                             {s.payment_status.replace(/_/g, " ")}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground max-w-[140px] truncate">
-                          {s.payment_id || "—"}
+                        <TableCell className="font-mono text-xs max-w-[160px]">
+                          {s.payment_id ? (() => {
+                            const url = explorerUrl(s.payment_id);
+                            const display = s.payment_id.length > 20
+                              ? `${s.payment_id.slice(0, 10)}…${s.payment_id.slice(-6)}`
+                              : s.payment_id;
+                            return url ? (
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline truncate block"
+                                title={s.payment_id}
+                              >
+                                {display}
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground truncate block" title={s.payment_id}>{display}</span>
+                            );
+                          })() : "—"}
                         </TableCell>
                         <TableCell className="font-mono text-xs text-muted-foreground max-w-[140px] truncate">
                           {s.wallet_address
