@@ -48,7 +48,7 @@ const networks = [
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks: networks as [AppKitNetwork, ...AppKitNetwork[]],
+  networks: networks as unknown as [AppKitNetwork, ...AppKitNetwork[]],
 });
 
 // Solana mainnet — Phantom, Solflare, Backpack for 1-click USDC listing payments
