@@ -1,6 +1,7 @@
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
+import { SolanaAdapter } from "@reown/appkit-adapter-solana/react";
 import { createAppKit } from "@reown/appkit/react";
 import { type AppKitNetwork } from "@reown/appkit/networks";
 import {
@@ -12,6 +13,7 @@ import {
   avalanche,
   bsc,
   linea,
+  solana,
 } from "@reown/appkit/networks";
 import { type ReactNode } from "react";
 
@@ -46,12 +48,15 @@ const networks = [
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks: networks as [AppKitNetwork, ...AppKitNetwork[]],
+  networks: networks as unknown as [AppKitNetwork, ...AppKitNetwork[]],
 });
 
+// Solana mainnet — Phantom, Solflare, Backpack for 1-click USDC listing payments
+const solanaAdapter = new SolanaAdapter();
+
 createAppKit({
-  adapters: [wagmiAdapter],
-  networks: networks as [AppKitNetwork, ...AppKitNetwork[]],
+  adapters: [wagmiAdapter, solanaAdapter],
+  networks: [...networks, solana] as [AppKitNetwork, ...AppKitNetwork[]],
   defaultNetwork: arcMainnet as AppKitNetwork,
   projectId,
   metadata: {

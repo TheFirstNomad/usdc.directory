@@ -15,7 +15,14 @@ import {
   AlertTriangle, ShieldCheck, RefreshCw, Globe2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAppKitAccount, useAppKit } from "@reown/appkit/react";
+import { useAppKitAccount, useAppKit, useAppKitNetwork, useAppKitProvider } from "@reown/appkit/react";
+import { useAppKitConnection, type Provider as SolanaProvider } from "@reown/appkit-adapter-solana/react";
+import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createTransferCheckedInstruction,
+} from "@solana/spl-token";
 import { useSendTransaction, usePublicClient, useChainId, useSwitchChain } from "wagmi";
 import { encodeFunctionData, parseAbi, parseUnits } from "viem";
 import {
@@ -49,6 +56,8 @@ const CHAIN_ID_TO_KEY: Record<number, string> = {
   5042: "arc", 8453: "base", 1: "ethereum", 42161: "arbitrum",
   10: "optimism", 137: "polygon", 43114: "avalanche", 56: "bnb", 59144: "linea",
 };
+
+const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 
 const SUPPORTED_CHAIN_IDS = new Set(Object.keys(EVM_USDC).map(Number));
 
@@ -101,6 +110,10 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
   const { toast } = useToast();
   const { isConnected, address } = useAppKitAccount();
   const { open } = useAppKit();
+  const { caipNetwork } = useAppKitNetwork();
+  const isSolana = caipNetwork?.chainNamespace === "solana";
+  const { walletProvider: solanaProvider } = useAppKitProvider<SolanaProvider>("solana");
+  const { connection: solanaConnection } = useAppKitConnection();
 
   const { sendTransactionAsync } = useSendTransaction();
   const walletChainId = useChainId();
@@ -108,10 +121,10 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
 
   // Use the wallet's actual chain — not the UI dropdown chain
   const usdcConfig = EVM_USDC[walletChainId];
-  const isSupported = SUPPORTED_CHAIN_IDS.has(walletChainId);
   const isArc = walletChainId === 5042;
   const chainKey = CHAIN_ID_TO_KEY[walletChainId] ?? "base";
-  const chainName = getChainName(walletChainId);
+  const isSupported = isSolana || SUPPORTED_CHAIN_IDS.has(walletChainId);
+  const chainName = isSolana ? "Solana" : getChainName(walletChainId);
 
   // Public client for the active wallet chain
   const publicClient = usePublicClient({ chainId: walletChainId });
@@ -156,16 +169,38 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     return hash;
   };
 
+  // ── Solana pay path — 1-click SPL USDC transfer via Phantom/Solflare/Backpack ──
+  const payOnSolana = async (): Promise<string> => {
+    if (!address || !solanaProvider || !solanaConnection) throw new Error("Solana wallet not connected");
+    const solCfg = getChain("solana");
+    if (!solCfg?.treasury) throw new Error("Solana treasury not configured");
+    const mint = new PublicKey(SOLANA_USDC_MINT);
+    const payer = new PublicKey(address);
+    const treasury = new PublicKey(solCfg.treasury);
+    const fromAta = getAssociatedTokenAddressSync(mint, payer);
+    const toAta = getAssociatedTokenAddressSync(mint, treasury);
+    const units = BigInt(Math.round(Number(fee) * 1_000_000));
+    const { blockhash, lastValidBlockHeight } = await solanaConnection.getLatestBlockhash("confirmed");
+    const tx = new Transaction({ feePayer: payer, blockhash, lastValidBlockHeight }).add(
+      createAssociatedTokenAccountIdempotentInstruction(payer, toAta, treasury, mint),
+      createTransferCheckedInstruction(fromAta, mint, toAta, payer, units, 6),
+    );
+    const sig = await solanaProvider.sendTransaction(tx, solanaConnection);
+    await solanaConnection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+    return sig;
+  };
+
   const handlePay = async () => {
     setPaying(true); setError(null);
+    const payChainKey = isSolana ? "solana" : chainKey;
     try {
-      const hash = await payOnEvmChain();
+      const hash = isSolana ? await payOnSolana() : await payOnEvmChain();
       try {
-        await persistListing(type, hash, address!, submissionData, chainKey);
+        await persistListing(type, hash, address!, submissionData, payChainKey);
       } catch (saveErr: unknown) {
         const message = saveErr instanceof Error ? saveErr.message : String(saveErr);
         setSaveFailedHash(hash);
-        setSaveFailedChain(chainKey);
+        setSaveFailedChain(payChainKey);
         setError(`Your payment is confirmed and safe. Saving the listing didn't go through yet: ${message}. Tap "Retry saving my listing" below — you will not be charged again.`);
         toast({
           title: "Payment safe — listing not saved yet",
@@ -174,7 +209,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         });
         return;
       }
-      setPaidChain(chainKey);
+      setPaidChain(payChainKey);
       setTxHash(hash);
       toast({ title: "Payment successful!", description: `Tx: ${hash.slice(0, 12)}…` });
       onSuccess(hash);
@@ -270,7 +305,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         <button onClick={() => setShowExternal((v) => !v)}
           className="text-xs text-primary hover:underline inline-flex items-center gap-1">
           <Globe2 className="h-3.5 w-3.5" />
-          Or pay from Solana, Sui, Near, BNB, ETH, Polygon… (no wallet connect needed)
+          Or pay from Sui, Near or another chain by pasting a tx hash
         </button>
         {showExternal && renderExternalForm()}
       </div>
@@ -354,7 +389,9 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2">
           <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
           <p className="text-xs text-foreground/90">
-            {isArc
+            {isSolana
+              ? <><strong>Solana</strong> — Pay {fee} USDC in one click from Phantom, Solflare or Backpack.</>
+              : isArc
               ? <><strong>Arc Mainnet</strong> — USDC is the gas token. Listing fees settle in seconds.</>
               : <><strong>{chainName}</strong> — Pay {fee} USDC directly. Listing publishes after on-chain verification.</>
             }
@@ -391,7 +428,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         <button onClick={() => setShowExternal((v) => !v)}
           className="text-xs text-primary hover:underline inline-flex items-center gap-1.5 w-full justify-center">
           <Globe2 className="h-3.5 w-3.5" />
-          {showExternal ? "Hide" : "Or pay from Solana, Sui, Near, BNB, ETH, Arbitrum, Polygon…"}
+          {showExternal ? "Hide" : "Or pay from Sui, Near or another chain (paste tx hash)"}
         </button>
       </div>
       {showExternal && renderExternalForm()}
@@ -429,7 +466,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
         </div>
       )}
 
-      {isSupported && usdcConfig && (
+      {isSupported && !isSolana && usdcConfig && (
         <div className="bg-muted/50 rounded-xl p-4">
           <p className="text-xs text-muted-foreground">
             🔵 Direct on-chain USDC transfer to treasury. {chainName} USDC:{" "}
