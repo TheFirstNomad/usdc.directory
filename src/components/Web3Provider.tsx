@@ -34,6 +34,7 @@ const arcMainnet = {
 } as const;
 
 // Arc is listed first — it becomes the default chain in the wallet modal
+// Mutable tuple so AppKit's createAppKit accepts it directly.
 const networks = [
   arcMainnet,
   base,
@@ -44,11 +45,11 @@ const networks = [
   avalanche,
   bsc,
   linea,
-] as const;
+] as unknown as [AppKitNetwork, ...AppKitNetwork[]];
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks: networks as unknown as [AppKitNetwork, ...AppKitNetwork[]],
+  networks,
 });
 
 // Solana mainnet — Phantom, Solflare, Backpack for 1-click USDC listing payments
