@@ -179,7 +179,7 @@ const ArcPaymentPanel = ({ type, submissionData, onSuccess }: ArcPaymentPanelPro
     const treasury = new PublicKey(solCfg.treasury);
     const fromAta = getAssociatedTokenAddressSync(mint, payer);
     const toAta = getAssociatedTokenAddressSync(mint, treasury);
-    const units = BigInt(Math.round(fee * 1_000_000));
+    const units = BigInt(Math.round(Number(fee) * 1_000_000));
     const { blockhash, lastValidBlockHeight } = await solanaConnection.getLatestBlockhash("confirmed");
     const tx = new Transaction({ feePayer: payer, blockhash, lastValidBlockHeight }).add(
       createAssociatedTokenAccountIdempotentInstruction(payer, toAta, treasury, mint),
