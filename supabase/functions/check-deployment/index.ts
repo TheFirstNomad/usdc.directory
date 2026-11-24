@@ -5,10 +5,13 @@
 // rejected so the function cannot be used as a request-forwarder against the
 // internal Supabase / cloud network.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { verifyAdminSessionToken } from "../_shared/admin-session.ts";
+
+const OWNER = "0x13fa78ab20762c8f49b58d44dbc177a2adb94d7c";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-session, x-admin-address",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -109,11 +112,18 @@ Deno.serve(async (req) => {
     supabase.rpc("cleanup_deployment_checks").then(() => {}).catch(() => {});
 
     // History is not client-readable (RLS denies anon/authenticated); serve it here.
-    const { data: history } = await supabase
-      .from("deployment_checks")
-      .select("id, checked_at, mount_success, duration_ms, status_code, error")
-      .order("checked_at", { ascending: false })
-      .limit(288);
+    // Only the owner (valid admin pass) receives check history.
+    const pass = req.headers.get("x-admin-session") ?? "";
+    const isAdmin = pass
+      ? await verifyAdminSessionToken(Deno.env.get("ADMIN_SESSION_SECRET") ?? "", pass, OWNER)
+      : false;
+    const { data: history } = isAdmin
+      ? await supabase
+        .from("deployment_checks")
+        .select("id, checked_at, mount_success, duration_ms, status_code, error")
+        .order("checked_at", { ascending: false })
+        .limit(288)
+      : { data: [] };
 
     return new Response(
       JSON.stringify({

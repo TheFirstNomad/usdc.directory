@@ -482,14 +482,14 @@ const AGENT_COLS = "id, name, description, website, logo_url, categories, region
 type OpResult = { status: number; body: any };
 
 export async function listAgents(sb: Sb, paid: string): Promise<OpResult> {
-  const { data, error } = await sb.from("partners").select(AGENT_COLS).contains("categories", ["AI Agents"])
+  const { data, error } = await sb.from("partners").select(AGENT_COLS).eq("payment_status", "confirmed").contains("categories", ["AI Agents"])
     .order("boosted_until", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }).limit(500);
   if (error) return { status: 500, body: { error: error.message } };
   return { status: 200, body: { count: data?.length ?? 0, agents: data ?? [], paid } };
 }
 
 export async function getAgent(sb: Sb, id: string, paid: string): Promise<OpResult> {
-  const { data, error } = await sb.from("partners").select(AGENT_COLS).eq("id", id).maybeSingle();
+  const { data, error } = await sb.from("partners").select(AGENT_COLS).eq("id", id).eq("payment_status", "confirmed").maybeSingle();
   if (error) return { status: 500, body: { error: error.message } };
   if (!data) return { status: 404, body: { error: "not found" } };
   return { status: 200, body: { agent: data, paid } };
@@ -498,7 +498,7 @@ export async function getAgent(sb: Sb, id: string, paid: string): Promise<OpResu
 export async function searchAgents(sb: Sb, qRaw: string, paid: string): Promise<OpResult> {
   const q = safeQuery(qRaw);
   if (!q) return { status: 400, body: { error: "q param required" } };
-  const { data, error } = await sb.from("partners").select(`${AGENT_COLS}, wallet_address`).contains("categories", ["AI Agents"])
+  const { data, error } = await sb.from("partners").select(AGENT_COLS).eq("payment_status", "confirmed").contains("categories", ["AI Agents"])
     .or(`name.ilike.%${q}%,description.ilike.%${q}%`)
     .order("boosted_until", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false }).limit(50);
   if (error) return { status: 500, body: { error: error.message } };
@@ -511,6 +511,7 @@ export async function searchMerchants(sb: Sb, qRaw: string, paid: string, opts: 
   if (!q) return { status: 400, body: { error: "q param required" } };
   const limit = Math.min(Math.max(Number(opts.limit ?? MERCHANT_MAX) || MERCHANT_MAX, 1), MERCHANT_MAX);
   let query = sb.from("partners").select("id, name, description, website, logo_url, categories, region, networks, verified, created_at")
+    .eq("payment_status", "confirmed")
     .or(`name.ilike.%${q}%,description.ilike.%${q}%`);
   if (opts.category && String(opts.category).trim()) query = query.contains("categories", [String(opts.category).trim().slice(0, 64)]);
   const { data, error } = await query.limit(limit);

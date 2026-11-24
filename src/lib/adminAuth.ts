@@ -22,6 +22,12 @@ interface StoredSession {
   expiresAt: number;
 }
 
+/** Returns stored admin-pass headers without prompting the wallet, or null. */
+export function getStoredAdminHeaders(): Record<string, string> | null {
+  const s = readSession(OWNER_WALLET);
+  return s ? { "x-admin-session": s.token, "x-admin-address": OWNER_WALLET } : null;
+}
+
 export function buildAdminMessage(timestamp: number): string {
   return `USDC Directory Admin\nTimestamp: ${timestamp}`;
 }

@@ -1,3 +1,4 @@
+import { getStoredAdminHeaders } from "@/lib/adminAuth";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
@@ -61,6 +62,7 @@ export default function DeploymentStatus() {
     try {
       const { data, error } = await supabase.functions.invoke("check-deployment", {
         body: { url: TARGET_URL },
+        headers: getStoredAdminHeaders() ?? undefined,
       });
       if (error) throw error;
       const payload = data as CheckResult & { history?: HistoryRow[] };
