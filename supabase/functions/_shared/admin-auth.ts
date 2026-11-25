@@ -28,7 +28,7 @@ export async function verifyAdminSignature(
   let recovered: string;
   try {
     recovered = (await recoverMessageAddress({
-      message: `USDC Directory Admin\nTimestamp: ${ts}`,
+      message: `usdc.directory admin sign-in\nThis is a sign-in only. It does not authorize any transaction or spending.\nTimestamp: ${ts}`,
       signature: signature as `0x${string}`,
     })).toLowerCase();
   } catch {

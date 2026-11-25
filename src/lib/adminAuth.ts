@@ -29,8 +29,13 @@ export function getStoredAdminHeaders(): Record<string, string> | null {
   return s ? { "x-admin-session": s.token, "x-admin-address": OWNER_WALLET } : null;
 }
 
+/** Plain sign-in text; must match _shared/admin-auth.ts. */
+export function buildAdminMessageText(timestamp: number): string {
+  return `usdc.directory admin sign-in\nThis is a sign-in only. It does not authorize any transaction or spending.\nTimestamp: ${timestamp}`;
+}
+
 export function buildAdminMessage(timestamp: number): string {
-  return `USDC Directory Admin\nTimestamp: ${timestamp}`;
+  return buildAdminMessageText(timestamp);
 }
 
 function readSession(address: string): StoredSession | null {

@@ -4,6 +4,7 @@ import { FUNCTIONS_BASE } from "@/lib/functionsUrl";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
+import { AdminSignInNotice } from "@/components/admin/AdminSignInNotice";
 import { getAdminAuthHeaders, handleAdminResponse } from "@/lib/adminAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -51,10 +52,14 @@ const AdminFeatured = () => {
     return getAdminAuthHeaders(address, (args: any) => signMessageAsync({ ...args, account: address as `0x${string}` }));
   }, [address, signMessageAsync]);
 
+  const [signInFailed, setSignInFailed] = useState(false);
   const fetchData = useCallback(async () => {
     if (!isOwner || !address) return;
     setLoading(true);
-    try {      const headers = await getHeaders();
+    try {
+      let headers: Record<string, string>;
+      try { headers = await getHeaders(); } catch { setSignInFailed(true); return; }
+      setSignInFailed(false);
       const res = await fetch(
         `${FUNCTIONS_BASE}/admin-featured`,
         { headers }
@@ -150,6 +155,7 @@ const AdminFeatured = () => {
       <SEO title="Featured Management | USDC Directory" description="Manage featured listings" />
       <Header />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        {signInFailed && <AdminSignInNotice onRetry={() => fetchData()} loading={loading} />}
         <div className="flex items-center justify-between">
           <div>
             <Button variant="ghost" size="sm" asChild className="mb-1 -ml-2 gap-1 text-muted-foreground">
