@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { safeHttpUrl } from "@/lib/safeUrl";
 import { Partner, REGION_FLAGS, CATEGORY_EMOJIS } from "@/lib/partners";
 import { Button } from "@/components/ui/button";
 import { BadgeCheck } from "lucide-react";
@@ -39,12 +40,15 @@ const USDC_FALLBACK = "https://cryptologos.cc/logos/usd-coin-usdc-logo.png";
 const PartnerCard = forwardRef<HTMLDivElement, { partner: Partner; index: number }>(({ partner, index }, ref) => {
   const isBoosted = !!partner.boosted_until && new Date(partner.boosted_until).getTime() > Date.now();
   const isAIAgent = partner.categories?.some((c) => c === "AI Agents" || c === "AI Agents & Automation");
-  const hasOwnLogo = partner.logo_url && partner.logo_url !== "" && !partner.logo_url.includes("usd-coin-usdc-logo");
+  const safeLogo = safeHttpUrl(partner.logo_url);
+  const hasOwnLogo = !!safeLogo && !safeLogo.includes("usd-coin-usdc-logo");
+  // No third-party logo lookups: a listing without its own logo gets a neutral fallback,
+  // so browsing the directory never leaks which merchants a visitor looks at.
   const logoUrl = isAIAgent && !hasOwnLogo
     ? `${BOT_LOGO}${encodeURIComponent(partner.name)}`
     : hasOwnLogo
-      ? partner.logo_url!
-      : `https://logo.clearbit.com/${partner.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || partner.name.toLowerCase().replace(/\s+/g, "") + ".com"}`;
+      ? safeLogo!
+      : USDC_FALLBACK;
 
   const isNew = partner.created_at
     ? Date.now() - new Date(partner.created_at).getTime() < 7 * 24 * 60 * 60 * 1000

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { safeLogoUrl } from "@/lib/safeUrl";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -101,9 +102,7 @@ export default function Leaderboard() {
             {[ranked[1], ranked[0], ranked[2]].map((p, i) => {
               const rank = i === 1 ? 1 : i === 0 ? 2 : 3;
               const tier = scoreTier(p.usdc_score ?? 0);
-              const logoUrl = p.logo_url && p.logo_url !== ""
-                ? p.logo_url
-                : `https://logo.clearbit.com/${p.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || p.name.toLowerCase() + ".com"}`;
+              const logoUrl = safeLogoUrl(p.logo_url);
               return (
                 <Link
                   key={p.id}
@@ -147,9 +146,7 @@ export default function Leaderboard() {
             <ul className="divide-y divide-border/50">
               {ranked.map((p, idx) => {
                 const tier = scoreTier(p.usdc_score ?? 0);
-                const logoUrl = p.logo_url && p.logo_url !== ""
-                  ? p.logo_url
-                  : `https://logo.clearbit.com/${p.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || p.name.toLowerCase() + ".com"}`;
+                const logoUrl = safeLogoUrl(p.logo_url);
                 return (
                   <motion.li
                     key={p.id}

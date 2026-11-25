@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
+import { safeLogoUrl } from "@/lib/safeUrl";
+import { FUNCTIONS_BASE } from "@/lib/functionsUrl";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
@@ -55,7 +56,7 @@ const AdminFeatured = () => {
     setLoading(true);
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-featured`,
+        `${FUNCTIONS_BASE}/admin-featured`,
         { headers }
       );
       handleAdminResponse(res);
@@ -86,7 +87,7 @@ const AdminFeatured = () => {
     setToggling(partnerId);
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-featured`,
+        `${FUNCTIONS_BASE}/admin-featured`,
         {
           method: "POST",
           headers,
@@ -121,10 +122,7 @@ const AdminFeatured = () => {
       p.categories.some((c) => c.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const logoUrl = (p: PartnerRow) =>
-    p.logo_url && p.logo_url !== ""
-      ? p.logo_url
-      : `https://logo.clearbit.com/${p.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || p.name.toLowerCase().replace(/\s+/g, "") + ".com"}`;
+  const logoUrl = (p: PartnerRow) => safeLogoUrl(p.logo_url);
 
   if (!isConnected || !isOwner) {
     return (

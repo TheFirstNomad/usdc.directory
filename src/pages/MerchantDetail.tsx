@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { safeHttpUrl, safeLogoUrl } from "@/lib/safeUrl";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { BadgeCheck, ExternalLink, ArrowLeft, Share2, Send, Trophy, Star, Zap } from "lucide-react";
@@ -100,9 +101,7 @@ const MerchantDetail = () => {
     return;
   };
 
-  const logoUrl = partner?.logo_url && partner.logo_url !== ""
-    ? partner.logo_url
-    : `https://logo.clearbit.com/${partner?.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || "circle.com"}`;
+  const logoUrl = safeLogoUrl(partner?.logo_url);
 
   const score = (partner as any)?.usdc_score ?? 0;
 
@@ -160,7 +159,7 @@ const MerchantDetail = () => {
           "@type": "Organization",
           name: partner.name,
           description: partner.description,
-          url: partner.website || undefined,
+          url: safeHttpUrl(partner.website) ?? undefined,
           logo: logoUrl,
           areaServed: partner.region,
           knowsAbout: partner.categories,
@@ -260,12 +259,12 @@ const MerchantDetail = () => {
           <div className="space-y-4">
             {/* Actions */}
             <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-              {partner?.website && partner.website.trim() !== "" && (
+              {safeHttpUrl(partner?.website) && (
                 <Button
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold"
                   asChild
                 >
-                  <a href={partner.website} target="_blank" rel="noopener noreferrer">
+                  <a href={safeHttpUrl(partner.website) ?? undefined} target="_blank" rel="noopener noreferrer">
                     Visit Site <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </Button>

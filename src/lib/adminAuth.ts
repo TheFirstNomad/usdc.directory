@@ -8,10 +8,11 @@
  * pass expires, the wallet changes, or the tab closes.
  */
 
+import { FUNCTIONS_BASE } from "@/lib/functionsUrl";
+
 /** The owner wallet that controls all admin edge functions. Must match OWNER_WALLET in _shared/admin-auth.ts. */
 export const OWNER_WALLET = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
 const STORAGE_KEY = "usdc-directory-admin-session";
 /** Refresh slightly before the server-side expiry. */
 const EXPIRY_MARGIN_MS = 60_000;
@@ -61,7 +62,7 @@ async function createSession(
 ): Promise<StoredSession> {
   const timestamp = Date.now();
   const signature = await signMessage({ message: buildAdminMessage(timestamp) });
-  const res = await fetch(`https://${projectId}.supabase.co/functions/v1/admin-session`, {
+  const res = await fetch(`${FUNCTIONS_BASE}/admin-session`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

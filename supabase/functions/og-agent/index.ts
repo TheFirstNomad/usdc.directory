@@ -60,8 +60,9 @@ Deno.serve(async (req) => {
       .eq("id", id)
       .maybeSingle();
 
-    const name = escapeXml(data?.name || "USDC Directory");
-    const emoji = data?.logo_emoji || "🤖";
+    // Truncate BEFORE escaping so an entity (e.g. &amp;) is never cut in half.
+    const name = escapeXml(String(data?.name || "USDC Directory").slice(0, 28));
+    const emoji = escapeXml(String(data?.logo_emoji || "🤖").slice(0, 8));
     const cats = (data?.categories || []).slice(0, 3).join(" · ");
     const score = data?.usdc_score ?? 0;
     const descLines = wrap(data?.description || "Discover businesses, AI agents, and apps accepting USDC.", 60, 3);
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
   <circle cx="120" cy="540" r="140" fill="#5cbdff" opacity="0.1"/>
   <text x="80" y="120" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="36" fill="#5cbdff" font-weight="600">USDC Directory</text>
   <text x="80" y="180" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="120">${emoji}</text>
-  <text x="80" y="360" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="72" fill="#ffffff" font-weight="800">${name.slice(0, 28)}</text>
+  <text x="80" y="360" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="72" fill="#ffffff" font-weight="800">${name}</text>
   ${descLines.map((l, i) => `<text x="80" y="${430 + i * 44}" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="30" fill="#cbd5e1">${escapeXml(l)}</text>`).join("\n  ")}
   <rect x="80" y="560" width="${Math.max(120, cats.length * 12 + 40)}" height="48" rx="24" fill="url(#accent)"/>
   <text x="${80 + Math.max(60, (cats.length * 12 + 40) / 2)}" y="592" font-family="system-ui, sans-serif" font-size="22" fill="#ffffff" text-anchor="middle" font-weight="600">${escapeXml(cats || "USDC")}</text>

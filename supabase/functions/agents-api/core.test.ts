@@ -11,7 +11,7 @@ function mockDb(rows: unknown[] = []) {
   const builder = (table: string) => {
     let limitN = Infinity;
     const b: any = {
-      select: () => b, eq: () => b, gte: () => b, contains: () => b, or: () => b, order: () => b,
+      select: () => b, eq: () => b, neq: () => b, in: () => b, gte: () => b, contains: () => b, or: () => b, order: () => b,
       limit: (n: number) => { limitN = n; return b; },
       maybeSingle: () => Promise.resolve({ data: null, error: null }),
       insert: (arg: unknown) => { log.push({ table, op: "insert", arg }); return Promise.resolve({ error: null }); },
@@ -123,6 +123,39 @@ Deno.test("Gateway verify failure serves nothing", async () => {
     const payload = { x402Version: 2, accepted: { network: "eip155:8453" }, payload: { signature: "0x", authorization: { from: "0xp", to: TREASURY, value: "10000", validAfter: "0", validBefore: "9999999999", nonce: "0x2" } } };
     const g = await gatePayment(db, { xPayment: btoa(JSON.stringify(payload)) }, "list_agents", resourceFor("/agents"), "/agents");
     assertEquals(g.ok, false);
-    assertEquals(db.log.length, 0);
+    // Only the rate-limit counter may be written; no payment or nonce rows.
+    assertEquals(db.log.filter((l) => l.table !== "agent_rate_limits").length, 0);
   } finally { gatewayClient.post = orig; }
+});
+
+Deno.test("self-list rejects script URLs and unknown input shapes before any payment", () => {
+  const base = { name: "Bot", wallet_address: "0xABCDEFabcdef0123456789abcdef0123456789AB", description: "d" };
+  assertEquals(validateSelfList({ ...base, website: "javascript:alert(1)" }).ok, false);
+  assertEquals(validateSelfList({ ...base, logo_url: "data:text/html,x" }).ok, false);
+  assertEquals(validateSelfList([base]).ok, false);
+  const ok = validateSelfList({ ...base, website: "monast.io", networks: ["Base", "evil"], capabilities: ["Payments", "<x>"] });
+  assertEquals(ok.ok, true);
+  if (ok.ok) {
+    assertEquals(ok.value.website, "https://monast.io/");
+    assertEquals(ok.value.networks, ["base"]);
+    assertEquals(ok.value.capabilities, ["payments"]);
+  }
+});
+
+Deno.test("legacy EIP-3009 is refused on Ethereum mainnet (server would pay gas above the price)", async () => {
+  const payload = {
+    scheme: "exact", network: "ethereum",
+    payload: { signature: "0x" + "11".repeat(65), authorization: { from: "0x" + "11".repeat(20), to: TREASURY, value: "10000", validAfter: "0", validBefore: "9999999999", nonce: "0x" + "22".repeat(32) } },
+  };
+  const db = mockDb();
+  const g = await gatePayment(db, { xPayment: btoa(JSON.stringify(payload)) }, "list_agents", resourceFor("/agents"), "/agents");
+  assertEquals(g.ok, false);
+  assertEquals(db.log.filter((l) => l.table === "x402_nonces").length, 0);
+});
+
+Deno.test("malformed legacy authorization is a 402, not a crash", async () => {
+  const payload = { scheme: "exact", network: "base", payload: { signature: "nope", authorization: { to: null, value: "x" } } };
+  const g = await gatePayment(mockDb(), { xPayment: btoa(JSON.stringify(payload)) }, "list_agents", resourceFor("/agents"), "/agents");
+  assertEquals(g.ok, false);
+  if (!g.ok) assertEquals(g.status, 402);
 });

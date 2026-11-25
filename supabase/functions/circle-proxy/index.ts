@@ -11,6 +11,8 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { validateCirclePath, ALLOWED_METHODS } from "../_shared/proxy-path.ts";
+import { clientIp } from "../_shared/input-safety.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,8 +60,7 @@ Deno.serve(async (req) => {
   // Per-caller quota (subject when signed in, otherwise client IP).
   const subject =
     (claimsData.claims as Record<string, unknown>).sub as string | undefined;
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const ip = clientIp(req.headers);
   const bucketKey = `circle-proxy:${subject ?? ip}`;
   const since = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
 
@@ -89,31 +90,40 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { method = "POST", path, body, headers: extraHeaders } = payload as {
+    const { method: rawMethod = "POST", path, body } = payload as {
       method?: string;
       path: string;
       body?: unknown;
-      headers?: Record<string, string>;
     };
+    const method = String(rawMethod).toUpperCase();
 
-    if (!path || typeof path !== "string" || !path.startsWith("/v1/stablecoinKits/")) {
+    // The path is normalised and locked to /v1/stablecoinKits/*; ".." and
+    // encoded dots/slashes are rejected so the key can never reach other APIs.
+    const safePath = validateCirclePath(path);
+    if (!safePath) {
       return new Response(
         JSON.stringify({ error: "Only /v1/stablecoinKits/* endpoints are allowed" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+    if (!ALLOWED_METHODS.has(method)) {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed" }),
+        { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
-    const targetUrl = `${CIRCLE_BASE}${path}`;
+    const targetUrl = `${CIRCLE_BASE}${safePath}`;
 
+    // Caller-supplied headers are never forwarded, so Authorization cannot be overridden.
     const fetchInit: RequestInit = {
-      method: method.toUpperCase(),
+      method,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${kitKey}`,
-        ...(extraHeaders ?? {}),
       },
     };
-    if (method.toUpperCase() !== "GET" && body !== undefined) {
+    if (method !== "GET" && body !== undefined) {
       fetchInit.body = JSON.stringify(body);
     }
 
@@ -135,7 +145,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("[circle-proxy] Error:", err);
     return new Response(
-      JSON.stringify({ error: String(err) }),
+      JSON.stringify({ error: "Upstream request failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

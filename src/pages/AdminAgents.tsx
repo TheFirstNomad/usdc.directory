@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
+import { FUNCTIONS_BASE } from "@/lib/functionsUrl";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS } from "@/lib/web3";
@@ -62,7 +62,7 @@ const AdminAgents = () => {
     try {      const headers = await getAdminAuthHeaders(address, (args: any) =>
         signMessageAsync({ ...args, account: address as `0x${string}` })
       );
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/admin-agents`, { headers });
+      const res = await fetch(`${FUNCTIONS_BASE}/admin-agents`, { headers });
       handleAdminResponse(res);
       if (!res.ok) throw new Error("Failed");
       const data = await res.json();

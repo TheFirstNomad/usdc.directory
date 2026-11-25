@@ -13,14 +13,15 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
   PUBLIC_HOST, SITE, UUID_RE, BOOST_DAYS,
   gatePayment, paymentRequiredHeader, paymentResponseHeader, resourceFor, validateSelfList,
-  listAgents, getAgent, searchAgents, searchMerchants, selfListAgent, boostAgent,
+  listAgents, getAgent, searchAgents, searchMerchants, selfListAgent, boostAgent, precheckBoost,
   type GateFail, type GateOk, type RouteKey,
 } from "../_shared/agents-core.ts";
+import { clientIp } from "../_shared/input-safety.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-payment, payment-signature, x-payment-txhash, x-payment-chain, x-public-host",
+    "authorization, x-client-info, apikey, content-type, x-payment, payment-signature, x-payment-txhash, x-payment-chain, x-payment-signer, x-public-host",
   "Access-Control-Expose-Headers": "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE",
   "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
 };
@@ -54,7 +55,8 @@ async function handle(req: Request, sb: any): Promise<Response> {
     xPayment: req.headers.get("x-payment") ?? req.headers.get("payment-signature"),
     txHash: req.headers.get("x-payment-txhash"),
     chain: req.headers.get("x-payment-chain"),
-    ip: req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown",
+    signer: req.headers.get("x-payment-signer"),
+    ip: clientIp(req.headers),
   };
   const gate = (route: RouteKey, endpoint: string) => gatePayment(sb, payment, route, resource, endpoint);
   const send = (r: { status: number; body: any }, g: GateOk) => json(r.body, r.status, r.status < 300 ? okHeaders(g) : {});
@@ -96,6 +98,11 @@ async function handle(req: Request, sb: any): Promise<Response> {
     }
     const boost = path.match(/^\/agents\/([0-9a-f-]{36})\/boost$/i);
     if (method === "POST" && boost && UUID_RE.test(boost[1])) {
+      // Reject unknown / non-agent targets before taking any payment.
+      if (payment.xPayment || payment.txHash) {
+        const bad = await precheckBoost(sb, boost[1]);
+        if (bad) return json(bad.body, bad.status);
+      }
       const g = await gate("boost", path); if (!g.ok) return failResponse(g);
       return send(await boostAgent(sb, boost[1], g), g);
     }
@@ -116,7 +123,7 @@ async function handle(req: Request, sb: any): Promise<Response> {
     return json({ error: "not found", path }, 404);
   } catch (e) {
     console.error("agents-api error:", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: "internal error" }, 500);
   }
 }
 

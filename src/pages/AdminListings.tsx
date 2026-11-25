@@ -1,5 +1,5 @@
 // Admin Manage Listings page — full CRUD table for partners
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
+import { FUNCTIONS_BASE } from "@/lib/functionsUrl";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
@@ -76,7 +76,7 @@ const AdminListings = () => {
     setLoading(true);
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings`,
+        `${FUNCTIONS_BASE}/admin-listings`,
         { headers }
       );
       handleAdminResponse(res);
@@ -104,7 +104,7 @@ const AdminListings = () => {
   const handleDelete = useCallback(async (id: string) => {
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings`,
+        `${FUNCTIONS_BASE}/admin-listings`,
         {
           method: "DELETE",
           headers: { ...headers, "Content-Type": "application/json" },
@@ -133,7 +133,7 @@ const AdminListings = () => {
         region: editPartner.region,
       };
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings`,
+        `${FUNCTIONS_BASE}/admin-listings`,
         {
           method: "PUT",
           headers: { ...headers, "Content-Type": "application/json" },
@@ -161,7 +161,7 @@ const AdminListings = () => {
   const handleToggleFeatured = useCallback(async (id: string, featured: boolean) => {
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings`,
+        `${FUNCTIONS_BASE}/admin-listings`,
         {
           method: "PUT",
           headers: { ...headers, "Content-Type": "application/json" },
@@ -180,7 +180,7 @@ const AdminListings = () => {
     setActionLoadingId(id);
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings`,
+        `${FUNCTIONS_BASE}/admin-listings`,
         {
           method: "PUT",
           headers: { ...headers, "Content-Type": "application/json" },
@@ -208,7 +208,7 @@ const AdminListings = () => {
     setBulkBusy(true);
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings`,
+        `${FUNCTIONS_BASE}/admin-listings`,
         {
           method: "POST",
           headers: { ...headers, "Content-Type": "application/json" },
@@ -237,7 +237,7 @@ const AdminListings = () => {
     setAuditLoading(true);
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-listings?resource=audit`,
+        `${FUNCTIONS_BASE}/admin-listings?resource=audit`,
         { headers }
       );
       const body = await res.json();

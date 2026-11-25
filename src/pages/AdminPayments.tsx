@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID as string;
+import { FUNCTIONS_BASE } from "@/lib/functionsUrl";
 import { useAppKitAccount } from "@reown/appkit/react";
 import { useSignMessage } from "wagmi";
 import { TREASURY_ADDRESS, LISTING_FEE_DISPLAY } from "@/lib/web3";
@@ -124,7 +124,7 @@ const AdminPayments = () => {
     if (!background) setLoading(true);
     try {
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-payments`,
+        `${FUNCTIONS_BASE}/admin-payments`,
         { headers }
       );
       handleAdminResponse(res);
@@ -154,7 +154,7 @@ const AdminPayments = () => {
   const handleDelete = useCallback(async (id: string) => {
     try {      const headers = await getHeaders();
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/admin-payments`,
+        `${FUNCTIONS_BASE}/admin-payments`,
         {
           method: "DELETE",
           headers,

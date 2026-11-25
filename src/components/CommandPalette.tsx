@@ -3,6 +3,7 @@
  * Powered by cmdk (already installed). Searches partners by name, category, region.
  */
 import { useEffect, useState, useCallback } from "react";
+import { safeLogoUrl } from "@/lib/safeUrl";
 import { useNavigate } from "react-router-dom";
 import { Search, BadgeCheck, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -87,10 +88,7 @@ export default function CommandPalette({ partners, open, onOpenChange }: Command
           ) : (
             <ul>
               {results.map((p) => {
-                const logoUrl =
-                  p.logo_url && p.logo_url !== ""
-                    ? p.logo_url
-                    : `https://logo.clearbit.com/${p.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || p.name.toLowerCase().replace(/\s+/g, "") + ".com"}`;
+                const logoUrl = safeLogoUrl(p.logo_url);
                 const primaryCat = p.categories[0];
                 return (
                   <li key={p.id}>

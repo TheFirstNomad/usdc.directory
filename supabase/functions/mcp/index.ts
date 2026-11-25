@@ -9,15 +9,18 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import {
   MCP_TOOLS, PUBLIC_HOST, SITE, ROUTES, UUID_RE,
   gatePayment, paymentResponseHeader, resourceFor, validateSelfList,
-  listAgents, getAgent, searchAgents, searchMerchants, selfListAgent, boostAgent,
+  listAgents, getAgent, searchAgents, searchMerchants, selfListAgent, boostAgent, precheckBoost,
 } from "../_shared/agents-core.ts";
+import { clientIp } from "../_shared/input-safety.ts";
 
 const PROTOCOL_VERSION = "2025-06-18";
+/** A single request may carry at most this many JSON-RPC messages. */
+const MAX_BATCH = 10;
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "content-type, authorization, apikey, x-client-info, mcp-session-id, mcp-protocol-version, x-payment, x-payment-txhash, x-payment-chain, x-public-host",
+    "content-type, authorization, apikey, x-client-info, mcp-session-id, mcp-protocol-version, x-payment, x-payment-txhash, x-payment-chain, x-payment-signer, x-public-host",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
   "Access-Control-Expose-Headers": "mcp-session-id, PAYMENT-RESPONSE",
 };
@@ -27,7 +30,7 @@ const rpcResult = (id: unknown, result: unknown) => ({ jsonrpc: "2.0", id, resul
 const rpcError = (id: unknown, code: number, message: string, data?: unknown) =>
   ({ jsonrpc: "2.0", id, error: data === undefined ? { code, message } : { code, message, data } });
 
-type Hdr = { xPayment: string | null; txHash: string | null; chain: string | null; ip: string };
+type Hdr = { xPayment: string | null; txHash: string | null; chain: string | null; signer: string | null; ip: string };
 
 async function callTool(sb: any, id: unknown, params: any, hdr: Hdr) {
   const tool = MCP_TOOLS.find((t) => t.name === params?.name);
@@ -51,10 +54,18 @@ async function callTool(sb: any, id: unknown, params: any, hdr: Hdr) {
     return rpcError(id, -32602, "q is required");
   }
 
+  const paymentOffered = !!(meta["x402/payment"] ?? hdr.xPayment ?? meta["x402/txHash"] ?? hdr.txHash);
+  if (tool.route === "boost" && paymentOffered) {
+    // Reject unknown / non-agent targets before taking any payment.
+    const bad = await precheckBoost(sb, String(args.id).trim());
+    if (bad) return rpcError(id, -32602, bad.body?.error ?? "invalid boost target");
+  }
+
   const g = await gatePayment(sb, {
     xPayment: meta["x402/payment"] ?? hdr.xPayment,
     txHash: meta["x402/txHash"] ?? hdr.txHash,
     chain: meta["x402/chain"] ?? hdr.chain,
+    signer: meta["x402/signer"] ?? hdr.signer,
     ip: hdr.ip,
   }, tool.route, resourceFor(path), path);
   if (!g.ok) {
@@ -126,10 +137,18 @@ Deno.serve(async (req) => {
     xPayment: req.headers.get("x-payment"),
     txHash: req.headers.get("x-payment-txhash"),
     chain: req.headers.get("x-payment-chain"),
-    ip: req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown",
+    signer: req.headers.get("x-payment-signer"),
+    ip: clientIp(req.headers),
   };
   const messages = Array.isArray(body) ? body : [body];
-  const responses = (await Promise.all(messages.map((m) => handleRpc(sb, m, hdr)))).filter((r) => r !== null);
+  if (messages.length === 0 || messages.length > MAX_BATCH) {
+    return new Response(JSON.stringify(rpcError(null, -32600, `Batch must contain 1 to ${MAX_BATCH} messages`)), { status: 400, headers: jsonHeaders });
+  }
+  // Sequential on purpose: paid calls in one batch must not race each other
+  // (a shared payment header can only ever fund one call).
+  const results: unknown[] = [];
+  for (const m of messages) results.push(await handleRpc(sb, m, hdr));
+  const responses = results.filter((r) => r !== null);
   if (responses.length === 0) return new Response(null, { status: 202, headers: cors });
   return new Response(JSON.stringify(Array.isArray(body) ? responses : responses[0]), {
     headers: { ...jsonHeaders, "mcp-session-id": crypto.randomUUID() },

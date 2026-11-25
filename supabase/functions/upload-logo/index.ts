@@ -2,13 +2,16 @@
 // `logos` bucket. Hardened against spam and abuse:
 //   - wallet_address MUST be a valid EVM/Solana/Sui/Near address (no anon uploads).
 //   - IP-based rate limit: max 3 uploads per IP per hour (logo_upload_rate_limits table).
-//   - SVG allowed — Supabase Storage CDN is a different origin so scripts are harmless.
+//   - SVG allowed, but screened: scripts, event handlers, external references
+//     and embedded documents are rejected (see _shared/svg-safety.ts).
 //   - File size capped at 2 MB.
 //   - Random filename suffix prevents path-guessing overwrites (upsert: false).
 //   - Orphan cleanup: logos not referenced by any listing after 24h should be
 //     deleted by a scheduled pg_cron job (add separately in Supabase dashboard).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { checkSvg } from "../_shared/svg-safety.ts";
+import { clientIp } from "../_shared/input-safety.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,8 +50,6 @@ serve(async (req) => {
       );
     }
 
-    // SVG is safe here — Supabase Storage serves from its own CDN domain,
-    // not the app origin, so inline scripts in SVG cannot access app cookies.
     const allowedTypes = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"];
     if (!allowedTypes.includes(file.type)) {
       return new Response(
@@ -71,10 +72,7 @@ serve(async (req) => {
 
     // ── IP rate limiting ─────────────────────────────────────────────────────
     // Extract real client IP from Cloudflare or standard proxy headers.
-    const ip =
-      req.headers.get("cf-connecting-ip") ??
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      "unknown";
+    const ip = clientIp(req.headers);
 
     const windowStart = new Date(
       Date.now() - RATE_LIMIT_WINDOW_HOURS * 60 * 60 * 1000
@@ -116,6 +114,17 @@ serve(async (req) => {
     const fileName = `${safeWallet}-${Date.now()}-${rand}.${ext}`;
 
     const arrayBuffer = await file.arrayBuffer();
+
+    // SVG can carry script or external content: screen it before it is stored on a public URL.
+    if (file.type === "image/svg+xml") {
+      const svgProblem = checkSvg(new TextDecoder().decode(arrayBuffer));
+      if (svgProblem) {
+        return new Response(
+          JSON.stringify({ error: svgProblem }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     const { error: uploadError } = await supabase.storage
       .from("logos")

@@ -2,7 +2,8 @@
  * submit-listing — Persists a new listing or update after on-chain payment.
  *
  * Accepts payments on ANY supported chain (EVM mainnets + Solana + Sui + Near).
- * 1 USDC fee for listing, 1 USDC for update.
+ * Fees: 3 USDC standard listing, 28 USDC featured listing, 1 USDC to update a listing.
+ * Verification and single-use claiming live in ../_shared/payment-verify.ts.
  *
  * POST body:
  *   {
@@ -15,7 +16,8 @@
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createPublicClient, http, decodeEventLog, getAddress, parseAbi } from "https://esm.sh/viem@2.21.55";
+import { verifyUsdcPayment, claimPayment, releasePayment, normalizeChainKey, EVM_CHAINS, NON_EVM_KEYS } from "../_shared/payment-verify.ts";
+import { safeHttpUrl, cleanText } from "../_shared/input-safety.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,59 +27,11 @@ const corsHeaders = {
 const FEE_STANDARD    = 3_000_000n;  // 3 USDC — standard listing
 const FEE_FEATURED    = 28_000_000n; // 28 USDC — featured listing (standard + 25 USDC carousel slot)
 const FEE_UPDATE      = 1_000_000n;  // 1 USDC — edit an existing listing
-const FEE_BASE_UNITS  = FEE_STANDARD; // default used by verifyEvm / verifySolana / etc.
-const EVM_TREASURY = "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c".toLowerCase();
-const SOLANA_TREASURY = "4RsopWwQuDLjNC4AdCd3Uzq7w58i9FoE69EgNTB3d4Be";
-const SUI_TREASURY = "0xa15979dcd7429463cdf01aae184cb32e33fcf15d3e46067238ccc384115f9979".toLowerCase();
-const NEAR_TREASURY = "b63a64053204d89290b73e3dbdce660a2f29d211cd1c400f4a499ac165f98171";
 
-const SOLANA_USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const SUI_USDC_TYPE = "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC";
-const NEAR_USDC_CONTRACT = "17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1";
 
-interface EvmChain {
-  rpc: string;
-  rpcFallback?: string; // secondary RPC tried if the primary times out
-  usdc: string;         // contract address (any-case)
-  usdcDecimals?: number; // defaults to 6; BNB Peg-USDC uses 18
-}
-const EVM_CHAINS: Record<string, EvmChain> = {
-  arc:       { rpc: "https://rpc.mainnet.arc.io",                      usdc: "0x3600000000000000000000000000000000000000" },
-  base:      { rpc: "https://mainnet.base.org",                        usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" },
-  // Ethereum: primary is LlamaRPC, Cloudflare is the fallback to prevent timeout failures.
-  ethereum:  { rpc: "https://eth.llamarpc.com", rpcFallback: "https://cloudflare-eth.com", usdc: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
-  arbitrum:  { rpc: "https://arb1.arbitrum.io/rpc",                    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831" },
-  optimism:  { rpc: "https://mainnet.optimism.io",                     usdc: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" },
-  polygon:   { rpc: "https://polygon-rpc.com",                         usdc: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359" },
-  avalanche: { rpc: "https://api.avax.network/ext/bc/C/rpc",           usdc: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E" },
-  // BNB: Binance-Peg USDC has 18 decimals (not 6). usdcDecimals tells verifyEvm
-  // to normalise the raw Transfer value before comparing against the fee.
-  bnb:       { rpc: "https://bsc-dataseed.binance.org",                usdc: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", usdcDecimals: 18 },
-  linea:     { rpc: "https://rpc.linea.build",                         usdc: "0x176211869cA2b568f2A7D4EE941E073a821EE1ff" },
-  // Monad mainnet: native USDC bridged via LayerZero OFT.
-  monad:     { rpc: "https://monad-mainnet.drpc.org",                  usdc: "0xf817257fed379853cDe0fa4F97AB987181B1E5f3" },
-};
 
-const SUPPORTED_CHAINS = new Set<string>([
-  ...Object.keys(EVM_CHAINS), "solana", "sui", "near",
-]);
+const SUPPORTED_CHAINS = new Set<string>([...Object.keys(EVM_CHAINS), ...NON_EVM_KEYS]);
 
-/**
- * Normalises every chain spelling the front-end or an agent might send, so a
- * confirmed payment is never rejected over naming (e.g. "Arc Mainnet" → "arc").
- */
-function normalizeChainKey(raw: unknown): string {
-  const c = String(raw ?? "base").trim().toLowerCase().replace(/[\s-]+/g, "_");
-  if (c === "arc" || c === "arc_mainnet" || c === "arcmainnet" || c === "5042") return "arc";
-  if (c === "base" || c === "base_mainnet" || c === "8453") return "base";
-  if (c === "bsc" || c === "bnb_chain" || c === "binance" || c === "binance_smart_chain") return "bnb";
-  if (c === "eth" || c === "mainnet" || c === "ethereum_mainnet") return "ethereum";
-  if (c === "matic") return "polygon";
-  if (c === "avax") return "avalanche";
-  if (c === "op" || c === "op_mainnet") return "optimism";
-  if (c === "arb" || c === "arbitrum_one") return "arbitrum";
-  return c;
-}
 
 const ALLOWED_CATEGORIES = new Set([
   "AI & Agentic Platforms","Bridge Apps","Bridge SDKs","DeFi Apps","Digital Wallets",
@@ -90,216 +44,19 @@ const ALLOWED_REGIONS = new Set([
 ]);
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EVM_TX_RE = /^0x[0-9a-fA-F]{64}$/;
-const SOLANA_TX_RE = /^[1-9A-HJ-NP-Za-km-z]{43,90}$/;
-const SUI_TX_RE = /^[1-9A-HJ-NP-Za-km-z]{40,50}$/;
-const NEAR_TX_RE = /^[0-9a-fA-F]{32,64}$|^[1-9A-HJ-NP-Za-km-z]{40,50}$/;
-
-function isValidUrl(s: string): boolean {
-  try {
-    const u = new URL(s);
-    return u.protocol === "http:" || u.protocol === "https:";
-  } catch { return false; }
-}
-
-const ERC20_TRANSFER_ABI = parseAbi([
-  "event Transfer(address indexed from, address indexed to, uint256 value)",
-]);
-
-// ── EVM verification ────────────────────────────────────────────────
-async function verifyEvmWithRpc(rpc: string, cfg: EvmChain, txHash: string, minFee: bigint): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
-  const client = createPublicClient({ transport: http(rpc) });
-  const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
-  if (!receipt || receipt.status !== "success") return { ok: false, error: "Transaction not successful" };
-
-  const usdcAddr = getAddress(cfg.usdc).toLowerCase();
-  // BNB Peg-USDC has 18 decimals; all other USDC contracts use 6.
-  // Normalise to 6-decimal units before comparing against the fee threshold.
-  const srcDecimals = cfg.usdcDecimals ?? 6;
-  const scaleFactor = srcDecimals > 6 ? 10n ** BigInt(srcDecimals - 6) : 1n;
-
-  let total = 0n;
-  let payer: string | null = null;
-  for (const log of receipt.logs) {
-    if (log.address.toLowerCase() !== usdcAddr) continue;
-    try {
-      const decoded = decodeEventLog({ abi: ERC20_TRANSFER_ABI, data: log.data, topics: log.topics });
-      if (decoded.eventName === "Transfer") {
-        const args = decoded.args as { from: string; to: string; value: bigint };
-        if (args.to.toLowerCase() === EVM_TREASURY) {
-          // Normalise to 6-decimal units for the fee comparison.
-          total += args.value / scaleFactor;
-          if (!payer) payer = args.from.toLowerCase();
-        }
-      }
-    } catch { /* not a Transfer log */ }
-  }
-  if (total < minFee) return { ok: false, error: `Insufficient payment: ${total} units (6-decimal) < ${minFee} required` };
-  return { ok: true, payer: payer ?? "unknown" };
-}
-
-async function verifyEvm(chainKey: string, txHash: string, minFee = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
-  const cfg = EVM_CHAINS[chainKey];
-  if (!cfg) return { ok: false, error: `On-chain verification not configured for ${chainKey}.` };
-  if (!EVM_TX_RE.test(txHash)) return { ok: false, error: "Invalid EVM tx hash" };
-
-  try {
-    return await verifyEvmWithRpc(cfg.rpc, cfg, txHash, minFee);
-  } catch (e) {
-    // Primary RPC failed — try fallback if configured (e.g. Cloudflare for Ethereum).
-    if (cfg.rpcFallback) {
-      try {
-        return await verifyEvmWithRpc(cfg.rpcFallback, cfg, txHash, minFee);
-      } catch (e2) {
-        return { ok: false, error: `RPC error (primary + fallback): ${(e2 as Error).message}` };
-      }
-    }
-    return { ok: false, error: `RPC error: ${(e as Error).message}` };
-  }
-}
-
-// ── Solana verification (SPL token transfer of USDC mint to treasury) ─
-async function verifySolana(txHash: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
-  if (!SOLANA_TX_RE.test(txHash)) return { ok: false, error: "Invalid Solana tx signature" };
-  try {
-    const res = await fetch("https://api.mainnet-beta.solana.com", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0", id: 1, method: "getTransaction",
-        params: [txHash, { encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }],
-      }),
-    });
-    const data = await res.json();
-    const tx = data?.result;
-    if (!tx) return { ok: false, error: "Transaction not found on Solana mainnet" };
-    if (tx.meta?.err) return { ok: false, error: "Transaction failed on Solana" };
-
-    // Walk postTokenBalances - preTokenBalances to find a USDC delta to treasury wallet.
-    const pre = tx.meta?.preTokenBalances ?? [];
-    const post = tx.meta?.postTokenBalances ?? [];
-    let delta = 0n;
-    let payer: string | null = null;
-    for (const p of post) {
-      if (p.mint !== SOLANA_USDC_MINT) continue;
-      if (p.owner !== SOLANA_TREASURY) continue;
-      const preMatch = pre.find((x: any) => x.accountIndex === p.accountIndex);
-      const preAmt = BigInt(preMatch?.uiTokenAmount?.amount ?? "0");
-      const postAmt = BigInt(p.uiTokenAmount?.amount ?? "0");
-      if (postAmt > preAmt) delta += postAmt - preAmt;
-    }
-    if (delta < minFee) return { ok: false, error: `Insufficient USDC to treasury: ${delta} < ${minFee}` };
-    // Payer = fee payer (first signer)
-    payer = tx.transaction?.message?.accountKeys?.[0]?.pubkey ?? null;
-    return { ok: true, payer: payer ?? "unknown" };
-  } catch (e) {
-    return { ok: false, error: `Solana RPC error: ${(e as Error).message}` };
-  }
-}
-
-// ── Sui verification ────────────────────────────────────────────────
-async function verifySui(txHash: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
-  try {
-    const res = await fetch("https://fullnode.mainnet.sui.io", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0", id: 1, method: "sui_getTransactionBlock",
-        params: [txHash, { showEffects: true, showBalanceChanges: true, showInput: true }],
-      }),
-    });
-    const data = await res.json();
-    const tx = data?.result;
-    if (!tx) return { ok: false, error: "Sui transaction not found" };
-    if (tx.effects?.status?.status !== "success") return { ok: false, error: "Sui transaction failed" };
-
-    const treasuryLc = SUI_TREASURY.toLowerCase();
-    let delta = 0n;
-    for (const bc of tx.balanceChanges ?? []) {
-      if (bc.coinType !== SUI_USDC_TYPE) continue;
-      const owner = (bc.owner?.AddressOwner ?? "").toLowerCase();
-      if (owner !== treasuryLc) continue;
-      const amt = BigInt(bc.amount);
-      if (amt > 0n) delta += amt;
-    }
-    if (delta < minFee) return { ok: false, error: `Insufficient USDC to Sui treasury: ${delta} < ${minFee}` };
-    const payer = tx.transaction?.data?.sender ?? "unknown";
-    return { ok: true, payer };
-  } catch (e) {
-    return { ok: false, error: `Sui RPC error: ${(e as Error).message}` };
-  }
-}
-
-// ── Near verification ───────────────────────────────────────────────
-async function verifyNear(txHash: string, signer?: string, minFee: bigint = FEE_BASE_UNITS): Promise<{ ok: true; payer: string } | { ok: false; error: string }> {
-  try {
-    // Near RPC `tx` requires both hash and signer_id. We try signer if provided, else use treasury.
-    const senderHint = signer && signer.length > 0 ? signer : NEAR_TREASURY;
-    const res = await fetch("https://rpc.mainnet.near.org", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0", id: 1, method: "tx",
-        params: [txHash, senderHint],
-      }),
-    });
-    const data = await res.json();
-    const tx = data?.result;
-    if (!tx) return { ok: false, error: data?.error?.data ?? "Near tx not found (include payer wallet)" };
-
-    // Walk receipts for an ft_transfer to NEAR_TREASURY of amount >= FEE_BASE_UNITS
-    const receipts = tx.receipts_outcome ?? [];
-    let ok = false;
-    for (const r of receipts) {
-      const logs: string[] = r.outcome?.logs ?? [];
-      for (const log of logs) {
-        // Standard ft_transfer event log: 'EVENT_JSON:{...}' OR plain "Transfer X from A to B"
-        const m = /Transfer\s+(\d+)\s+from\s+\S+\s+to\s+(\S+)/.exec(log);
-        if (m && m[2] === NEAR_TREASURY && BigInt(m[1]) >= minFee) { ok = true; break; }
-        if (log.startsWith("EVENT_JSON:")) {
-          try {
-            const ev = JSON.parse(log.slice("EVENT_JSON:".length));
-            if (ev.standard === "nep141" && ev.event === "ft_transfer") {
-              for (const d of ev.data ?? []) {
-                if (d.new_owner_id === NEAR_TREASURY && BigInt(d.amount) >= minFee) { ok = true; break; }
-              }
-            }
-          } catch { /* ignore */ }
-        }
-      }
-      if (ok) break;
-    }
-    if (!ok) return { ok: false, error: "No qualifying ft_transfer to Near treasury found in this tx" };
-    const payer = tx.transaction?.signer_id ?? "unknown";
-    return { ok: true, payer };
-  } catch (e) {
-    return { ok: false, error: `Near RPC error: ${(e as Error).message}` };
-  }
-}
-
-async function verifyPayment(chain: string, txHash: string, signerHint?: string, minFee: bigint = FEE_BASE_UNITS) {
-  if (chain === "solana") return verifySolana(txHash, minFee);
-  if (chain === "sui") return verifySui(txHash, minFee);
-  if (chain === "near") return verifyNear(txHash, signerHint, minFee);
-  return verifyEvm(chain, txHash, minFee);
-}
 
 function validateData(data: any): { ok: true; out: any } | { ok: false; error: string } {
   if (!data || typeof data !== "object") return { ok: false, error: "Missing data" };
-  const company_name = String(data.company_name ?? "").trim();
-  const description = String(data.description ?? "").trim();
+  const company_name = cleanText(data.company_name, 81);
+  const description = cleanText(data.description, 501);
   if (company_name.length < 1 || company_name.length > 80) return { ok: false, error: "company_name 1-80 chars" };
   if (description.length < 1 || description.length > 500) return { ok: false, error: "description 1-500 chars" };
 
   let website: string | null = null;
   if (data.website) {
-    let w = String(data.website).trim();
-    // Auto-prepend https:// so bare domains like "monast.io" are accepted.
-    if (w.length > 0 && !w.startsWith("http://") && !w.startsWith("https://")) {
-      w = "https://" + w;
-    }
-    if (w.length > 200 || !isValidUrl(w)) return { ok: false, error: "Invalid website URL — use https://yoursite.com" };
-    website = w;
+    // Bare domains like "monast.io" get https://; javascript:/data: and other schemes are rejected.
+    website = safeHttpUrl(data.website, 200);
+    if (!website) return { ok: false, error: "Invalid website URL: use https://yoursite.com" };
   }
   let contact_email: string | null = null;
   if (data.contact_email) {
@@ -316,9 +73,8 @@ function validateData(data: any): { ok: true; out: any } | { ok: false; error: s
 
   let logo_url: string | null = null;
   if (data.logo_url) {
-    const l = String(data.logo_url).trim();
-    if (l.length > 500 || !isValidUrl(l)) return { ok: false, error: "Invalid logo_url" };
-    logo_url = l;
+    logo_url = safeHttpUrl(data.logo_url, 500);
+    if (!logo_url) return { ok: false, error: "Invalid logo_url" };
   }
   const partner_id = data.partner_id ? String(data.partner_id) : undefined;
   return { ok: true, out: { company_name, description, website, contact_email, categories, region, logo_url, partner_id } };
@@ -369,8 +125,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (dup) return json({ error: "Transaction hash already used" }, 409);
 
-    // ── Verify the on-chain payment ──
-    const verification = await verifyPayment(chain, tx_hash, wallet_address, requiredFee);
+    // ── Verify the on-chain payment (shared verifier: normalised amounts, all chains) ──
+    const verification = await verifyUsdcPayment(chain, tx_hash, requiredFee, { signerHint: wallet_address });
     if (!verification.ok) return json({ error: `Payment verification failed: ${verification.error}` }, 402);
 
     // The wallet that actually sent the funds on-chain is the only identity we
@@ -379,6 +135,24 @@ Deno.serve(async (req) => {
     if (!verifiedPayer || verifiedPayer === "unknown")
       return json({ error: "Could not determine the paying wallet from the transaction" }, 402);
 
+    // Updates: check ownership BEFORE consuming the payment, so a wrong wallet never burns a transfer.
+    if (type === "update") {
+      const { data: owner, error: ownerErr } = await supabase
+        .from("partners").select("id, wallet_address").eq("id", partner_id!).maybeSingle();
+      if (ownerErr || !owner) return json({ error: "Partner not found" }, 404);
+      if ((owner.wallet_address || "").toLowerCase() !== verifiedPayer)
+        return json({ error: "The paying wallet is not the owner of this listing" }, 403);
+    }
+
+    // Consume the transaction exactly once across every paid feature.
+    const claim = await claimPayment(supabase, chain, tx_hash, `submit-listing:${type}`);
+    if (!claim.ok) {
+      return claim.reason === "used"
+        ? json({ error: "Transaction hash already used" }, 409)
+        : json({ error: "Payment ledger unavailable, please retry shortly" }, 503);
+    }
+
+    try {
     if (type === "listing") {
       const isFeatured = tier === "featured";
       const boostedUntil = isFeatured
@@ -453,6 +227,11 @@ Deno.serve(async (req) => {
     });
 
     return json({ success: true, partner_id, chain, verified_payer: verification.payer });
+    } catch (inner) {
+      // Delivery failed after the payment was claimed: hand the transaction back so the payer can retry.
+      await releasePayment(supabase, chain, tx_hash);
+      throw inner;
+    }
   } catch (err) {
     console.error("submit-listing error:", err);
     return json({ error: "Internal server error" }, 500);

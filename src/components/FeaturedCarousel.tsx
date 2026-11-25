@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { safeLogoUrl } from "@/lib/safeUrl";
 import { BadgeCheck, Star } from "lucide-react";
 import type { Partner } from "@/lib/partners";
 import { CATEGORY_EMOJIS } from "@/lib/partners";
@@ -20,10 +21,7 @@ const FeaturedCarousel = ({ partners }: { partners: Partner[] }) => {
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
         {uniquePartners.map((p) => {
-          const logoUrl =
-            p.logo_url && p.logo_url !== ""
-              ? p.logo_url
-              : `https://logo.clearbit.com/${p.website?.replace(/https?:\/\//, "").replace(/\/.*/, "") || p.name.toLowerCase().replace(/\s+/g, "") + ".com"}`;
+          const logoUrl = safeLogoUrl(p.logo_url);
           const isBoosted = !!p.boosted_until && new Date(p.boosted_until).getTime() > Date.now();
           const primaryCat = p.categories[0];
 

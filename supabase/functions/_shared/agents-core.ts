@@ -3,16 +3,15 @@
 // prices, payment checks, self-listing and boosting live in exactly one place.
 
 import {
-  createPublicClient,
   createWalletClient,
   http,
-  decodeEventLog,
   getAddress,
   parseAbi,
   recoverTypedDataAddress,
 } from "https://esm.sh/viem@2.21.55";
 import { privateKeyToAccount } from "https://esm.sh/viem@2.21.55/accounts";
-import { verifyUsdcPayment } from "./payment-verify.ts";
+import { verifyUsdcPayment, claimPayment, releasePayment, EVM_CHAINS } from "./payment-verify.ts";
+import { safeHttpUrl, cleanText, cleanCapabilities, cleanNetworks } from "./input-safety.ts";
 
 // deno-lint-ignore no-explicit-any
 type Sb = any;
@@ -226,45 +225,36 @@ export function paymentRequiredHeader(reqs: ReturnType<typeof paymentRequirement
   return encodeB64Json({ x402Version: 2, resource: reqs.resource, accepts: reqs.accepts, extensions: reqs.extensions });
 }
 
-// ── On-chain EVM verification ───────────────────────────────────────────────
-const ERC20_TRANSFER_ABI = parseAbi(["event Transfer(address indexed from, address indexed to, uint256 value)"]);
-
-async function verifyOnChainPayment(txHash: string, chainId: number, amount: bigint):
-  Promise<{ ok: true; from: string } | { ok: false; reason: string }> {
-  const cfg = CHAINS[chainId];
-  if (!cfg) return { ok: false, reason: "unsupported chain" };
-  if (!/^0x[0-9a-fA-F]{64}$/.test(txHash)) return { ok: false, reason: "bad tx hash" };
-  const client = createPublicClient({ transport: http(cfg.rpc) });
-  let receipt;
-  try { receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` }); }
-  catch (e) { return { ok: false, reason: `receipt fetch failed: ${(e as Error).message}` }; }
-  if (!receipt || receipt.status !== "success") return { ok: false, reason: "tx not successful" };
-  const usdcAddr = getAddress(cfg.usdc).toLowerCase();
-  let from: string | null = null;
-  let total = 0n;
-  for (const log of receipt.logs) {
-    if (log.address.toLowerCase() !== usdcAddr) continue;
-    try {
-      const d = decodeEventLog({ abi: ERC20_TRANSFER_ABI, data: log.data, topics: log.topics });
-      const a = d.args as { from: string; to: string; value: bigint };
-      if (a.to.toLowerCase() === TREASURY) { total += a.value; if (!from) from = a.from.toLowerCase(); }
-    } catch { /* not a Transfer */ }
-  }
-  const required = cfg.usdcDecimals && cfg.usdcDecimals > 6 ? amount * 10n ** BigInt(cfg.usdcDecimals - 6) : amount;
-  if (total < required) return { ok: false, reason: `paid ${total} < required ${required}` };
-  return { ok: true, from: from ?? "unknown" };
-}
-
 // ── Legacy direct EIP-3009 path (v1 network names like "base") ──────────────
+// The server's settlement key pays gas for this path, so it is limited to
+// low-fee networks where USDC supports transferWithAuthorization with the
+// "USD Coin" v2 domain. Ethereum mainnet (gas can exceed the price of a call),
+// BNB (no EIP-3009), Arc, Linea and Monad are on-chain-hash or Gateway only.
+export const LEGACY_EIP3009_NETWORKS = ["base", "arbitrum", "optimism", "polygon", "avalanche"] as const;
+
 type Auth = { from: `0x${string}`; to: `0x${string}`; value: string; validAfter: string; validBefore: string; nonce: `0x${string}` };
+
+const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
+const BYTES32_RE = /^0x[0-9a-fA-F]{64}$/;
+const SIG_RE = /^0x[0-9a-fA-F]{130}$/;
+const UINT_RE = /^[0-9]{1,40}$/;
 
 async function verifyEip3009(parsed: any, amount: bigint):
   Promise<{ ok: true; payer: string; nonce: string; network: string; chainId: number; auth: Auth; signature: `0x${string}` } | { ok: false; reason: string }> {
-  const cfg = Object.values(CHAINS).find((c) => c.network === parsed.network);
-  if (!cfg) return { ok: false, reason: `unknown network ${parsed.network}` };
+  const network = String(parsed?.network ?? "");
+  if (!(LEGACY_EIP3009_NETWORKS as readonly string[]).includes(network)) {
+    return { ok: false, reason: `direct EIP-3009 is not accepted on '${network}'. Use the Gateway x402 scheme or the on-chain tx-hash fallback` };
+  }
+  const cfg = Object.values(CHAINS).find((c) => c.network === network);
+  if (!cfg) return { ok: false, reason: `unknown network ${network}` };
   if (parsed.scheme !== "exact") return { ok: false, reason: "scheme must be 'exact'" };
   const a: Auth | undefined = parsed.payload?.authorization;
-  if (!a) return { ok: false, reason: "missing authorization" };
+  const signature = parsed.payload?.signature;
+  if (!a || typeof a !== "object") return { ok: false, reason: "missing authorization" };
+  if (!ADDR_RE.test(String(a.from)) || !ADDR_RE.test(String(a.to))) return { ok: false, reason: "malformed address" };
+  if (!BYTES32_RE.test(String(a.nonce))) return { ok: false, reason: "malformed nonce" };
+  if (![a.value, a.validAfter, a.validBefore].every((v) => UINT_RE.test(String(v)))) return { ok: false, reason: "malformed amount or validity window" };
+  if (!SIG_RE.test(String(signature))) return { ok: false, reason: "malformed signature" };
   if (a.to.toLowerCase() !== TREASURY) return { ok: false, reason: "wrong recipient" };
   if (BigInt(a.value) < amount) return { ok: false, reason: "insufficient value" };
   const now = Math.floor(Date.now() / 1000);
@@ -336,6 +326,8 @@ export type PaymentInput = {
   xPayment?: string | Record<string, unknown> | null;
   txHash?: string | null;
   chain?: string | null;
+  /** Paying account id; only required for Near (X-Payment-Signer). */
+  signer?: string | null;
   ip?: string;
 };
 export type GateOk = { ok: true; paymentId: string; payer: string; chain: string; scheme: string; txHash?: string };
@@ -359,41 +351,52 @@ export async function gatePayment(sb: Sb, p: PaymentInput, route: RouteKey, reso
     return fail402();
   }
 
+  // Every payment attempt (valid or not) is rate limited per caller, so bad
+  // transaction hashes cannot be used to hammer the chain RPC endpoints.
+  if (!(await rateLimitOk(sb, `try:${p.ip ?? "unknown"}`, "paid-attempt", 120, 60))) {
+    return { ok: false, status: 429, body: { error: "rate limited" } };
+  }
+
   // On-chain fallback
   if (p.txHash) {
-    const txHash = p.txHash;
+    const txHash = String(p.txHash).trim().slice(0, 200);
     const resolved = resolveChain(p.chain);
     if (!resolved) {
       return { ok: false, status: 400, body: { error: "unsupported X-Payment-Chain", supported: [...Object.values(CHAINS).map((c) => c.network), ...NON_EVM_CHAINS.map((c) => c.key)] } };
     }
-    const { data: existing } = await sb.from("agent_api_payments").select("id").eq("payment_id", txHash).eq("endpoint", endpoint).maybeSingle();
-    if (existing) return { ok: false, status: 409, body: { error: "tx hash already used for this endpoint" } };
-    let network: string, payer: string;
-    if (resolved.kind === "evm") {
-      const v = await verifyOnChainPayment(txHash, resolved.cfg.id, amount);
-      if (!v.ok) return fail402(`payment invalid: ${v.reason}`);
-      network = resolved.cfg.network; payer = v.from;
-    } else {
-      const v = await verifyUsdcPayment(resolved.key, txHash, amount);
-      if (!v.ok) return fail402(`payment invalid: ${v.error}`);
-      network = resolved.key; payer = v.payer;
+    const network = resolved.kind === "evm" ? resolved.cfg.network : resolved.key;
+    if (resolved.kind === "evm" && !EVM_CHAINS[network]) return fail402(`payment invalid: no verifier for ${network}`);
+
+    // Verify first (cheap to reject), then consume the transaction atomically.
+    const v = await verifyUsdcPayment(network, txHash, amount, { signerHint: p.signer ?? undefined });
+    if (!v.ok) return fail402(`payment invalid: ${v.error}`);
+    const claim = await claimPayment(sb, network, txHash, `api:${endpoint}`);
+    if (!claim.ok) {
+      return claim.reason === "used"
+        ? { ok: false, status: 409, body: { error: "this transaction was already used for a paid action" } }
+        : { ok: false, status: 503, body: { error: "payment ledger unavailable, retry shortly" } };
     }
-    await sb.from("agent_api_payments").insert({ payment_id: txHash, endpoint, method, amount_usdc: amount.toString(), chain: network, agent_wallet: payer, scheme: "onchain" });
-    return { ok: true, paymentId: txHash, payer, chain: network, scheme: "onchain" };
+    const { error: logErr } = await sb.from("agent_api_payments").insert({ payment_id: txHash, endpoint, method, amount_usdc: amount.toString(), chain: network, agent_wallet: v.payer, scheme: "onchain" });
+    if (logErr) {
+      await releasePayment(sb, network, txHash);
+      return { ok: false, status: 409, body: { error: "this transaction was already used for a paid action" } };
+    }
+    return { ok: true, paymentId: txHash, payer: v.payer, chain: network, scheme: "onchain", txHash };
   }
 
   const parsed = decodePayment(p.xPayment!);
-  if (!parsed) return fail402("invalid base64/json X-PAYMENT");
-  const network: string = parsed.accepted?.network ?? parsed.paymentRequirements?.network ?? parsed.network ?? "";
+  if (!parsed || typeof parsed !== "object") return fail402("invalid base64/json X-PAYMENT");
+  const network: string = String(parsed.accepted?.network ?? parsed.paymentRequirements?.network ?? parsed.network ?? "");
 
   // Circle Gateway Nanopayments (GatewayWalletBatched) path
   if (network.startsWith("eip155:")) {
     const requirement = gatewayRequirement(amount, resource, network);
     if (!requirement) return fail402(`network ${network} is not supported for gasless payment`);
     const auth: Auth | undefined = parsed.payload?.authorization;
-    if (!auth?.nonce) return fail402("missing authorization");
+    if (!auth?.nonce || typeof auth.nonce !== "string" || auth.nonce.length > 100) return fail402("missing authorization");
     if (String(auth.to).toLowerCase() !== TREASURY) return fail402("wrong recipient");
-    if (BigInt(auth.value ?? "0") < amount) return fail402("insufficient value for this route");
+    if (!UINT_RE.test(String(auth.value ?? ""))) return fail402("malformed authorization value");
+    if (BigInt(auth.value) < amount) return fail402("insufficient value for this route");
 
     const paymentPayload = { ...parsed, x402Version: parsed.x402Version ?? 2 };
     const ver = await gatewayClient.post("/v1/x402/verify", { paymentPayload, paymentRequirements: requirement });
@@ -456,23 +459,39 @@ export function safeQuery(q: unknown): string {
 
 export type SelfListInput = { name: string; wallet: string; description: string; logo_url: string | null; website: string | null; networks: string[]; capabilities: string[] };
 
+export const KNOWN_NETWORKS: string[] = [
+  ...Object.values(CHAINS).map((c) => c.network),
+  ...NON_EVM_CHAINS.map((c) => c.key),
+];
+
 export function validateSelfList(body: any): { ok: true; value: SelfListInput } | { ok: false; error: string } {
   const b = body ?? {};
-  const name = String(b.name ?? "").trim();
-  const description = String(b.description ?? "").trim();
+  if (typeof b !== "object" || Array.isArray(b)) return { ok: false, error: "JSON object body required" };
+  const name = cleanText(b.name, 101);
+  const description = cleanText(b.description, 301);
   if (!name || name.length > 100) return { ok: false, error: "name required (<=100)" };
   if (!b.wallet_address || String(b.wallet_address).trim().length > 256) return { ok: false, error: "wallet_address required (<=256)" };
   const wallet = normalizeWallet(b.wallet_address);
   if (!wallet) return { ok: false, error: "wallet_address format invalid (EVM 0x+40 hex, Solana base58, Sui 0x+64 hex, Near 64 hex or *.near)" };
   if (!description || description.length > 300) return { ok: false, error: "description required (<=300)" };
+
+  // Links are rendered as hrefs / image sources: only real http(s) URLs are stored.
+  let website: string | null = null;
+  if (b.website !== undefined && b.website !== null && String(b.website).trim() !== "") {
+    website = safeHttpUrl(b.website, 255);
+    if (!website) return { ok: false, error: "website must be a valid http(s) URL" };
+  }
+  let logo_url: string | null = null;
+  if (b.logo_url !== undefined && b.logo_url !== null && String(b.logo_url).trim() !== "") {
+    logo_url = safeHttpUrl(b.logo_url, 500);
+    if (!logo_url) return { ok: false, error: "logo_url must be a valid http(s) URL" };
+  }
   return {
     ok: true,
     value: {
-      name, wallet, description,
-      logo_url: b.logo_url ? String(b.logo_url).trim() : null,
-      website: b.website ? String(b.website).trim().slice(0, 255) : null,
-      networks: Array.isArray(b.networks) ? b.networks.slice(0, 10).map(String) : [],
-      capabilities: Array.isArray(b.capabilities) ? b.capabilities.slice(0, 20).map(String) : [],
+      name, wallet, description, logo_url, website,
+      networks: cleanNetworks(b.networks, KNOWN_NETWORKS),
+      capabilities: cleanCapabilities(b.capabilities, 5),
     },
   };
 }
@@ -520,23 +539,73 @@ export async function searchMerchants(sb: Sb, qRaw: string, paid: string, opts: 
   return { status: 200, body: { q, count: rows.length, merchants: rows, paid } };
 }
 
+/**
+ * When a paid action fails AFTER an on-chain payment was accepted, hand the
+ * transaction back so the caller can retry instead of losing the payment.
+ * Gateway/x402 payments are already settled and cannot be handed back.
+ */
+export async function undoGate(sb: Sb, g: GateOk): Promise<void> {
+  if (g.scheme !== "onchain") return;
+  await sb.from("agent_api_payments").delete().eq("payment_id", g.paymentId);
+  await releasePayment(sb, g.chain, g.paymentId);
+}
+
 export async function selfListAgent(sb: Sb, v: SelfListInput, gate: GateOk): Promise<OpResult> {
-  const categories = ["AI Agents", ...v.capabilities.map((c) => `AI: ${c}`).slice(0, 5)];
+  const categories = ["AI Agents", ...v.capabilities.map((c) => `AI: ${c}`)];
+  // Ownership is bound to the wallet that actually paid, never to a wallet the
+  // caller merely typed, so nobody can list an agent under someone else's address.
+  const owner = gate.payer && gate.payer !== "unknown" ? gate.payer : v.wallet;
   const { data, error } = await sb.from("partners").insert({
     name: v.name, description: v.description, website: v.website, categories, region: "Global",
-    networks: v.networks.length > 0 ? v.networks : [gate.chain], wallet_address: v.wallet, logo_url: v.logo_url,
+    networks: v.networks.length > 0 ? v.networks : [gate.chain], wallet_address: owner, logo_url: v.logo_url,
     payment_status: "confirmed", payment_id: gate.paymentId,
   }).select().single();
-  if (error) return { status: 500, body: { error: error.message } };
-  return { status: 201, body: { id: data.id, name: data.name, paid: gate.paymentId } };
+  if (error) {
+    await undoGate(sb, gate);
+    return { status: 500, body: { error: "could not create listing; on-chain payments are released for retry", retry: gate.scheme === "onchain" } };
+  }
+  return {
+    status: 201,
+    body: {
+      id: data.id, name: data.name, paid: gate.paymentId, owner_wallet: owner,
+      ...(owner.toLowerCase() !== v.wallet.toLowerCase() ? { note: "owner_wallet is the wallet that paid; the declared wallet was not used for ownership" } : {}),
+    },
+  };
+}
+
+/**
+ * Checks a boost target BEFORE any payment is taken, so a bad id never costs the caller.
+ * Returns an error result, or null when the listing can be boosted.
+ */
+export async function precheckBoost(sb: Sb, id: string): Promise<OpResult | null> {
+  const { data, error } = await sb.from("partners").select("id, categories, payment_status")
+    .eq("id", id).in("payment_status", ["confirmed", "finished", "sending"]).maybeSingle();
+  if (error) return { status: 500, body: { error: "lookup failed" } };
+  if (!data) return { status: 404, body: { error: "agent not found" } };
+  if (!Array.isArray(data.categories) || !data.categories.includes("AI Agents")) {
+    return { status: 400, body: { error: "only AI agent listings can be boosted through this API" } };
+  }
+  return null;
 }
 
 export async function boostAgent(sb: Sb, id: string, gate: GateOk): Promise<OpResult> {
-  const expiresAt = new Date(Date.now() + BOOST_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  const { error: upErr } = await sb.from("partners").update({ boosted_until: expiresAt }).eq("id", id);
-  if (upErr) return { status: 500, body: { error: upErr.message } };
+  const { data: cur } = await sb.from("partners").select("boosted_until").eq("id", id).maybeSingle();
+  // A second boost extends the current window instead of resetting it.
+  const currentEnd = cur?.boosted_until ? new Date(cur.boosted_until).getTime() : 0;
+  const base = Math.max(Date.now(), Number.isFinite(currentEnd) ? currentEnd : 0);
+  const expiresAt = new Date(base + BOOST_DAYS * 24 * 60 * 60 * 1000).toISOString();
+
   const { error: insErr } = await sb.from("agent_boosts").insert({ partner_id: id, payment_id: gate.paymentId, amount_usdc: PRICE_BOOST.toString(), chain: gate.chain, expires_at: expiresAt });
-  if (insErr) return { status: 500, body: { error: insErr.message } };
+  if (insErr) {
+    await undoGate(sb, gate);
+    return { status: 500, body: { error: "could not record boost; on-chain payments are released for retry", retry: gate.scheme === "onchain" } };
+  }
+  const { error: upErr } = await sb.from("partners").update({ boosted_until: expiresAt }).eq("id", id);
+  if (upErr) {
+    await sb.from("agent_boosts").delete().eq("payment_id", gate.paymentId);
+    await undoGate(sb, gate);
+    return { status: 500, body: { error: "could not apply boost; on-chain payments are released for retry", retry: gate.scheme === "onchain" } };
+  }
   return { status: 200, body: { id, boosted_until: expiresAt, paid: gate.paymentId } };
 }
 
